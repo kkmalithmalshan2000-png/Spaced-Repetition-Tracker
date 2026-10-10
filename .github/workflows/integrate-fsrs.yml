@@ -1,0 +1,46 @@
+name: Integrate FSRS
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: [sw.js]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add FSRS to index.html and sw.js
+        run: |
+          test -f fsrs-bundle.js || { echo "fsrs-bundle.js is missing from the repo root"; exit 1; }
+          python3 - <<'PY'
+          import os, re, pathlib
+          p = pathlib.Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          if "fsrs-bundle.js" not in s:
+              assert "</head>" in s, "no </head> in index.html"
+              s = s.replace("</head>", '<script defer src="./fsrs-bundle.js"></script>\n</head>', 1)
+              p.write_text(s, encoding="utf-8")
+              print("index.html: script tag added")
+          else:
+              print("index.html: already integrated")
+          sw = pathlib.Path("sw.js")
+          if sw.exists():
+              t = sw.read_text(encoding="utf-8")
+              if "fsrs-bundle.js" not in t:
+                  t = re.sub(r"""(['"])\./index\.html\1""",
+                             lambda m: m.group(0) + "," + m.group(1) + "./fsrs-bundle.js" + m.group(1), t, count=1)
+              sha = os.environ["GITHUB_SHA"][:7]
+              t = re.sub(r"""((?:CACHE|VERSION)\w*\s*=\s*['"])[^'"]*(['"])""",
+                         lambda m: m.group(1) + "nexus-" + sha + m.group(2), t, count=1)
+              sw.write_text(t, encoding="utf-8")
+              print("sw.js: precache + cache version updated")
+          else:
+              print("sw.js not found: skipped")
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git diff --quiet || (git add -A && git commit -m "Integrate FSRS (automated)" && git push)
