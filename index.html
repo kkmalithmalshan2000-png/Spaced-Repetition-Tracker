@@ -672,24 +672,16 @@
     
     const origDeleteSubject = window.deleteSubject;
     window.deleteSubject = function(id){
-      const s = state.subjects.find(x=>x.id===id);
-      const count = state.topics.filter(t=>t.subjectId===id).length;
-      if(count>0){ alert(`Cannot delete subject "${s?.name}" — it still has ${count} topics. Delete topics first.`); return; }
-      if(!confirm(`Delete subject "${s?.name}"?\n\nThis can be undone with Undo bar.`)) return;
-      startUndo('Subject deleted');
-      state.subjects = state.subjects.filter(x=>x.id!==id);
-      save(); renderAll();
+      // Use the core cascade-aware handler so topics, review history, and linked records are cleaned up together.
+      if(typeof origDeleteSubject === 'function') return origDeleteSubject(id);
+      console.error('Subject deletion handler is unavailable; no data was changed.');
     };
     
     const origDeleteStream = window.deleteStream;
     window.deleteStream = function(id){
-      const st = state.streams.find(x=>x.id===id);
-      const subCount = state.subjects.filter(s=>s.streamId===id).length;
-      if(subCount>0){ alert(`Cannot delete stream "${st?.name}" — has ${subCount} subjects. Delete subjects first.`); return; }
-      if(!confirm(`Delete stream "${st?.name}"?`)) return;
-      startUndo('Stream deleted');
-      state.streams = state.streams.filter(x=>x.id!==id);
-      save(); renderAll();
+      // Use the core cascade-aware handler so nested subjects, topics, and linked records are cleaned up together.
+      if(typeof origDeleteStream === 'function') return origDeleteStream(id);
+      console.error('Stream deletion handler is unavailable; no data was changed.');
     };
     
     const origDeleteExam = window.deleteExam;
