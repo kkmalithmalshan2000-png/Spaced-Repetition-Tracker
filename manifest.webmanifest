@@ -1,6 +1,6 @@
 {
-  "name": "Recall \u2014 Spaced Repetition Tracker",
-  "short_name": "Recall",
+  "name": "Nexus: Spaced Repetition tracker",
+  "short_name": "Nexus",
   "description": "Offline-first study planner and spaced repetition tracker.",
   "start_url": "./index.html",
   "scope": "./",
