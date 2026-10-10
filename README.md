@@ -1,4 +1,4 @@
-# Recall — Spaced Repetition Tracker (Netlify bundle)
+# Nexus: Spaced Repetition tracker (Netlify bundle)
 
 A mobile-friendly, offline-first study tracker packaged as an installable Progressive Web App (PWA). The bundle is static and does not need a build command.
 
