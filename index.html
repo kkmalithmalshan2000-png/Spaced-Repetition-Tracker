@@ -32,7 +32,17 @@
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
   
     /* --- Polished UI Enhancements --- */
-    #installBtn{display:none !important}
+    @media (display-mode:standalone){#installBtn{display:none !important}}
+    .install-options{display:flex;flex-direction:column;gap:10px}
+    .install-option{display:flex;align-items:center;gap:13px;padding:14px;border:1px solid var(--border);border-radius:13px;background:var(--surface2);color:var(--text);text-decoration:none;text-align:left;font:inherit;cursor:pointer;width:100%}
+    .install-option:hover{border-color:var(--accent)}
+    .install-option:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .install-option[hidden]{display:none}
+    .install-option-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:var(--accent);color:#fff;font-size:18px;font-weight:800}
+    .install-option-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .install-option-text strong{font-size:14px}
+    .install-option-text span{font-size:12px;color:var(--muted);line-height:1.4}
+    .install-note{margin:14px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
@@ -247,6 +257,7 @@
 
   <dialog id="examDialog"><form id="examForm"><div class="dialog-head"><h2 id="examDialogTitle">Add exam or deadline</h2><p>Use this for any examination, test, assessment, or deadline.</p></div><div class="dialog-body"><div class="form-grid"><div class="form-group full"><label class="form-label" for="examNameInput">Name</label><input class="control" id="examNameInput" maxlength="150" required placeholder="e.g. Semester exam, A/L, professional exam"></div><div class="form-group"><label class="form-label" for="examDateInput">Date</label><input class="control" id="examDateInput" type="date" required></div><div class="form-group"><label class="form-label" for="examTypeInput">Type</label><select class="control" id="examTypeInput"><option>Academic exam</option><option>Test</option><option>Professional exam</option><option>Assignment deadline</option><option>Other</option></select></div><div class="form-group full"><label class="form-label" for="examNotesInput">Notes (optional)</label><textarea class="control" id="examNotesInput" maxlength="500" placeholder="Optional details"></textarea></div></div><div class="dialog-actions"><button class="btn" type="button" data-close="examDialog">Cancel</button><button class="btn btn-primary" type="submit">Save exam</button></div></div></form></dialog>
 
+  <dialog id="installDialog" aria-labelledby="installDialogTitle"><div class="dialog-head"><h2 id="installDialogTitle">Install Recall</h2><p>Choose how you want to install the app on this device.</p></div><div class="dialog-body"><div class="install-options"><a class="install-option" id="apkDownloadLink" href="./downloads/recall.apk" download="Recall.apk"><span class="install-option-icon" aria-hidden="true">⇩</span><span class="install-option-text"><strong>Download Android app (APK)</strong><span>Recall.apk · about 1 MB · Android 7.0 or newer</span></span></a><button class="install-option" id="pwaInstallOption" type="button" hidden><span class="install-option-icon" aria-hidden="true">+</span><span class="install-option-text"><strong>Install as web app</strong><span>Adds Recall to your home screen or desktop through your browser.</span></span></button></div><p class="install-note">After the APK downloads, open it from your notifications or Downloads folder. If Android asks, allow your browser to install unknown apps, then tap Install. Your study data stays on the device as before.</p><div class="dialog-actions"><button class="btn" type="button" data-close="installDialog">Close</button></div></div></dialog>
   <dialog id="helpDialog"><div class="dialog-head"><h2>How to use Recall</h2><p>Feature guide and data-handling details.</p></div><div class="dialog-body help-content">
     <h3>1. Overview</h3><p>Overview summarises active topics, topics due today, overdue topics, reviews completed today, progress by subject, and the nearest upcoming exam or deadline. “Start review” opens the next due topic.</p>
     <h3>2. Topics and spaced repetition</h3><p>Use <strong>Add topic</strong> to create a lesson. Choose a stream and subject, enter the name, and add optional notes. Use the search box and filters to find topics by name, stream, subject, or due status. Edit an existing topic to rename it or move it. Delete removes the topic from the tracker but its older history entries remain.</p><p>Open <strong>Review</strong> after attempting to recall the material without looking. Choose a recall rating from 1 to 5 and optionally set a custom next review date. Check the preview, then tap <strong>Mark as reviewed</strong> to save the review. The next due date is based on the review date, rating, and previous interval unless you choose a custom date. Rating 1 resets to one day; higher ratings progressively increase the interval. The maximum interval is 120 days.</p>
@@ -314,7 +325,7 @@
     ['ECON','ආර්ථික විද්‍යාව','12. ලංකාවේ ආර්ථික ව්‍යුහය සහ ප්‍රතිපත්ති']
   ];
   const LEGACY_SUBJECT_MAP = {
-    'Business Studies':'ව්‍යාපාර අධ්‍යයනය','Business Studies (BS)':'ව්‍යාපාර අධ්‍යයනය','BS':'ව්‍යාපාර අධ්‍යයනය',
+    'Business Studies':'ව්‍යාපාර අධ්‍යයනය','Business Studies (BS)':'ව්‍යාපාර අධ්‍යයනය','BS':'ව්‍යාපාර අධ්‍යය���ය',
     'Accounting':'ගිණුම්කරණය','ACC':'ගිණුම්කරණය',
     'Economics':'ආර්ථික විද්‍යාව','ECON':'ආර්ථික විද්‍යාව'
   };
@@ -551,7 +562,8 @@
   function applyTheme(){document.documentElement.dataset.theme=state.settings.theme;$('themeSelect').value=state.settings.theme;$('themeBtn').textContent=state.settings.theme==='light'?'☀':state.settings.theme==='dark'?'☾':'◐';$('themeBtn').title=`Theme: ${state.settings.theme}. Click to cycle.`;}
   function cycleTheme(){const seq=['system','light','dark'];state.settings.theme=seq[(seq.indexOf(state.settings.theme)+1)%seq.length];save();applyTheme();notify(`Theme: ${state.settings.theme}.`);}
   function openHelp(){$('helpDialog').showModal();}
-  function install(){if(installPrompt){installPrompt.prompt();installPrompt.userChoice.finally(()=>{installPrompt=null;$('installBtn').textContent='✓ Install';});return;}alert('To install Recall, open it from its hosted HTTPS link in a supported browser and use the browser menu: “Install app” or “Add to Home Screen”. Installation is not available when opening the downloaded HTML directly.');}
+  function install(){$('pwaInstallOption').hidden=!installPrompt;$('installDialog').showModal();}
+  function installPwa(){if(!installPrompt)return;$('installDialog').close();installPrompt.prompt();installPrompt.userChoice.finally(()=>{installPrompt=null;$('pwaInstallOption').hidden=true;});}
   // Events are attached once; dynamic content uses delegated handlers.
   document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
   $('startReviewBtn').addEventListener('click',()=>{const next=activeTopics().filter(t=>['overdue','due'].includes(status(t))).sort((a,b)=>dueRank(status(a))-dueRank(status(b))||(a.dueDate||'').localeCompare(b.dueDate||''))[0]||activeTopics().find(t=>status(t)==='new');if(next)openReview(next.id);else{switchView('topics');notify('No due or new topics found.');}});
@@ -572,7 +584,7 @@
   $('reviewCustomDue').addEventListener('change',renderReviewPreview);
   document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).close()));
   $('reviewNote').addEventListener('input',()=>{});
-  $('themeBtn').addEventListener('click',cycleTheme);$('themeSelect').addEventListener('change',()=>{state.settings.theme=$('themeSelect').value;save();applyTheme();notify('Theme preference saved.');});$('helpBtn').addEventListener('click',openHelp);$('installBtn').addEventListener('click',install);
+  $('themeBtn').addEventListener('click',cycleTheme);$('themeSelect').addEventListener('change',()=>{state.settings.theme=$('themeSelect').value;save();applyTheme();notify('Theme preference saved.');});$('helpBtn').addEventListener('click',openHelp);$('installBtn').addEventListener('click',install);$('pwaInstallOption').addEventListener('click',installPwa);$('apkDownloadLink').addEventListener('click',()=>{setTimeout(()=>{$('installDialog').close();notify('Downloading Recall.apk — open it when the download finishes.');},150);});
   $('backupBtn').addEventListener('click',exportBackup);$('menuBackup').addEventListener('click',()=>{$('moreMenu').open=false;exportBackup();});$('restoreBtn').addEventListener('click',()=>$('importFile').click());$('menuRestore').addEventListener('click',()=>{$('moreMenu').open=false;$('importFile').click();});$('importFile').addEventListener('change',e=>importBackup(e.target.files?.[0]));
   $('historyCsvBtn').addEventListener('click',exportHistory);$('setupHistoryCsvBtn').addEventListener('click',exportHistory);$('menuHistoryCsv').addEventListener('click',()=>{exportHistory();$('moreMenu').open=false;});$('setupTopicsCsvBtn').addEventListener('click',exportTopics);$('menuTopicsCsv').addEventListener('click',()=>{exportTopics();$('moreMenu').open=false;});$('clearHistoryBtn').addEventListener('click',clearHistory);$('resetBtn').addEventListener('click',resetAll);$('undoBtn').addEventListener('click',undo);$('menuSettings').addEventListener('click',()=>{switchView('setup');$('moreMenu').open=false;});
   $('topicDialog').addEventListener('close',()=>{editTopicId=null;});$('streamDialog').addEventListener('close',()=>{editStreamId=null;});$('subjectDialog').addEventListener('close',()=>{editSubjectId=null;});$('examDialog').addEventListener('close',()=>{editExamId=null;});$('reviewDialog').addEventListener('close',()=>{reviewTopicId=null;});

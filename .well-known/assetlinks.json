@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.recall.tracker",
+      "sha256_cert_fingerprints": [
+        "9F:89:59:1F:A7:F7:D4:41:E8:76:A5:AF:2F:E9:8C:DB:8B:41:26:20:9E:97:B8:76:5B:A8:5E:A4:80:CA:C2:6D"
+      ]
+    }
+  }
+]
