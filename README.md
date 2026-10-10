@@ -4,9 +4,9 @@ A mobile-friendly, offline-first study tracker packaged as an installable Progre
 
 ## Deploy free with Netlify
 
-1. Download and extract `recall-netlify-bundle.zip`.
+1. Download and extract `nexus-netlify-bundle.zip`.
 2. In Netlify, choose **Add new site → Deploy manually** (wording may vary).
-3. Upload the extracted `recall-netlify-bundle` folder, or drag its contents into the deploy drop zone. `index.html`, `manifest.webmanifest`, `sw.js`, icons, and `netlify.toml` must be at the published root.
+3. Upload the extracted `nexus-netlify-bundle` folder, or drag its contents into the deploy drop zone. `index.html`, `manifest.webmanifest`, `sw.js`, icons, and `netlify.toml` must be at the published root.
 4. Open the resulting HTTPS URL in Chrome on Android.
 5. In Chrome's menu, choose **Install app** or **Add to Home screen**.
 

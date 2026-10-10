@@ -7,7 +7,7 @@
     Cache-Control = "no-cache"
 
 [[headers]]
-  for = "/downloads/*.apk"
+  for = "/downloads/nexus.apk"
   [headers.values]
     Content-Type = "application/vnd.android.package-archive"
     Content-Disposition = "attachment; filename=\"Nexus.apk\""
