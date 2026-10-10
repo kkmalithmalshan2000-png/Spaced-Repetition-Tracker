@@ -1,5 +1,5 @@
 {
-  "name": "Nexus: Spaced Repetition tracker",
+  "name": "Nexus: Spaced Repetition Tracker",
   "short_name": "Nexus",
   "description": "Offline-first study planner and spaced repetition tracker.",
   "start_url": "./index.html",

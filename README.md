@@ -1,6 +1,6 @@
-# Nexus: Spaced Repetition tracker (Netlify bundle)
+# Nexus: Spaced Repetition Tracker (Netlify bundle)
 
-A mobile-friendly, offline-first study tracker packaged as an installable Progressive Web App (PWA). The bundle is static and does not need a build command.
+A mobile-friendly, offline-first study tracker packaged as an installable Progressive Web App (PWA). The bundle is static and does not need a build command. Optional cloud sync requires your own Supabase project.
 
 ## Deploy free with Netlify
 
@@ -25,16 +25,40 @@ You can also deploy from GitHub by pushing these files to a repository and conne
 - Mistake/concept-gap journal, past-paper and mock-exam tracking, timed sections, calculation drills, theory-recall logs, score/error tracking, and weak-area notes.
 - Global search, bulk topic rescheduling/archive actions, topic CSV import/template, and CSV exports for journal, papers, selected topics, and study time.
 - Full JSON backup including Study Hub data, plus restore/merge options for transferring data between devices.
+- Optional Supabase cloud sync with Google OAuth or email magic-link sign-in, manual restore, and automatic uploads after local changes.
 - Installable PWA shell with service-worker caching for offline use after the first successful visit.
 
 ## Data, sync, and notification limits
 
 - Data is stored locally in the browser profile on each device. Export full JSON backups regularly and store a copy somewhere safe.
-- Restore/merge can transfer data to another device, but **automatic multi-device cloud sync is not configured**. Real cloud sync requires an authenticated backend/database.
+- Cloud sync is optional. Create a Supabase project, configure Google and/or email sign-in, run the SQL below, then enter the project URL and public anon key in Setup & data → Cloud sync. Never put a service_role key in the app.
+- In Supabase → Authentication → URL Configuration, add your deployed app URL to the allowed redirect URLs. In Authentication → Providers, enable Google and configure its OAuth client. Email sign-in uses a magic link.
 - Browser notifications can be checked while the app is open and permission is granted. Reliable scheduled push notifications while the browser is fully closed require push infrastructure and a server.
-- The optional adaptive scheduler is a simple FSRS-inspired heuristic, not the official FSRS implementation. Classic scheduling remains available.
+- The app includes the FSRS-6 scheduler in fsrs-bundle.js; this update leaves the scheduler bundle and its integration unchanged.
 - The syllabus coverage percentage reflects topics you have entered, or your optional expected topic count; it cannot independently know the complete official syllabus.
 
 ## Updating an existing deployment
 
 Deploy the entire bundle, not only `index.html`. Keep the same Netlify site/domain when possible so the browser origin and its locally stored data remain the same. Before changing domains or replacing devices, download a full JSON backup and restore it on the new site/device.
+
+
+## Cloud sync setup
+
+Cloud sync uses one row per authenticated user and relies on Row Level Security (RLS). Run this SQL in the Supabase SQL Editor:
+
+```sql
+create table if not exists public.nexus_user_data (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  payload jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.nexus_user_data enable row level security;
+drop policy if exists "Users can read own Nexus backup" on public.nexus_user_data;
+drop policy if exists "Users can insert own Nexus backup" on public.nexus_user_data;
+drop policy if exists "Users can update own Nexus backup" on public.nexus_user_data;
+create policy "Users can read own Nexus backup" on public.nexus_user_data for select using (auth.uid() = user_id);
+create policy "Users can insert own Nexus backup" on public.nexus_user_data for insert with check (auth.uid() = user_id);
+create policy "Users can update own Nexus backup" on public.nexus_user_data for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```
+
+If a cloud backup already exists at sign-in, Nexus asks you to type RESTORE or UPLOAD; cancel leaves both copies untouched. A newer remote backup is protected from silent overwrite. Restore cloud backup replaces this device’s local data after confirmation. Keep JSON backups as an independent recovery option.
