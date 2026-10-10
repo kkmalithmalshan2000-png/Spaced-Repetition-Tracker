@@ -1,6 +1,6 @@
 # Nexus: Spaced Repetition Tracker (Netlify bundle)
 
-A mobile-friendly, offline-first study tracker packaged as an installable Progressive Web App (PWA). The bundle is static and does not need a build command. Optional cloud sync requires your own Supabase project.
+A mobile-friendly, offline-first study tracker packaged as an installable Progressive Web App (PWA). The bundle is static and does not need a build command. Optional cloud sync is preconfigured to use the Nexus Supabase project.
 
 ## Deploy free with Netlify
 
@@ -31,7 +31,7 @@ You can also deploy from GitHub by pushing these files to a repository and conne
 ## Data, sync, and notification limits
 
 - Data is stored locally in the browser profile on each device. Export full JSON backups regularly and store a copy somewhere safe.
-- Cloud sync is optional. Create a Supabase project, configure Google and/or email sign-in, run the SQL below, then enter the project URL and public anon key in Setup & data → Cloud sync. Never put a service_role key in the app.
+- Cloud sync is preconfigured to use the Nexus Supabase project and its public publishable key. Email magic-link sign-in and Google sign-in require the deployed GitHub Pages URL to be allowed in Supabase Auth. Never put a service_role/secret key in the app.
 - In Supabase → Authentication → URL Configuration, add your deployed app URL to the allowed redirect URLs. In Authentication → Providers, enable Google and configure its OAuth client. Email sign-in uses a magic link.
 - Browser notifications can be checked while the app is open and permission is granted. Reliable scheduled push notifications while the browser is fully closed require push infrastructure and a server.
 - The app includes the FSRS-6 scheduler in fsrs-bundle.js; this update leaves the scheduler bundle and its integration unchanged.
@@ -44,7 +44,9 @@ Deploy the entire bundle, not only `index.html`. Keep the same Netlify site/doma
 
 ## Cloud sync setup
 
-Cloud sync uses one row per authenticated user and relies on Row Level Security (RLS). Run this SQL in the Supabase SQL Editor:
+Cloud sync uses the live `nexus-spaced-repetition` project in the Mumbai region (`ap-south-1`). Its API URL is `https://txugbdavblpettcnhcxl.supabase.co`; the app already contains its public publishable key. The `public.nexus_user_data` table and owner-only RLS policies have been created in that project. The SQL below documents the schema for reference or a separate environment.
+
+Cloud sync uses one row per authenticated user and relies on Row Level Security (RLS).
 
 ```sql
 create table if not exists public.nexus_user_data (
@@ -62,3 +64,15 @@ create policy "Users can update own Nexus backup" on public.nexus_user_data for 
 ```
 
 If a cloud backup already exists at sign-in, Nexus asks you to type RESTORE or UPLOAD; cancel leaves both copies untouched. A newer remote backup is protected from silent overwrite. Restore cloud backup replaces this device’s local data after confirmation. Keep JSON backups as an independent recovery option.
+
+
+## One-time authentication setup for the deployed site
+
+The database and client connection are configured. To allow authentication redirects for the GitHub Pages deployment:
+
+1. Open the [Nexus Supabase Auth URL Configuration](https://supabase.com/dashboard/project/txugbdavblpettcnhcxl/auth/url-configuration).
+2. Set **Site URL** to `https://kkmalithmalshan2000-png.github.io/Spaced-Repetition-Tracker/`.
+3. Add that same URL to **Redirect URLs** and save.
+4. Email magic-link sign-in can then be used. For Google sign-in, open [Auth Providers](https://supabase.com/dashboard/project/txugbdavblpettcnhcxl/auth/providers), enable Google, and enter the OAuth Client ID and Client Secret from a Google Cloud OAuth web application. Add the Supabase callback URL shown on that provider page to the Google OAuth client's authorized redirect URIs.
+
+The Supabase project-management connection available here does not expose Auth URL/provider settings, and Google OAuth requires credentials from your Google account. Those settings must be completed in the dashboard before sign-in can be fully verified. The app will continue to work offline and keep local data while cloud sign-in is not configured.
