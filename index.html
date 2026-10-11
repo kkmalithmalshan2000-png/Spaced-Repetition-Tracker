@@ -1414,7 +1414,7 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 <dialog id="accountChoiceDialog" class="account-choice-dialog" aria-labelledby="accountChoiceTitle"><div class="dialog-head"><div class="choice-kicker">IMPORTANT · DATA CHOICE</div><h2 id="accountChoiceTitle">What should happen to your offline data?</h2><p>You have study data on this device. Choose how to handle it for the signed-in account before syncing starts.</p></div><div class="dialog-body"><div class="choice-option"><strong>Merge offline data</strong><p>Keep your offline topics, subjects, reviews, and exams, and combine them with this account’s cloud data. Matching records use the offline copy.</p><button class="btn btn-primary" data-account-choice="merge" type="button">Keep & merge offline data</button></div><div class="choice-option"><strong>Replace offline data with cloud data</strong><p>Discard this device’s current study data and load only the signed-in account’s cloud backup. If there is no backup, start with an empty workspace.</p><button class="btn btn-danger" data-account-choice="replace" type="button">Use cloud data on this device</button></div><div class="choice-option danger-zone"><strong>Replace cloud data with offline data</strong><p>Upload this device’s workspace as the account’s new cloud backup, overwriting the existing copy.</p><button class="btn btn-danger" data-account-choice="replace-cloud" type="button">Overwrite cloud with offline data…</button></div><p class="choice-footnote">All choices apply only to the account just signed into. Data from another account is never merged. Downloaded JSON backups remain untouched.</p></div></dialog>
 <dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog>
 <script>
-/* Keep the three-dot menu in the viewport and above every page section. */
+/* Portal the three-dot menu to the document layer to escape all ancestor stacking contexts. */
 (()=>{
  const init=()=>{
   const details=document.getElementById('moreMenu');
@@ -1422,16 +1422,17 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
   const pop=details?.querySelector('.menu-pop');
   if(!details||!summary||!pop||details.dataset.viewportMenuFix==='1') return;
   details.dataset.viewportMenuFix='1';
+  const placeholder=document.createComment('menu-pop-location');
+  pop.parentNode.insertBefore(placeholder,pop);
   const place=()=>{
-   if(!details.open) return;
+   if(!details.open||pop.parentNode!==document.body) return;
    const r=summary.getBoundingClientRect();
    const vw=document.documentElement.clientWidth;
    const vh=window.innerHeight;
    const margin=12;
    const width=Math.min(pop.offsetWidth||260,vw-margin*2);
    const height=Math.min(pop.scrollHeight||220,vh-margin*2);
-   let left=r.right-width;
-   left=Math.max(margin,Math.min(left,vw-width-margin));
+   let left=Math.max(margin,Math.min(r.right-width,vw-width-margin));
    let top=r.bottom+8;
    if(top+height>vh-margin) top=r.top-height-8;
    top=Math.max(margin,Math.min(top,vh-height-margin));
@@ -1440,7 +1441,17 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
    pop.style.top=top+'px';
    pop.style.right='auto';
   };
-  details.addEventListener('toggle',()=>{if(details.open){requestAnimationFrame(place);}else{pop.style.removeProperty('--nexus-menu-left');pop.style.removeProperty('left');pop.style.removeProperty('top');}});
+  details.addEventListener('toggle',()=>{
+   if(details.open){
+    document.body.appendChild(pop);
+    requestAnimationFrame(place);
+   }else{
+    if(placeholder.parentNode) placeholder.parentNode.insertBefore(pop,placeholder);
+    pop.style.removeProperty('--nexus-menu-left');
+    pop.style.removeProperty('left');
+    pop.style.removeProperty('top');
+   }
+  });
   window.addEventListener('resize',place,{passive:true});
   window.addEventListener('scroll',place,{passive:true,capture:true});
   document.addEventListener('click',e=>{if(details.open&&!details.contains(e.target)&&!pop.contains(e.target)) details.open=false;});
