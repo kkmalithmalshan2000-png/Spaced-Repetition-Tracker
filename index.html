@@ -162,7 +162,30 @@
     @media(max-width:720px){.hub-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hub-grid{grid-template-columns:1fr}.hub-card.wide{grid-column:auto}.hub-card{padding:13px}.hub-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.hub-tab{padding:9px 6px}.hub-form{grid-template-columns:1fr}.hub-form .full{grid-column:auto}.hub-row{align-items:flex-start}.hub-row-actions{max-width:100%}}
     @media(prefers-reduced-motion:reduce){.hub-card,.hub-tab,.hub-meter span,.hub-chart-bar{animation:none;transition:none}}
 
-  .account-choice-dialog{width:min(560px,calc(100% - 24px));padding:0;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);box-shadow:0 22px 80px rgba(0,0,0,.28)}.account-choice-dialog::backdrop{background:rgba(7,15,24,.72);backdrop-filter:blur(4px)}.choice-kicker{display:inline-block;padding:5px 9px;margin-bottom:8px;border-radius:999px;background:var(--amberSoft);color:var(--amber);font-size:11px;font-weight:850;letter-spacing:.08em}.account-choice-dialog .dialog-head h2{font-size:clamp(21px,4vw,27px);line-height:1.15}.choice-option{padding:14px;margin:0 0 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface2)}.choice-option p,.choice-footnote{color:var(--muted);font-size:12px}.choice-option .btn{width:100%;white-space:normal;margin-top:5px}.choice-footnote{margin:14px 0 0}@media(max-width:600px){.account-choice-dialog .dialog-head,.account-choice-dialog .dialog-body{padding:16px}}\n  </style>
+  .account-choice-dialog{width:min(560px,calc(100% - 24px));padding:0;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);box-shadow:0 22px 80px rgba(0,0,0,.28)}.account-choice-dialog::backdrop{background:rgba(7,15,24,.72);backdrop-filter:blur(4px)}.choice-kicker{display:inline-block;padding:5px 9px;margin-bottom:8px;border-radius:999px;background:var(--amberSoft);color:var(--amber);font-size:11px;font-weight:850;letter-spacing:.08em}.account-choice-dialog .dialog-head h2{font-size:clamp(21px,4vw,27px);line-height:1.15}.choice-option{padding:14px;margin:0 0 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface2)}.choice-option p,.choice-footnote{color:var(--muted);font-size:12px}.choice-option .btn{width:100%;white-space:normal;margin-top:5px}.choice-footnote{margin:14px 0 0}@media(max-width:600px){.account-choice-dialog .dialog-head,.account-choice-dialog .dialog-body{padding:16px}}\n  
+/* Nexus responsive navigation and visual refresh */
+:root{--radius:18px;--shadow:0 8px 28px rgba(22,42,58,.065)}
+html{scroll-padding-top:18px}body{letter-spacing:-.006em}
+.app{max-width:1500px;padding-top:clamp(14px,2.5vw,30px)}
+.topbar{padding:3px 0 18px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.brandmark{border-radius:15px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 24%,transparent)}h1{letter-spacing:-.055em}
+.tabs{position:sticky;top:8px;z-index:30;gap:5px;padding:6px;margin:0 0 24px;border-radius:15px;background:color-mix(in srgb,var(--surface) 88%,var(--bg));backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(20,40,55,.055);scrollbar-width:thin}
+.tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 15px;border:1px solid transparent;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+.tab:hover{background:var(--surface);color:var(--text);transform:translateY(-1px)}
+.tab[aria-selected="true"]{background:var(--accentSoft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 20%,transparent);box-shadow:none}
+.tab-icon{font-size:15px;line-height:1;opacity:.85}.view.active{animation:sectionReveal .28s ease both}
+@keyframes sectionReveal{from{opacity:.6;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.stat,.panel,.topic-card,.history-entry,.collapsible{border-color:color-mix(in srgb,var(--border) 88%,transparent)}
+.stat{padding:18px;border-radius:18px}.stat-value{letter-spacing:-.065em}.panel{border-radius:18px}.panel-head{padding:18px 20px 14px}.panel-body{padding:18px 20px}
+.btn{min-height:38px}.btn-primary{box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 18%,transparent)}
+.field,.control{min-height:42px;border-radius:11px;transition:border-color .16s ease,box-shadow .16s ease}
+.field:focus,.control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.topic-card{border-radius:16px;padding:16px}.section-head{margin-bottom:18px}.section-head h2{font-size:clamp(19px,2vw,23px);letter-spacing:-.04em}
+.empty{border:1px dashed var(--border);border-radius:14px;margin:10px 0}.footer{padding-top:14px;border-top:1px solid var(--border)}
+@media(max-width:850px){.tabs{top:4px;margin-left:-2px;margin-right:-2px}.tab{padding:10px 12px}}
+@media(max-width:540px){.topbar{padding-bottom:13px;margin-bottom:12px}.tabs{gap:3px;padding:5px;margin-bottom:18px;border-radius:13px}.tab{min-height:39px;padding:9px 11px;font-size:12px;gap:6px}.tab-icon{font-size:14px}.stat{border-radius:15px}.panel-head{padding:14px 15px 12px}.panel-body{padding:14px 15px}.btn{min-height:36px}}
+@media(prefers-reduced-motion:reduce){.view.active{animation:none}.tab{transition:none}}
+</style>
 
   <!-- Vercel Web Analytics -->
   <script>
@@ -184,7 +207,7 @@
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
     </header>
-    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true">Overview</button><button class="tab" data-view="topics" aria-selected="false">Topics & structure</button><button class="tab" data-view="history" aria-selected="false">History</button><button class="tab" data-view="setup" aria-selected="false">Settings</button><button class="tab" data-view="account" aria-selected="false">Account & backups</button><button class="tab" data-view="studyhub" aria-selected="false">Study Hub ✦</button></nav>
+    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌂</span>Overview</button><button class="tab" data-view="studyhub" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Study Hub</button><button class="tab" data-view="topics" aria-selected="false"><span class="tab-icon" aria-hidden="true">▦</span>Topics & structure</button><button class="tab" data-view="history" aria-selected="false"><span class="tab-icon" aria-hidden="true">◷</span>History</button><button class="tab" data-view="setup" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span>Settings</button><button class="tab" data-view="account" aria-selected="false"><span class="tab-icon" aria-hidden="true">☁</span>Account & backups</button></nav>
 
     <section class="view active" id="view-overview">
       <div class="section-head"><div><h2>Overview</h2><p>See what needs review and track progress across subjects.</p></div><button class="btn btn-primary" id="startReviewBtn">Start review →</button></div>
