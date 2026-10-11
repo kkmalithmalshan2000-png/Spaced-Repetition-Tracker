@@ -677,7 +677,65 @@ h1{font:800 clamp(23px,3vw,30px)/1.1 Manrope,sans-serif;letter-spacing:-.055em}
 @media(max-width:899px){.tabs{float:none;position:sticky;top:4px;width:100%;max-height:none;flex-direction:row;overflow-x:auto;margin:0 0 18px;padding:7px;border-radius:16px}.tab{width:auto;flex:none;padding:10px 13px}.view{margin-left:0}#oceanHero{min-height:210px;padding:23px}.oceanHeroCopy h2{font-size:31px}#oceanHero .oceanOrb{width:82px;height:82px;font-size:38px;margin-right:0}}
 @media(max-width:560px){.app{padding-top:12px}.topbar{align-items:flex-start;gap:10px}.brandmark{width:40px;height:40px}.header-actions{gap:5px}.header-actions .btn{padding:8px;font-size:11px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:14px}.layout-two{grid-template-columns:minmax(0,1fr)}.topic-grid,.setup-grid{grid-template-columns:minmax(0,1fr)}#oceanHero{padding:21px;min-height:0}#oceanHero .oceanOrb{display:none}.oceanHeroCopy h2{font-size:29px}.section-head{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style></head>
+</style><style id="nexus-analytics-icons-and-light-timer-fix">
+/* Premium, purpose-specific analytics glyphs */
+.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
+.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
+.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
+.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
+[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
+[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
+[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
+[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
+[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
+/* Force timer digits to remain legible against both theme surfaces. */
+#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
+#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
+#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
+#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
+[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
+[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
+[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
+</style>
+<style id="nexus-preview-layout-fixes">
+/* Preview QA fixes: opaque, correctly sized menu; readable controls; responsive subject rows. */
+.more-menu{position:relative;flex:none;z-index:1000}
+.more-menu[open]{z-index:10000}
+.menu-pop{position:absolute!important;right:0!important;left:auto!important;top:calc(100% + 8px)!important;width:min(260px,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;max-height:min(70vh,420px);overflow-y:auto;box-sizing:border-box;background:#fff!important;color:#17334a!important;opacity:1!important;isolation:isolate;z-index:10001!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid #c8dce7!important;border-radius:16px!important;box-shadow:0 18px 48px rgba(18,53,78,.22)!important}
+.menu-pop button,.menu-pop label{display:flex!important;width:100%;min-height:42px;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;background:#fff!important;color:#17334a!important;opacity:1!important;font-size:14px;line-height:1.35}
+.menu-pop button:hover,.menu-pop label:hover{background:#eaf6fb!important;color:#0a6f98!important}
+.menu-pop button:focus-visible{outline:2px solid #168bb9;outline-offset:-2px}
+.topbar,.header-actions{min-width:0}
+.header-actions{position:relative}
+.preview-ribbon{font-weight:650;line-height:1.45}
+#structureList{max-height:none;overflow:visible;scrollbar-gutter:auto}
+#structureList button{max-width:100%;white-space:normal}
+#structureList [style*="display:flex"]{flex-wrap:wrap;gap:8px;align-items:center}
+#structureList [style*="justify-content:space-between"]{gap:12px;flex-wrap:wrap}
+#structureList [style*="min-width"]{min-width:0!important}
+#structureList [style*="width:"]{max-width:100%}
+@media(max-width:760px){
+ .app{width:100%;box-sizing:border-box;padding-left:14px;padding-right:14px}
+ .topbar{align-items:flex-start;flex-direction:column}
+ .brand{width:100%;align-items:center}
+ .header-actions{width:100%;justify-content:flex-start;gap:7px}
+ .statusline{white-space:normal}
+ .more-menu{margin-left:auto}
+ .menu-pop{position:fixed!important;top:auto!important;right:14px!important;left:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 22px)!important;width:min(300px,calc(100vw - 28px))!important;max-height:min(60vh,420px)}
+ .tabs{display:flex;flex-wrap:nowrap;justify-content:flex-start;gap:4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+ .tab{flex:0 0 auto;min-width:max-content}
+ .panel-head{gap:12px;flex-wrap:wrap}
+ #structureList{max-height:none!important}
+}
+@media(max-width:420px){
+ .header-actions .btn{font-size:12px;padding:8px 9px}
+ .menu-pop{right:10px!important;width:calc(100vw - 20px)!important}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+</head>
 <body>
   <main class="app" data-preview-build="nexus-ocean-isolated">
     <div style="margin:0 0 12px;padding:8px 13px;border:1px solid rgba(67,132,236,.2);border-radius:12px;background:rgba(255,255,255,.65);color:#2479a5;font-size:11px;font-weight:700">PRIVATE UI PREVIEW · Original tracker logic and local data model retained in this isolated copy</div>
@@ -1510,9 +1568,6 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
   if(document.getElementById('oceanHero')) return;
   const overview=document.getElementById('view-overview');
   if(!overview)return;
-  const ribbon=document.createElement('div');ribbon.className='preview-ribbon';ribbon.textContent='PRIVATE TEST BUILD · Your existing study data and core workflows are retained in this isolated preview.'; 
-  const app=document.querySelector('.app'); const topbar=document.querySelector('.topbar');
-  if(app&&topbar) app.insertBefore(ribbon,topbar.nextSibling);
   const hero=document.createElement('section');hero.id='oceanHero';
   hero.innerHTML='<div class="oceanHeroCopy"><div class="oceanKicker">✦ YOUR PERSONAL LEARNING SPACE</div><h2>Make every review<br>move you forward.</h2><p>Your learning journey, organized around what matters. Small focused sessions today build lasting knowledge tomorrow.</p><div class="oceanHeroBtns"><button class="btn btn-primary" id="oceanStartReview">Start a review&nbsp; ↗</button><button class="btn" id="oceanOpenLibrary">Explore topics&nbsp; →</button></div></div><div class="oceanOrb" aria-hidden="true">✧</div>';
   overview.insertBefore(hero,overview.firstChild);
@@ -1525,25 +1580,3 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 })();
 </script></body>
 </html>
-<style id="nexus-analytics-icons-and-light-timer-fix">
-/* Premium, purpose-specific analytics glyphs */
-.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
-.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
-.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
-.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
-.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
-[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
-[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
-[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
-[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
-[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
-/* Force timer digits to remain legible against both theme surfaces. */
-#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
-#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
-#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
-#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
-[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
-[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
-[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
-@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
-</style>
