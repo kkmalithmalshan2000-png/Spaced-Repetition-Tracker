@@ -200,7 +200,89 @@ select,.field,.control,.hub-input{position:relative;z-index:3} .hub-field:focus-
 @keyframes workspace-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes focus-breathe{0%,100%{transform:scale(.98);opacity:.55}50%{transform:scale(1.03);opacity:1}}
 @media(max-width:650px){.tabs{top:4px}.tab{flex:none;padding:10px 12px}.calendar-launch-card{align-items:flex-start;flex-wrap:wrap}.calendar-launch-copy{min-width:calc(100% - 65px)}.calendar-launch-card .btn{width:100%}.calendar-day{min-height:55px;padding:5px;border-radius:9px;gap:4px}.calendar-day-count{font-size:9px}.calendar-toolbar{gap:6px}.calendar-toolbar .field{max-width:100px;font-size:11px}.focus-shell{min-height:88dvh}.focus-footer{justify-content:center}.review-calendar-grid{gap:3px}}
 @media(prefers-reduced-motion:reduce){.focus-orbit:before,.focus-orbit:after{animation:none}}
-</style>
+
+  /* Nexus visual refresh: soft lavender glass, calm pastel cards, compact workspace */
+  :root {
+    --bg:#f5f1ff; --surface:rgba(255,255,255,.88); --surface2:#eee8fb;
+    --text:#171827; --muted:#77758d; --border:rgba(122,105,174,.16);
+    --accent:#7d63f6; --accentHover:#6748e9; --accentSoft:#eee8ff;
+    --blue:#5d9be9; --blueSoft:#e6f1ff; --green:#429f91; --greenSoft:#e0f3ed;
+    --amber:#b78a36; --amberSoft:#fff0c8; --red:#d75f79; --redSoft:#ffe7ed;
+    --shadow:0 10px 32px rgba(75,54,130,.075); --radius:22px;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  :root[data-theme="dark"] {
+    --bg:#171426; --surface:rgba(35,30,55,.92); --surface2:#29223e;
+    --text:#f7f3ff; --muted:#b7aecf; --border:rgba(190,170,255,.15);
+    --accent:#a694ff; --accentHover:#b9acff; --accentSoft:#342952;
+    --blue:#92c1ff; --blueSoft:#243550; --green:#8ed7c5; --greenSoft:#203b39;
+    --amber:#f3ce7b; --amberSoft:#40351e; --red:#ff9caf; --redSoft:#452535;
+    --shadow:0 12px 36px rgba(0,0,0,.22);
+  }
+  @media(prefers-color-scheme:dark){:root[data-theme="system"]{color-scheme:dark;--bg:#171426;--surface:rgba(35,30,55,.92);--surface2:#29223e;--text:#f7f3ff;--muted:#b7aecf;--border:rgba(190,170,255,.15);--accent:#a694ff;--accentHover:#b9acff;--accentSoft:#342952;--blue:#92c1ff;--blueSoft:#243550;--green:#8ed7c5;--greenSoft:#203b39;--amber:#f3ce7b;--amberSoft:#40351e;--red:#ff9caf;--redSoft:#452535;--shadow:0 12px 36px rgba(0,0,0,.22)}}
+  html{scroll-behavior:smooth;background:var(--bg)}
+  body{background:radial-gradient(ellipse at 10% 0%,rgba(201,187,255,.42),transparent 36%),radial-gradient(ellipse at 95% 24%,rgba(210,231,255,.42),transparent 30%),var(--bg);background-attachment:fixed;letter-spacing:-.012em}
+  .app{max-width:1500px;padding-top:clamp(14px,3vw,34px)}
+  .topbar{margin-bottom:22px;gap:14px}
+  .brandmark{background:linear-gradient(145deg,#a99aff,#7355f2);border-radius:17px;box-shadow:0 9px 22px rgba(125,99,246,.26)}
+  h1{letter-spacing:-.055em;font-weight:820}
+  .subtitle{letter-spacing:0}
+  .btn{border-radius:13px;padding:10px 14px;border-color:var(--border);background:var(--surface);box-shadow:0 2px 6px rgba(67,48,120,.025);transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:hover{box-shadow:0 7px 18px rgba(97,73,174,.12);transform:translateY(-1px)}
+  .btn-primary{background:linear-gradient(135deg,#9a86ff,#7558f1);border-color:transparent;box-shadow:0 7px 17px rgba(125,99,246,.2)}
+  .btn-primary:hover{background:linear-gradient(135deg,#8b75fa,#6748e9)}
+  .btn-soft{background:var(--surface2)}
+  .tabs{gap:7px;padding:6px;border-radius:17px;background:rgba(255,255,255,.55);border-color:rgba(130,110,190,.15);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .tab{padding:11px 17px;border-radius:12px;transition:background-color .16s ease,color .16s ease}
+  .tab[aria-selected="true"]{background:#fff;color:#5f48d3;box-shadow:0 4px 13px rgba(82,60,145,.1)}
+  .stats{gap:14px}
+  .stat,.panel{border:1px solid rgba(255,255,255,.82);background:var(--surface);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow);border-radius:22px}
+  .stat{padding:18px 19px;position:relative;overflow:hidden}
+  .stat:after{content:"";position:absolute;right:-25px;top:-36px;width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,rgba(187,170,255,.2),rgba(204,231,255,.12));pointer-events:none}
+  .stat-label{letter-spacing:.025em}
+  .stat-value{letter-spacing:-.06em;font-weight:820}
+  .panel{overflow:visible}
+  .panel-head{padding:18px 20px 14px;border-bottom-color:rgba(130,110,190,.12)}
+  .panel-head h3{font-size:16px;letter-spacing:-.025em}
+  .panel-body{padding:18px 20px}
+  .due-list,.progress-list{padding-left:20px;padding-right:20px}
+  .due-item,.progress-row{border-bottom-color:rgba(130,110,190,.12)}
+  .progress-track{height:8px;background:color-mix(in srgb,var(--accent) 10%,var(--surface2))}
+  .progress-fill{background:linear-gradient(90deg,#b9a9ff,#7e67f5)}
+  .exam-card{border-radius:20px;box-shadow:var(--shadow)}
+  .field,input,select,textarea{border-radius:12px}
+  .menu-pop{z-index:10000;border-radius:16px;box-shadow:0 18px 45px rgba(35,24,75,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .more-menu{z-index:30}
+  .section-head h2{letter-spacing:-.045em;font-size:clamp(20px,2.3vw,25px)}
+  .view{animation:nexus-view-in .22s ease both}
+  @keyframes nexus-view-in{from{opacity:.65;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  dialog{border:1px solid rgba(255,255,255,.65);border-radius:28px;background:var(--bg);color:var(--text);box-shadow:0 28px 90px rgba(35,24,75,.3)}
+  dialog::backdrop{background:rgba(31,23,55,.45);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  .focus-window,.calendar-window{border-radius:26px}
+  .focus-window{background:radial-gradient(ellipse at 50% 0%,rgba(172,150,255,.22),transparent 45%),var(--surface)}
+  .calendar-window{background:radial-gradient(ellipse at 0% 0%,rgba(197,183,255,.25),transparent 45%),var(--surface)}
+  .calendar-day,.review-calendar-grid button{border-radius:15px}
+  .review-calendar-grid button{transition:transform .14s ease,box-shadow .14s ease}
+  .review-calendar-grid button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(125,99,246,.12)}
+  canvas,svg{max-width:100%}
+  .chart-wrap,.chart-card,.analytics-chart,.chart-panel{border-radius:20px}
+  @media(max-width:760px){
+    .app{padding-left:12px;padding-right:12px;padding-top:14px}
+    .topbar{align-items:flex-start}
+    .brandmark{width:42px;height:42px}
+    .tabs{margin-bottom:17px;overflow-x:auto;scrollbar-width:none}
+    .tab{padding:10px 13px}
+    .stats{gap:9px}
+    .stat{padding:14px 13px;border-radius:18px}
+    .stat-value{font-size:clamp(23px,7vw,30px)}
+    .panel{border-radius:19px}
+    .panel-head{padding:15px 15px 12px}
+    .panel-body{padding:15px}
+    .layout-two{grid-template-columns:minmax(0,1fr)}
+  }
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.view{animation:none}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+  </style>
 
   <!-- Vercel Web Analytics -->
   <script>
