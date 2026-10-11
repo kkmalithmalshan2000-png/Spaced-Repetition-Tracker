@@ -404,6 +404,60 @@ canvas,svg{max-width:100%}
 .hub-scroll-list .hub-row:last-child,.history-list .history-entry:last-child{border-bottom:0}
 @media(max-width:760px){.history-list,.due-list,.progress-list,#structureList,.hub-scroll-list,.hub-list,.hub-heatmap,.global-search-results{max-height:48vh}.topic-grid{max-height:62vh}}
 
+
+/* Premium finishing pass: centered dialogs, glass surfaces, refined navigation and destructive actions */
+#reviewCalendarDialog,#focusModeDialog{position:fixed;inset:0;margin:auto;transform:none;align-self:center;justify-self:center}
+#reviewCalendarDialog[open],#focusModeDialog[open]{display:block}
+#reviewCalendarDialog .calendar-window{width:100%;max-width:100%;margin-inline:auto}
+#reviewCalendarDialog .calendar-window-head{align-items:center}
+#reviewCalendarDialog .calendar-window-head>div{flex:1;text-align:center}
+#reviewCalendarDialog .calendar-window-head>button{flex:0 0 auto}
+#reviewCalendarDialog .calendar-toolbar{justify-content:center}
+#reviewCalendarDialog .calendar-toolbar strong{flex:0 1 210px;text-align:center}
+#reviewCalendarDialog .calendar-legend{justify-content:center}
+#reviewCalendarDialog .review-calendar-grid{margin-inline:auto;width:100%;max-width:790px}
+#focusModeDialog .focus-shell{width:100%;min-height: min(76dvh,780px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(22px,5vw,44px);gap:clamp(15px,3vh,28px)}
+#focusModeDialog .focus-top{width:100%;display:flex;align-items:center;justify-content:space-between;align-self:stretch}
+#focusModeDialog .focus-orbit{margin:0 auto;flex:0 0 auto}
+#focusModeDialog .focus-topic-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{width:100%;text-align:center}
+#focusModeDialog .focus-controls{justify-content:center}
+#focusModeDialog .focus-footer{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 20px}
+#focusModeDialog .focus-hint{max-width:480px;margin-inline:auto}
+.btn-danger,[data-action*="delete"],[data-action*="remove"],[data-action*="reset"],[data-account-choice*="replace"],#cloudSignOutBtn,#resetBtn,#clearHistoryBtn,#deleteAllTopicsBtn{
+ color:var(--dangerText,var(--red))!important;
+ background:color-mix(in srgb,var(--red) 10%,var(--surface))!important;
+ border-color:color-mix(in srgb,var(--red) 34%,var(--border))!important;
+ box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 7%,transparent);
+}
+.btn-danger:hover,[data-action*="delete"]:hover,[data-action*="remove"]:hover,[data-action*="reset"]:hover,[data-account-choice*="replace"]:hover,#cloudSignOutBtn:not(:disabled):hover,#resetBtn:hover,#clearHistoryBtn:hover,#deleteAllTopicsBtn:hover{
+ color:white!important;background:var(--red)!important;border-color:var(--red)!important;box-shadow:0 7px 20px color-mix(in srgb,var(--red) 25%,transparent)
+}
+:root[data-theme="dark"]{--dangerText:#ff9caf}
+:root[data-theme="dark"] .btn-danger,:root[data-theme="dark"] [data-action*="delete"],:root[data-theme="dark"] [data-action*="remove"],:root[data-theme="dark"] [data-action*="reset"],:root[data-theme="dark"] #cloudSignOutBtn{background:color-mix(in srgb,#ff708b 15%,var(--surface))!important;border-color:color-mix(in srgb,#ff8da2 38%,var(--border))!important;color:#ffb2c0!important}
+@media(prefers-color-scheme:dark){:root[data-theme="system"] .btn-danger,:root[data-theme="system"] [data-action*="delete"],:root[data-theme="system"] [data-action*="remove"],:root[data-theme="system"] [data-action*="reset"],:root[data-theme="system"] #cloudSignOutBtn{background:color-mix(in srgb,#ff708b 15%,var(--surface))!important;border-color:color-mix(in srgb,#ff8da2 38%,var(--border))!important;color:#ffb2c0!important}}
+/* Modern pill navigation on desktop, floating glass dock on mobile */
+.tabs{position:sticky;top:10px;z-index:100;display:flex;align-items:center;justify-content:center;gap:7px;width:fit-content;max-width:100%;margin:0 auto 26px;padding:7px;border:1px solid color-mix(in srgb,var(--border) 85%,white);border-radius:22px;background:color-mix(in srgb,var(--surface) 78%,transparent);box-shadow:0 12px 34px rgba(57,39,106,.10),inset 0 1px 0 rgba(255,255,255,.5);backdrop-filter:blur(24px) saturate(145%);-webkit-backdrop-filter:blur(24px) saturate(145%)}
+.tab{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;border-radius:15px;color:var(--muted);font-size:13px;font-weight:760;letter-spacing:-.01em;transition:background-color .18s ease,color .18s ease,box-shadow .18s ease}
+.tab .tab-icon{font-size:16px;line-height:1}
+.tab[aria-selected="true"]{color:var(--accent);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 8%,var(--surface)));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent),0 4px 12px rgba(80,56,150,.08);opacity:1}
+.tab:hover{background:var(--accentSoft);color:var(--accent);opacity:1}
+:root[data-theme="dark"] .tabs{background:rgba(30,25,47,.82);border-color:var(--border);box-shadow:0 12px 34px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.045)}
+:root[data-theme="dark"] .tab[aria-selected="true"]{background:linear-gradient(135deg,#42365f,#342b4d);color:#f4efff}
+@media(prefers-color-scheme:dark){:root[data-theme="system"] .tabs{background:rgba(30,25,47,.84)!important;border-color:var(--border);box-shadow:0 12px 34px rgba(0,0,0,.25)}:root[data-theme="system"] .tab[aria-selected="true"]{background:linear-gradient(135deg,#42365f,#342b4d)!important;color:#f4efff!important}}
+.panel,.stat,.topbar,.exam-card,.topic-card,.history-card{backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+.panel,.stat{box-shadow:0 12px 34px rgba(75,54,130,.07),inset 0 1px 0 rgba(255,255,255,.4)}
+@media(max-width:760px){
+ .tabs{position:sticky;top:5px;width:100%;justify-content:flex-start;gap:4px;padding:6px;border-radius:18px;overflow-x:auto;scrollbar-width:none}
+ .tabs::-webkit-scrollbar{display:none}
+ .tab{flex:0 0 auto;min-width:max-content;padding:10px 12px;border-radius:13px;font-size:12px}
+ #reviewCalendarDialog .calendar-window{padding:18px 13px}
+ #reviewCalendarDialog .calendar-window-head{gap:8px}
+ #reviewCalendarDialog .calendar-toolbar{gap:6px;flex-wrap:wrap}
+ #reviewCalendarDialog .calendar-toolbar strong{flex-basis:130px}
+ #focusModeDialog .focus-shell{min-height:78dvh;padding:18px 14px;gap:18px}
+}
+@media(prefers-reduced-motion:reduce){.tabs,.tab,.btn{transition:none!important}}
+
 </style>
 
   <!-- Vercel Web Analytics -->
