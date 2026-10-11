@@ -626,7 +626,58 @@ input,select,textarea{max-width:100%}button{touch-action:manipulation}
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 <script defer src="./fsrs-bundle.js"></script>
-</head>
+<style>
+/* Nexus Ocean full test UI — isolated preview only */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+:root{--bg:#eaf5fb;--surface:rgba(255,255,255,.78);--surface2:#eaf5fb;--text:#142d43;--muted:#6f879b;--border:rgba(94,151,183,.22);--accent:#078bb9;--accentHover:#08749b;--accentSoft:#dff6fb;--blue:#367fe3;--blueSoft:#e8f1ff;--green:#168b79;--greenSoft:#e2f8f0;--shadow:0 12px 34px rgba(28,91,124,.08);--radius:20px;font-family:'DM Sans',system-ui,sans-serif}
+html,body{background:linear-gradient(135deg,#f4fbff 0%,#e6f7fb 48%,#e9edff 100%);color:var(--text)}
+body:before{content:"";position:fixed;z-index:0;pointer-events:none;right:-180px;top:-220px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(84,202,224,.23),transparent 70%)}
+body:after{content:"";position:fixed;z-index:0;pointer-events:none;left:16%;bottom:-300px;width:650px;height:650px;border-radius:50%;background:radial-gradient(circle,rgba(120,153,246,.14),transparent 70%)}
+.app{position:relative;z-index:1;width:min(1580px,100%);padding:22px clamp(14px,3vw,42px) 60px}
+.topbar{padding:10px 0 18px;margin-bottom:14px;border-bottom:1px solid rgba(111,160,187,.18)}
+.brandmark{background:linear-gradient(145deg,#12334b,#087fac);border-radius:16px;box-shadow:0 9px 20px rgba(16,112,153,.22)}
+h1{font:800 clamp(23px,3vw,30px)/1.1 Manrope,sans-serif;letter-spacing:-.055em}
+.subtitle{font-size:12px;letter-spacing:.01em}
+.btn{border-radius:12px;box-shadow:0 3px 10px rgba(24,87,121,.035);transition:transform .18s,border-color .18s,box-shadow .18s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(24,87,121,.09)}
+.btn-primary{background:linear-gradient(115deg,#0aa7c6,#4382e9);border-color:transparent;box-shadow:0 7px 17px rgba(27,135,195,.2)}
+.tabs{position:sticky;top:10px;z-index:30;display:flex;flex-direction:column;gap:5px;float:left;width:190px;max-height:calc(100vh - 24px);overflow-y:auto;padding:12px;margin:0 24px 24px 0;border:1px solid rgba(255,255,255,.85);border-radius:22px;background:rgba(255,255,255,.62);box-shadow:0 14px 40px rgba(45,107,141,.08);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.tab{width:100%;text-align:left;padding:12px 13px;border-radius:13px;font-size:12px;opacity:.8}
+.tab[aria-selected="true"]{background:linear-gradient(115deg,rgba(21,174,202,.13),rgba(76,124,235,.11));color:#087da9;box-shadow:inset 0 0 0 1px rgba(29,154,190,.16)}
+.view{min-width:0}
+.view.active{animation:oceanRise .26s ease-out}
+.view:after{content:"";display:block;clear:both}
+.section-head h2{font:800 21px Manrope,sans-serif;letter-spacing:-.045em}
+.stats{gap:13px}
+.stat,.panel,.topic-card,.history-entry{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.76);border-radius:19px;box-shadow:0 12px 32px rgba(36,95,127,.065),inset 0 1px 0 rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.stat{padding:19px}
+.stat-label{font-size:11px;letter-spacing:.02em}
+.stat-value{font:800 clamp(27px,3vw,35px)/1.1 Manrope,sans-serif;color:#173b55}
+.panel-head{padding:19px 20px 15px;border-bottom-color:rgba(117,165,191,.17)}
+.panel-body{padding:19px 20px}
+.field{border-radius:12px;background:rgba(255,255,255,.8);border-color:rgba(112,163,190,.28)}
+.topic-card{padding:17px}
+.exam-card{border-radius:18px;background:linear-gradient(110deg,rgba(20,173,198,.12),rgba(85,126,234,.1));}
+.pill{border-radius:8px}
+#oceanHero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:230px;margin:3px 0 20px;padding:28px 30px;border-radius:27px;color:white;background:linear-gradient(115deg,#0ca9c3 0%,#328be0 49%,#5969df 100%);box-shadow:0 18px 38px rgba(38,129,204,.2),inset 0 1px 0 rgba(255,255,255,.25)}
+#oceanHero:before{content:"";position:absolute;z-index:-1;right:-75px;top:-190px;width:440px;height:440px;border-radius:50%;border:1px solid rgba(255,255,255,.25);box-shadow:0 0 0 28px rgba(255,255,255,.035),0 0 0 58px rgba(255,255,255,.035)}
+#oceanHero:after{content:"✦";position:absolute;right:13%;top:23%;font-size:88px;color:rgba(255,255,255,.18);transform:rotate(-12deg)}
+.oceanHeroCopy{position:relative;z-index:1;max-width:570px}
+.oceanKicker{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.82)}
+.oceanHeroCopy h2{font:800 clamp(30px,4vw,43px)/1.05 Manrope,sans-serif;letter-spacing:-1.8px;margin:15px 0 10px;color:#fff}
+.oceanHeroCopy p{max-width:470px;font-size:13px;line-height:1.75;color:rgba(255,255,255,.82);margin:0}
+.oceanHeroBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:19px}
+#oceanHero .btn{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:white;box-shadow:none;backdrop-filter:blur(8px)}
+#oceanHero .btn-primary{background:#fff;color:#1478ad;border-color:#fff}
+#oceanHero .oceanOrb{width:120px;height:120px;flex:none;margin-right:7%;border-radius:34px;display:grid;place-items:center;font-size:54px;background:linear-gradient(145deg,rgba(255,255,255,.35),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.4);box-shadow:0 20px 50px rgba(24,53,147,.18),inset 0 1px 0 rgba(255,255,255,.4);transform:rotate(-9deg)}
+#oceanWelcome{margin:0 0 18px}
+.preview-ribbon{position:relative;z-index:50;margin:0 0 14px;padding:8px 12px;border-radius:10px;background:rgba(15,123,157,.08);color:#2d6d87;font-size:11px;text-align:center;border:1px solid rgba(37,153,188,.16)}
+@keyframes oceanRise{from{opacity:.6;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:900px){.app{padding-left:34px;padding-right:34px}.view{margin-left:214px}.view.active{min-height:70vh}}
+@media(max-width:899px){.tabs{float:none;position:sticky;top:4px;width:100%;max-height:none;flex-direction:row;overflow-x:auto;margin:0 0 18px;padding:7px;border-radius:16px}.tab{width:auto;flex:none;padding:10px 13px}.view{margin-left:0}#oceanHero{min-height:210px;padding:23px}.oceanHeroCopy h2{font-size:31px}#oceanHero .oceanOrb{width:82px;height:82px;font-size:38px;margin-right:0}}
+@media(max-width:560px){.app{padding-top:12px}.topbar{align-items:flex-start;gap:10px}.brandmark{width:40px;height:40px}.header-actions{gap:5px}.header-actions .btn{padding:8px;font-size:11px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:14px}.layout-two{grid-template-columns:minmax(0,1fr)}.topic-grid,.setup-grid{grid-template-columns:minmax(0,1fr)}#oceanHero{padding:21px;min-height:0}#oceanHero .oceanOrb{display:none}.oceanHeroCopy h2{font-size:29px}.section-head{align-items:flex-start;flex-direction:column}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style></head>
 <body>
   <main class="app" data-preview-build="nexus-ocean-isolated">
     <div style="margin:0 0 12px;padding:8px 13px;border:1px solid rgba(67,132,236,.2);border-radius:12px;background:rgba(255,255,255,.65);color:#2479a5;font-size:11px;font-weight:700">PRIVATE UI PREVIEW · Original tracker logic and local data model retained in this isolated copy</div>
@@ -1452,7 +1503,27 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 </script>
 
 <dialog id="accountChoiceDialog" class="account-choice-dialog" aria-labelledby="accountChoiceTitle"><div class="dialog-head"><div class="choice-kicker">IMPORTANT · DATA CHOICE</div><h2 id="accountChoiceTitle">What should happen to your offline data?</h2><p>You have study data on this device. Choose how to handle it for the signed-in account before syncing starts.</p></div><div class="dialog-body"><div class="choice-option"><strong>Merge offline data</strong><p>Keep your offline topics, subjects, reviews, and exams, and combine them with this account’s cloud data. Matching records use the offline copy.</p><button class="btn btn-primary" data-account-choice="merge" type="button">Keep & merge offline data</button></div><div class="choice-option"><strong>Replace offline data with cloud data</strong><p>Discard this device’s current study data and load only the signed-in account’s cloud backup. If there is no backup, start with an empty workspace.</p><button class="btn btn-danger" data-account-choice="replace" type="button">Use cloud data on this device</button></div><div class="choice-option danger-zone"><strong>Replace cloud data with offline data</strong><p>Upload this device’s workspace as the account’s new cloud backup, overwriting the existing copy.</p><button class="btn btn-danger" data-account-choice="replace-cloud" type="button">Overwrite cloud with offline data…</button></div><p class="choice-footnote">All choices apply only to the account just signed into. Data from another account is never merged. Downloaded JSON backups remain untouched.</p></div></dialog>
-<dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog></body>
+<dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog>
+<script>
+(function(){
+ function initOcean(){
+  if(document.getElementById('oceanHero')) return;
+  const overview=document.getElementById('view-overview');
+  if(!overview)return;
+  const ribbon=document.createElement('div');ribbon.className='preview-ribbon';ribbon.textContent='PRIVATE TEST BUILD · Your existing study data and core workflows are retained in this isolated preview.'; 
+  const app=document.querySelector('.app'); const topbar=document.querySelector('.topbar');
+  if(app&&topbar) app.insertBefore(ribbon,topbar.nextSibling);
+  const hero=document.createElement('section');hero.id='oceanHero';
+  hero.innerHTML='<div class="oceanHeroCopy"><div class="oceanKicker">✦ YOUR PERSONAL LEARNING SPACE</div><h2>Make every review<br>move you forward.</h2><p>Your learning journey, organized around what matters. Small focused sessions today build lasting knowledge tomorrow.</p><div class="oceanHeroBtns"><button class="btn btn-primary" id="oceanStartReview">Start a review&nbsp; ↗</button><button class="btn" id="oceanOpenLibrary">Explore topics&nbsp; →</button></div></div><div class="oceanOrb" aria-hidden="true">✧</div>';
+  overview.insertBefore(hero,overview.firstChild);
+  document.getElementById('oceanStartReview').addEventListener('click',()=>{const b=document.getElementById('startReviewBtn');if(b)b.click();else{const due=document.querySelector('[data-action*="review"]');if(due)due.click();}});
+  document.getElementById('oceanOpenLibrary').addEventListener('click',()=>{const t=[...document.querySelectorAll('.tab')].find(x=>/Library|Topics/i.test(x.textContent));if(t)t.click();});
+  // Keep the navigation compact and make the overview feel like a dashboard.
+  const tabs=document.querySelector('.tabs'); if(tabs){tabs.setAttribute('aria-label','Nexus navigation');}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initOcean);else initOcean();
+})();
+</script></body>
 </html>
 <style id="nexus-analytics-icons-and-light-timer-fix">
 /* Premium, purpose-specific analytics glyphs */
