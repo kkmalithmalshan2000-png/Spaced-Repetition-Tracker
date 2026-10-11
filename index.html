@@ -282,6 +282,117 @@ select,.field,.control,.hub-input{position:relative;z-index:3} .hub-field:focus-
   }
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.view{animation:none}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
+  
+/* Premium visual pass: cohesive learning workspace inspired by the supplied references */
+:root{
+ --bg:#f4f0ff;--surface:rgba(255,255,255,.88);--surface2:#eee8fb;--text:#19172b;--muted:#77718d;
+ --border:rgba(115,92,172,.16);--accent:#8064f5;--accentHover:#694be6;--accentSoft:#eee8ff;
+ --blue:#5b9ee8;--blueSoft:#e8f2ff;--green:#3e9c8d;--greenSoft:#e1f4ed;
+ --amber:#b78630;--amberSoft:#fff0c9;--red:#d85e7b;--redSoft:#ffe7ed;
+ --shadow:0 12px 34px rgba(75,54,130,.075);--radius:22px;
+}
+:root[data-theme="dark"]{
+ --bg:#171426;--surface:rgba(34,29,52,.94);--surface2:#29233d;--text:#f8f5ff;--muted:#b9b0d0;
+ --border:rgba(198,179,255,.16);--accent:#a694ff;--accentHover:#c0b4ff;--accentSoft:#393052;
+ --blue:#92c1ff;--blueSoft:#253650;--green:#8ed7c5;--greenSoft:#203b39;
+ --amber:#f3ce7b;--amberSoft:#40351e;--red:#ff9caf;--redSoft:#452535;
+ --shadow:0 14px 38px rgba(0,0,0,.23);
+}
+@media(prefers-color-scheme:dark){:root[data-theme="system"]{
+ --bg:#171426;--surface:rgba(34,29,52,.94);--surface2:#29233d;--text:#f8f5ff;--muted:#b9b0d0;
+ --border:rgba(198,179,255,.16);--accent:#a694ff;--accentHover:#c0b4ff;--accentSoft:#393052;
+ --blue:#92c1ff;--blueSoft:#253650;--green:#8ed7c5;--greenSoft:#203b39;
+ --amber:#f3ce7b;--amberSoft:#40351e;--red:#ff9caf;--redSoft:#452535;--shadow:0 14px 38px rgba(0,0,0,.23);
+}}
+html{background:var(--bg);scroll-behavior:smooth}
+body{color:var(--text);background:radial-gradient(ellipse at 8% 0%,color-mix(in srgb,#b9a5ff 28%,transparent),transparent 37%),radial-gradient(ellipse at 94% 15%,color-mix(in srgb,#b4dcff 23%,transparent),transparent 32%),var(--bg);background-attachment:fixed;letter-spacing:-.012em}
+.app{width:min(1480px,100%);padding-top:clamp(14px,3vw,34px)}
+.topbar{padding:15px 18px;border:1px solid var(--border);border-radius:23px;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow);margin-bottom:16px}
+.brandmark{background:linear-gradient(145deg,#b6a7ff,#7655ee)!important;box-shadow:0 8px 24px rgba(128,100,245,.28)!important}
+h1{font-weight:830;letter-spacing:-.055em}
+.subtitle{color:var(--muted)}
+.header-actions{gap:8px}
+.statusline{color:var(--muted)}
+.btn{border-radius:13px;border-color:var(--border);background:var(--surface);color:var(--text);box-shadow:0 2px 7px rgba(70,48,130,.035);transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.btn:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));box-shadow:0 7px 18px rgba(97,73,174,.12);transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#9e8aff,#785cf1);color:#fff;border-color:transparent;box-shadow:0 7px 19px rgba(128,100,245,.22)}
+.btn-primary:hover{background:linear-gradient(135deg,#8e78fa,#6748e9);color:#fff}
+.tabs{position:sticky;top:8px;z-index:40;gap:6px;padding:6px;margin-bottom:24px;border-radius:18px;background:color-mix(in srgb,var(--surface) 91%,transparent);border-color:var(--border);box-shadow:0 8px 26px rgba(60,42,110,.09);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.tab{flex:0 0 auto;padding:11px 16px;border-radius:12px;color:var(--text);opacity:.8;font-weight:740}
+.tab:hover{background:var(--accentSoft);opacity:1}
+.tab[aria-selected="true"]{background:var(--accentSoft);color:var(--accent);opacity:1;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent)}
+:root[data-theme="dark"] .tabs{background:rgba(30,25,47,.93);border-color:var(--border);box-shadow:0 10px 28px rgba(0,0,0,.23)}
+:root[data-theme="dark"] .tab{color:var(--text);opacity:.86}
+:root[data-theme="dark"] .tab[aria-selected="true"]{background:#3a3157;color:#e5dcff}
+@media(prefers-color-scheme:dark){:root[data-theme="system"] .tabs{background:rgba(30,25,47,.93);border-color:var(--border);box-shadow:0 10px 28px rgba(0,0,0,.23)}:root[data-theme="system"] .tab{color:var(--text);opacity:.86}:root[data-theme="system"] .tab[aria-selected="true"]{background:#3a3157;color:#e5dcff}}
+.view.active{animation:nexus-premium-enter .2s ease both}
+@keyframes nexus-premium-enter{from{opacity:.7;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.section-head{align-items:center;margin-bottom:17px}
+.section-head h2{font-size:clamp(21px,2.4vw,27px);font-weight:820;letter-spacing:-.05em}
+.section-head p{color:var(--muted)}
+.stats{gap:14px;margin-bottom:20px}
+.stat{position:relative;isolation:isolate;overflow:hidden;padding:19px;border:1px solid color-mix(in srgb,var(--border) 80%,white);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.stat:after{content:"";position:absolute;z-index:-1;right:-25px;top:-35px;width:105px;height:105px;border-radius:50%;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 13%,transparent),color-mix(in srgb,var(--blue) 8%,transparent))}
+.stat-label{font-weight:720;letter-spacing:.015em}
+.stat-value{font-weight:850;letter-spacing:-.065em}
+.layout-two{gap:17px;margin-bottom:17px}
+.panel{border:1px solid color-mix(in srgb,var(--border) 84%,white);border-radius:23px;background:var(--surface);box-shadow:var(--shadow);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.panel-head{padding:18px 20px 14px;border-bottom-color:var(--border)}
+.panel-head h3{font-size:15px;font-weight:800;letter-spacing:-.025em}
+.panel-head p{line-height:1.45}
+.panel-body{padding:18px 20px}
+.due-list,.progress-list{padding-left:20px;padding-right:20px}
+.due-item,.progress-row{border-bottom-color:var(--border)}
+.progress-track{height:8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 10%,var(--surface2));overflow:hidden}
+.progress-fill{border-radius:999px;background:linear-gradient(90deg,#bbaaff,#8064f5)}
+.pill{border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.exam-card{border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.toolbar{gap:10px}
+.field,input,select,textarea{border-color:var(--border);border-radius:12px;background:var(--surface);color:var(--text)}
+.field:focus,input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.menu-pop{z-index:10000;border-radius:16px;background:var(--surface);box-shadow:0 18px 45px rgba(35,24,75,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.more-menu{z-index:50}
+.topic-card,.history-card,.exam-card,.calendar-launch-card{border-radius:20px}
+dialog{color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:28px;box-shadow:0 28px 90px rgba(35,24,75,.3)}
+dialog::backdrop{background:rgba(37,26,64,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#focusModeDialog,#reviewCalendarDialog{background:var(--surface);color:var(--text);border-color:var(--border)}
+#focusModeDialog .focus-shell{background:radial-gradient(ellipse at 50% 5%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 48%),radial-gradient(ellipse at 100% 100%,color-mix(in srgb,var(--blue) 11%,transparent),transparent 42%),var(--surface);color:var(--text)}
+#focusModeDialog .focus-live{color:var(--muted)}
+#focusModeDialog .focus-live i{background:var(--green);box-shadow:0 0 14px color-mix(in srgb,var(--green) 50%,transparent)}
+#focusModeDialog .focus-top .btn{color:var(--text);background:var(--surface2);border-color:var(--border)}
+#focusModeDialog .focus-orbit{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 13px color-mix(in srgb,var(--accent) 6%,transparent),0 0 0 28px color-mix(in srgb,var(--accent) 3%,transparent),0 0 70px color-mix(in srgb,var(--accent) 12%,transparent)}
+#focusModeDialog .focus-orbit:before,#focusModeDialog .focus-orbit:after{border-color:color-mix(in srgb,var(--accent) 18%,transparent)}
+#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)}
+#focusModeDialog .focus-control{border-color:var(--border);background:var(--surface2);color:var(--text)}
+#focusModeDialog .focus-control.primary{background:linear-gradient(135deg,var(--accent),var(--accentHover));color:white;box-shadow:0 10px 35px color-mix(in srgb,var(--accent) 25%,transparent)}
+#focusModeDialog .focus-dialog.is-paused .focus-orbit{box-shadow:0 0 0 13px color-mix(in srgb,var(--amber) 7%,transparent)}
+#focusModeDialog .focus-dialog.is-paused .focus-live i{background:var(--amber);box-shadow:0 0 12px color-mix(in srgb,var(--amber) 45%,transparent)}
+#focusModeDialog::backdrop,#reviewCalendarDialog::backdrop{background:color-mix(in srgb,var(--bg) 64%,#080511 36%);backdrop-filter:blur(12px)}
+#reviewCalendarDialog .calendar-window{background:radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 45%),var(--surface)}
+.review-calendar-grid button{border-radius:14px;transition:background-color .14s ease,border-color .14s ease}
+.review-calendar-grid button:hover{box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 14%,transparent)}
+canvas,svg{max-width:100%}
+.chart-wrap,.chart-card,.analytics-chart,.chart-panel{border-radius:20px}
+@media(max-width:760px){
+ .app{padding-left:12px;padding-right:12px;padding-top:12px}
+ .topbar{padding:13px;border-radius:19px;align-items:flex-start}
+ .topbar h1{font-size:clamp(18px,5vw,24px)}
+ .header-actions{gap:6px}
+ .tabs{top:4px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+ .tab{padding:10px 12px;font-size:12px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .stat{padding:15px 14px;border-radius:19px}
+ .stat-value{font-size:clamp(24px,7vw,31px)}
+ .layout-two{grid-template-columns:minmax(0,1fr);gap:13px}
+ .panel{border-radius:20px}
+ .panel-head{padding:15px 15px 12px}
+ .panel-body{padding:15px}
+ .due-list,.progress-list{padding-left:15px;padding-right:15px}
+ .section-head{align-items:flex-start}
+ #focusModeDialog .focus-shell{min-height:82dvh;padding:20px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.view.active{animation:none}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
   </style>
 
   <!-- Vercel Web Analytics -->
