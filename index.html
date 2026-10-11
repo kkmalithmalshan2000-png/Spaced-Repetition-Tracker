@@ -139,6 +139,10 @@ html[data-theme="dark"] .focus-timer-ring .ring-track{stroke:#464064}
       <nav class="hub-nav" aria-label="Study Hub sections">
         <button class="hub-tab active" data-hub-tab="planner">Daily planner</button><button class="hub-tab" data-hub-tab="mastery">Mastery & syllabus</button><button class="hub-tab" data-hub-tab="papers">Exams & papers</button><button class="hub-tab" data-hub-tab="journal">Notes & mistakes</button><button class="hub-tab" data-hub-tab="analytics">Analytics</button><button class="hub-tab" data-hub-tab="tools">Search & settings</button>
       </nav>
+      <section class="focus-timer-card" aria-label="Focus timer">
+        <div><p class="eyebrow">Focus session</p><h3>Protect your attention.</h3><p>Start a focused block. Nexus saves the start time so you can return to the timer after closing the app.</p><div class="focus-timer-clock" id="nexusFocusDigits">00:00</div><div class="hub-actions"><button class="btn btn-primary" id="nexusTimerStartBtn" type="button">Start focus session</button><button class="btn" id="nexusTimerStopBtn" type="button" disabled>Stop & log</button></div></div>
+        <div class="focus-timer-ring"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="ring-track" cx="36" cy="36" r="30"/><circle class="ring-progress" id="nexusFocusArc" cx="36" cy="36" r="30" style="stroke-dashoffset:188.5"/></svg><div class="ring-label"><strong id="nexusFocusRingValue">0%</strong><span>of focus block</span></div></div>
+      </section>
       <div id="hubContent"></div>
     </section>
 
@@ -979,35 +983,33 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
   try{if(typeof renderOverviewAnalytics==='function'){const original=renderOverviewAnalytics;renderOverviewAnalytics=function(){original();renderTrend();};}}catch(_){}
   try{if(typeof renderAll==='function'){const originalAll=renderAll;renderAll=function(){originalAll();renderDateStrip();renderTrend();syncDock();};}}catch(_){}
 
-  try{
-    if(typeof renderPlanner==='function'){
-      const basePlanner=renderPlanner;
-      renderPlanner=function(){
-        let html=basePlanner();
-        html=html.replaceAll('id="hubFocusClock"','id="hubFocusInlineClock"');
-        const running=typeof focusStart!=='undefined'&&focusStart;
-        const elapsed=running?Math.max(0,Date.now()-focusStart):0;
-        const seconds=Math.floor(elapsed/1000);
-        const clock=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
-        const target=(typeof fsState!=='undefined'&&fsState.settings&&fsState.settings.sessionMinutes)||25;
-        const progress=Math.min(1,elapsed/(target*60000));
-        const timer='<section class="focus-timer-card"><div><p class="eyebrow">Focus session</p><h3>Protect your attention.</h3><p>Start a focused block. Nexus keeps the start time so your session can recover after reopening the app.</p><div class="focus-timer-clock" id="nexusFocusDigits">'+clock+'</div><div class="hub-actions"><button class="btn btn-primary" data-hub-action="focus-start" '+(running?'disabled':'')+'>Start focus session</button><button class="btn" data-hub-action="focus-stop" '+(!running?'disabled':'')+'>Stop & log</button></div></div><div class="focus-timer-ring"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="ring-track" cx="36" cy="36" r="30"/><circle class="ring-progress" id="nexusFocusArc" cx="36" cy="36" r="30" style="stroke-dashoffset:'+(188.5-188.5*progress)+'"/></svg><div class="ring-label"><strong id="nexusFocusRingValue">'+Math.round(progress*100)+'%</strong><span>of focus block</span></div></div></section>';
-        return timer+html;
-      };
-    }
-  }catch(_){}
-  try{
-    if(typeof refreshLiveFocusUi==='function'){
-      const baseRefresh=refreshLiveFocusUi;
-      refreshLiveFocusUi=function(){
-        baseRefresh();
-        const el=document.getElementById('nexusFocusDigits');
-        if(el&&typeof focusStart!=='undefined'&&focusStart){const secs=Math.floor(Math.max(0,Date.now()-focusStart)/1000);el.textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');}
-        const arc=document.getElementById('nexusFocusArc'),label=document.getElementById('nexusFocusRingValue');
-        if(arc&&typeof focusStart!=='undefined'&&focusStart){const target=(typeof fsState!=='undefined'&&fsState.settings&&fsState.settings.sessionMinutes)||25;const p=Math.min(1,Math.max(0,Date.now()-focusStart)/(target*60000));arc.style.strokeDashoffset=String(188.5-188.5*p);if(label)label.textContent=Math.round(p*100)+'%';}
-      };
-    }
-  }catch(_){}
+
+  function refreshNexusTimer(){
+    const clock=document.getElementById('nexusFocusDigits'),arc=document.getElementById('nexusFocusArc'),label=document.getElementById('nexusFocusRingValue'),startBtn=document.getElementById('nexusTimerStartBtn'),stopBtn=document.getElementById('nexusTimerStopBtn');
+    if(!clock)return;
+    let fs={};try{fs=JSON.parse(localStorage.getItem('recall.study.features.v1')||'{}')||{};}catch(_){}
+    const start=fs.focusStartedAt?new Date(fs.focusStartedAt).getTime():0;
+    const paused=fs.focusPausedAt?new Date(fs.focusPausedAt).getTime():0;
+    const running=Number.isFinite(start)&&start>0;
+    const elapsed=running?Math.max(0,(paused||Date.now())-start):0;
+    const secs=Math.floor(elapsed/1000);
+    clock.textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
+    const target=Math.max(1,Number(fs.settings&&fs.settings.sessionMinutes)||25);
+    const p=running?Math.min(1,elapsed/(target*60000)):0;
+    if(arc)arc.style.strokeDashoffset=String(188.5-188.5*p);
+    if(label)label.textContent=Math.round(p*100)+'%';
+    if(startBtn)startBtn.disabled=!!running;
+    if(stopBtn)stopBtn.disabled=!running;
+  }
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('#nexusTimerStartBtn,#nexusTimerStopBtn');if(!b)return;
+    const action=b.id==='nexusTimerStartBtn'?'focus-start':'focus-stop';
+    const planner=document.querySelector('[data-hub-tab="planner"]');
+    if(planner&&!planner.classList.contains('active')){planner.click();setTimeout(()=>document.querySelector('#hubContent [data-hub-action="'+action+'"]')?.click(),120);}
+    else document.querySelector('#hubContent [data-hub-action="'+action+'"]')?.click();
+    setTimeout(refreshNexusTimer,250);
+  });
+  setInterval(refreshNexusTimer,1000);
 
   renderDateStrip();renderTrend();syncDock();
   const welcome=$('welcomeTitle');if(welcome){const hour=new Date().getHours();welcome.innerHTML=(hour<12?'Good morning.':hour<18?'Good afternoon.':'Good evening.')+'<br>Let’s build lasting recall.';}
