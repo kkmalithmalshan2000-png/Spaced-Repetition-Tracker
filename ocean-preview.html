@@ -735,6 +735,7 @@ h1{font:800 clamp(23px,3vw,30px)/1.1 Manrope,sans-serif;letter-spacing:-.055em}
  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
+<style id="nexus-responsive-qa-fixes">
 /* Nexus responsive QA pass: override conflicting legacy redesign layers deterministically. */
 /* The preview uses light surfaces by default; never pair those with system-dark text tokens. */
 :root[data-theme="system"]{
@@ -814,7 +815,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  .menu-pop{position:fixed!important;left:auto!important;right:10px!important;top:auto!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;width:min(320px,calc(100vw - 20px))!important;z-index:10001!important}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-
+</style>
 </head>
 <body>
   <main class="app" data-preview-build="nexus-ocean-isolated">
