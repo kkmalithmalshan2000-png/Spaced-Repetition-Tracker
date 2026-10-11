@@ -1414,57 +1414,79 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 <dialog id="accountChoiceDialog" class="account-choice-dialog" aria-labelledby="accountChoiceTitle"><div class="dialog-head"><div class="choice-kicker">IMPORTANT · DATA CHOICE</div><h2 id="accountChoiceTitle">What should happen to your offline data?</h2><p>You have study data on this device. Choose how to handle it for the signed-in account before syncing starts.</p></div><div class="dialog-body"><div class="choice-option"><strong>Merge offline data</strong><p>Keep your offline topics, subjects, reviews, and exams, and combine them with this account’s cloud data. Matching records use the offline copy.</p><button class="btn btn-primary" data-account-choice="merge" type="button">Keep & merge offline data</button></div><div class="choice-option"><strong>Replace offline data with cloud data</strong><p>Discard this device’s current study data and load only the signed-in account’s cloud backup. If there is no backup, start with an empty workspace.</p><button class="btn btn-danger" data-account-choice="replace" type="button">Use cloud data on this device</button></div><div class="choice-option danger-zone"><strong>Replace cloud data with offline data</strong><p>Upload this device’s workspace as the account’s new cloud backup, overwriting the existing copy.</p><button class="btn btn-danger" data-account-choice="replace-cloud" type="button">Overwrite cloud with offline data…</button></div><p class="choice-footnote">All choices apply only to the account just signed into. Data from another account is never merged. Downloaded JSON backups remain untouched.</p></div></dialog>
 <dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog>
 <script>
-/* Keep the three-dot menu in the browser top layer so headers, cards and dialogs cannot cover it. */
+/* Stable overflow menu: render in the browser top layer and outside all app stacking contexts. */
 (()=>{
  const init=()=>{
   const details=document.getElementById('moreMenu');
   const summary=details?.querySelector('summary');
   const pop=details?.querySelector('.menu-pop');
-  if(!details||!summary||!pop||details.dataset.stableMenuFix==='1') return;
-  details.dataset.stableMenuFix='1';
+  if(!details||!summary||!pop||details.dataset.stableMenuFix==='2') return;
+  details.dataset.stableMenuFix='2';
+
+  // Move the menu out of transformed/overflow-clipped headers and cards.
   pop.setAttribute('popover','manual');
   pop.style.position='fixed';
   pop.style.inset='auto';
   pop.style.margin='0';
   pop.style.zIndex='2147483647';
+  document.body.appendChild(pop);
+
+  const isOpen=()=>pop.matches(':popover-open');
   const place=()=>{
+   if(!isOpen()) return;
    const r=summary.getBoundingClientRect();
    const vw=document.documentElement.clientWidth;
-   const vh=window.visualViewport?.height||window.innerHeight;
+   const vv=window.visualViewport;
+   const vh=vv?.height||window.innerHeight;
+   const offsetTop=vv?.offsetTop||0;
    const margin=12;
-   const width=Math.min(pop.offsetWidth||260,vw-margin*2);
-   const height=Math.min(pop.scrollHeight||260,vh-margin*2);
+   const width=Math.min(Math.max(pop.scrollWidth,220),Math.min(300,vw-margin*2));
+   pop.style.width=width+'px';
+   pop.style.maxWidth=(vw-margin*2)+'px';
+   pop.style.maxHeight=Math.max(120,vh-margin*2)+'px';
+   pop.style.overflowY='auto';
+   // Measure after width constraints are applied.
+   const height=Math.min(pop.scrollHeight,vh-margin*2);
    const left=Math.max(margin,Math.min(r.right-width,vw-width-margin));
    let top=r.bottom+8;
    if(top+height>vh-margin) top=r.top-height-8;
    top=Math.max(margin,Math.min(top,vh-height-margin));
    pop.style.left=left+'px';
-   pop.style.top=top+'px';
+   pop.style.top=(top+offsetTop)+'px';
    pop.style.right='auto';
-   pop.style.maxHeight=Math.max(120,vh-margin*2)+'px';
   };
-  const opened=()=>pop.matches(':popover-open');
-  const close=()=>{if(opened()) pop.hidePopover();};
+  const close=()=>{
+   if(isOpen()) pop.hidePopover();
+   summary.setAttribute('aria-expanded','false');
+  };
+  const open=()=>{
+   try{pop.showPopover();}catch(_){return;}
+   summary.setAttribute('aria-expanded','true');
+   requestAnimationFrame(()=>{place();requestAnimationFrame(place);});
+  };
+  summary.setAttribute('aria-haspopup','menu');
+  summary.setAttribute('aria-expanded','false');
   summary.addEventListener('click',e=>{
    e.preventDefault();
    e.stopPropagation();
-   if(opened()){close();return;}
-   try{pop.showPopover();}catch(_){pop.setAttribute('popover','manual');pop.showPopover();}
-   place();
+   if(isOpen()) close(); else open();
   });
+  // Do not let clicks inside the menu be interpreted as outside clicks.
   pop.addEventListener('click',e=>{
-   if(e.target.closest('button')) close();
+   e.stopPropagation();
+   if(e.target.closest('button,label')) close();
   });
   document.addEventListener('click',e=>{
-   if(opened()&&!pop.contains(e.target)&&!summary.contains(e.target)) close();
+   if(isOpen()&&!pop.contains(e.target)&&!summary.contains(e.target)) close();
   });
   document.addEventListener('keydown',e=>{
-   if(e.key==='Escape'&&opened()){close();summary.focus();}
+   if(e.key==='Escape'&&isOpen()){close();summary.focus();}
   });
-  const reposition=()=>{if(opened()) place();};
+  const reposition=()=>{if(isOpen()) place();};
   window.addEventListener('resize',reposition,{passive:true});
   window.addEventListener('scroll',reposition,{passive:true,capture:true});
   window.visualViewport?.addEventListener('resize',reposition,{passive:true});
+  window.visualViewport?.addEventListener('scroll',reposition,{passive:true});
  };
  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
 })();
