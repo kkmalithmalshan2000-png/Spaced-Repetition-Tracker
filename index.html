@@ -46,6 +46,37 @@ html[data-theme="dark"] .rating-btn[data-rating="3"][aria-pressed=true],html[dat
 html[data-theme="dark"] .rating-btn[data-rating="4"][aria-pressed=true],html[data-theme="dark"] .rating-btn[data-rating="4"]:hover{background:#1f3a3a}
 html[data-theme="dark"] .rating-btn[data-rating="5"][aria-pressed=true],html[data-theme="dark"] .rating-btn[data-rating="5"]:hover{background:#302b50}
 
+
+/* Study Hub component system */
+.hub-card{background:var(--surface);border:1px solid #e8eaf4;border-radius:22px;box-shadow:var(--shadow);margin:0 0 16px;overflow:visible;min-width:0}
+.hub-card-head{padding:19px 21px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hub-card-title{font-size:14px;font-weight:800;letter-spacing:-.025em}
+.hub-card-description,.hub-muted{font-size:10px;color:var(--muted);line-height:1.55}
+.hub-card-body{padding:17px 21px 21px;min-width:0}
+.hub-inline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hub-score{font-size:27px;font-weight:850;letter-spacing:-.055em;line-height:1.2}
+.hub-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:99px;background:#efedff;color:#6657d8;font-size:9px;font-weight:800}
+.hub-badge.good{background:var(--teal-soft);color:#278a78}.hub-badge.warn{background:var(--amber-soft);color:#a8792b}
+.hub-meter{height:8px;background:#eeeff7;border-radius:99px;overflow:hidden;margin:13px 0}.hub-meter>span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8273ef,#65a9f6);transition:width .25s}
+.hub-workload-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;background:#f8f8fe;border-radius:15px}
+.hub-workload-summary>div{flex:1;min-width:140px}.hub-workload-summary strong,.hub-workload-summary span{display:block}.hub-workload-summary strong{font-size:11px}.hub-workload-summary span{font-size:9px;color:var(--muted);margin-top:3px}
+.hub-list{display:grid;gap:8px}.hub-task,.hub-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid #eceef6;background:#fff;border-radius:15px;min-width:0}
+.hub-task>div,.hub-row>div{min-width:0}.hub-task-name,.hub-row-title{font-size:11px;font-weight:750;overflow-wrap:anywhere}.hub-task-meta,.hub-row-meta{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.45}
+.hub-note{padding:12px 14px;border:1px solid #e8e5ff;background:#f7f5ff;color:#77709f;border-radius:15px;font-size:10px;line-height:1.55;margin-top:12px}
+.hub-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hub-field{min-width:0}.hub-field label{display:block;font-size:10px;font-weight:750;color:#656a85;margin:0 0 6px}.hub-input,.hub-field select,.hub-field input,.hub-field textarea{width:100%;min-width:0;border:1px solid #e2e5f1;border-radius:11px;padding:10px 11px;background:#fff;color:var(--text);font-size:11px}
+.hub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.hub-actions.full{grid-column:1/-1}
+.hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hub-table-wrap{overflow-x:auto;max-width:100%}.hub-table{width:100%;border-collapse:collapse;font-size:10px}.hub-table th,.hub-table td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}
+.focus-timer-card{display:grid;grid-template-columns:minmax(0,1fr) 170px;align-items:center;gap:20px;background:linear-gradient(115deg,#eeebff 0%,#f6f4ff 50%,#eaf4ff 100%);border:1px solid #fff;border-radius:25px;padding:22px;margin:0 0 16px;box-shadow:var(--shadow)}
+.focus-timer-card h3{margin:0;font-size:17px;letter-spacing:-.04em}.focus-timer-card p{font-size:10px;color:#7a7f9a;margin:6px 0 12px}.focus-timer-clock{font-size:32px;font-weight:850;letter-spacing:-.055em;color:#5147b9;font-variant-numeric:tabular-nums;line-height:1.1}
+.focus-timer-ring{width:150px;height:150px;display:grid;place-items:center;position:relative;margin:auto}.focus-timer-ring svg{width:150px;height:150px;transform:rotate(-90deg)}.focus-timer-ring circle{fill:none;stroke-width:8}.focus-timer-ring .ring-track{stroke:#dcd9f7}.focus-timer-ring .ring-progress{stroke:#7567e8;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:188.5;transition:stroke-dashoffset .8s linear}.focus-timer-ring .ring-label{position:absolute;text-align:center}.focus-timer-ring .ring-label span{display:block;font-size:9px;color:#8b8eaa;margin-top:4px}
+html[data-theme="dark"] .hub-card{background:var(--surface);border-color:#343952}
+html[data-theme="dark"] .hub-task,html[data-theme="dark"] .hub-row,html[data-theme="dark"] .hub-workload-summary,html[data-theme="dark"] .hub-input,html[data-theme="dark"] .hub-field select,html[data-theme="dark"] .hub-field input,html[data-theme="dark"] .hub-field textarea{background:#252a42;border-color:#3a405c;color:#e5e7f8}
+html[data-theme="dark"] .hub-note{background:#292642;border-color:#46406b;color:#c2bce8}
+html[data-theme="dark"] .focus-timer-card{background:linear-gradient(115deg,#302b50 0%,#292b48 50%,#20364d 100%);border-color:#3b3b5b}
+html[data-theme="dark"] .focus-timer-card h3,html[data-theme="dark"] .focus-timer-clock{color:#e1dcff}
+html[data-theme="dark"] .focus-timer-ring .ring-track{stroke:#464064}
+@media(max-width:720px){.hub-form,.hub-grid{grid-template-columns:1fr}.focus-timer-card{grid-template-columns:minmax(0,1fr) 116px;padding:17px;gap:10px}.focus-timer-ring,.focus-timer-ring svg{width:112px;height:112px}.focus-timer-clock{font-size:27px}.hub-card-head{padding:17px 17px 0}.hub-card-body{padding:14px 17px 17px}.hub-task,.hub-row{align-items:flex-start}.hub-workload-summary{align-items:flex-start}}
+
 </style>
 
   <!-- Vercel Web Analytics -->
@@ -935,7 +966,7 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
       if(key==='home'){document.querySelector('.tab[data-view="overview"]')?.click();}
       if(key==='schedule'){$('homeOpenCalendar')?.click();}
       if(key==='hub'){document.querySelector('.tab[data-view="studyhub"]')?.click();}
-      if(key==='quizzes'){document.querySelector('.tab[data-view="topics"]')?.click();$('startReviewBtn')?.scrollIntoView({behavior:'smooth',block:'start'});}
+      if(key==='quizzes'){document.querySelector('.tab[data-view="overview"]')?.click();setTimeout(()=>$('startReviewBtn')?.click(),80);}
       if(key==='settings'){document.querySelector('.tab[data-view="setup"]')?.click();}
       syncDock();
     }
@@ -947,6 +978,37 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
   const originalRender=window.renderOverviewAnalytics;
   try{if(typeof renderOverviewAnalytics==='function'){const original=renderOverviewAnalytics;renderOverviewAnalytics=function(){original();renderTrend();};}}catch(_){}
   try{if(typeof renderAll==='function'){const originalAll=renderAll;renderAll=function(){originalAll();renderDateStrip();renderTrend();syncDock();};}}catch(_){}
+
+  try{
+    if(typeof renderPlanner==='function'){
+      const basePlanner=renderPlanner;
+      renderPlanner=function(){
+        let html=basePlanner();
+        html=html.replaceAll('id="hubFocusClock"','id="hubFocusInlineClock"');
+        const running=typeof focusStart!=='undefined'&&focusStart;
+        const elapsed=running?Math.max(0,Date.now()-focusStart):0;
+        const seconds=Math.floor(elapsed/1000);
+        const clock=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+        const target=(typeof fsState!=='undefined'&&fsState.settings&&fsState.settings.sessionMinutes)||25;
+        const progress=Math.min(1,elapsed/(target*60000));
+        const timer='<section class="focus-timer-card"><div><p class="eyebrow">Focus session</p><h3>Protect your attention.</h3><p>Start a focused block. Nexus keeps the start time so your session can recover after reopening the app.</p><div class="focus-timer-clock" id="nexusFocusDigits">'+clock+'</div><div class="hub-actions"><button class="btn btn-primary" data-hub-action="focus-start" '+(running?'disabled':'')+'>Start focus session</button><button class="btn" data-hub-action="focus-stop" '+(!running?'disabled':'')+'>Stop & log</button></div></div><div class="focus-timer-ring"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="ring-track" cx="36" cy="36" r="30"/><circle class="ring-progress" id="nexusFocusArc" cx="36" cy="36" r="30" style="stroke-dashoffset:'+(188.5-188.5*progress)+'"/></svg><div class="ring-label"><strong id="nexusFocusRingValue">'+Math.round(progress*100)+'%</strong><span>of focus block</span></div></div></section>';
+        return timer+html;
+      };
+    }
+  }catch(_){}
+  try{
+    if(typeof refreshLiveFocusUi==='function'){
+      const baseRefresh=refreshLiveFocusUi;
+      refreshLiveFocusUi=function(){
+        baseRefresh();
+        const el=document.getElementById('nexusFocusDigits');
+        if(el&&typeof focusStart!=='undefined'&&focusStart){const secs=Math.floor(Math.max(0,Date.now()-focusStart)/1000);el.textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');}
+        const arc=document.getElementById('nexusFocusArc'),label=document.getElementById('nexusFocusRingValue');
+        if(arc&&typeof focusStart!=='undefined'&&focusStart){const target=(typeof fsState!=='undefined'&&fsState.settings&&fsState.settings.sessionMinutes)||25;const p=Math.min(1,Math.max(0,Date.now()-focusStart)/(target*60000));arc.style.strokeDashoffset=String(188.5-188.5*p);if(label)label.textContent=Math.round(p*100)+'%';}
+      };
+    }
+  }catch(_){}
+
   renderDateStrip();renderTrend();syncDock();
   const welcome=$('welcomeTitle');if(welcome){const hour=new Date().getHours();welcome.innerHTML=(hour<12?'Good morning.':hour<18?'Good afternoon.':'Good evening.')+'<br>Let’s build lasting recall.';}
 })();
