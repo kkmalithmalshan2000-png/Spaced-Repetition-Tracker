@@ -672,7 +672,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="section-head"><div><h2>Review history</h2><p>Each review stores the rating, date, assigned interval, and optional note.</p></div><button class="btn" id="historyCsvBtn">⇩ Export CSV</button></div>
       <div class="history-insights panel" id="historyInsights" aria-live="polite"></div>
       <div class="toolbar"><button class="btn btn-sm filters-toggle" id="toggleHistoryFilters" type="button">▾ Filters</button></div><div class="toolbar" id="historyFiltersBar" style="display:none"><input class="field search" id="historySearch" type="search" placeholder="Search history…" aria-label="Search history"><select class="field" id="historyStreamFilter" aria-label="Filter history by stream"><option value="ALL">All streams</option></select><select class="field" id="historySubjectFilter" aria-label="Filter history by subject"><option value="ALL">All subjects</option></select></div>
-      <div class="history-list" id="historyList"></div><div class="count-label" id="historyCountLabel"></div>
+      <div class="history-list" id="historyList"></div><div class="count-label" id="historyCountLabel"></div><div class="toolbar" id="historyPagination" style="justify-content:center;margin-top:12px"><button class="btn btn-sm" id="historyShowMoreBtn" type="button">Show more history</button></div>
       <div class="toolbar" style="margin-top:12px"><button class="btn btn-danger" id="clearHistoryBtn">Clear history</button></div>
     </section>
 
@@ -799,7 +799,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     'Economics':'ආර්ථික විද්‍යාව','ECON':'ආර්ථික විද්‍යාව'
   };
   const RATING_LABELS = {1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'};
-  let state, undoState=null, undoTimer=null, toastTimer=null, editTopicId=null, reviewTopicId=null, selectedReviewRating=null, editStreamId=null, editSubjectId=null, editExamId=null, installPrompt=null;
+  let state, undoState=null, undoTimer=null, toastTimer=null, editTopicId=null, reviewTopicId=null, selectedReviewRating=null, editStreamId=null, editSubjectId=null, editExamId=null, installPrompt=null, historyVisibleLimit=100;
   const $ = id => document.getElementById(id);
   const clone = obj => JSON.parse(JSON.stringify(obj));
   const makeId = prefix => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
@@ -1002,9 +1002,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     $('topicCountLabel').textContent=`Showing ${items.length} of ${activeTopics().length} active topics`;
     $('topicGrid').innerHTML=items.length?items.map(t=>{const d=subjectDisplay(t),s=status(t);return `<article class="topic-card"><div class="topic-card-top"><div style="min-width:0"><div class="topic-name">${esc(t.name)}</div><div class="topic-sub">${esc(d.stream)} · ${esc(d.subject)}</div></div><span class="pill ${s}">${statusText(s)}</span></div>${t.notes?`<div class="topic-note">${esc(t.notes)}</div>`:''}<div class="topic-details"><span>Last: ${fmtDate(t.lastReviewed)}</span><span>Next: ${fmtDate(t.dueDate)}</span><span>Interval: ${t.intervalDays||'—'}d</span><span>Reviews: ${t.reviewCount}</span></div><div class="topic-actions"><button class="btn btn-sm btn-primary" data-action="review" data-id="${esc(t.id)}">Review</button><button class="btn btn-sm" data-action="edit-topic" data-id="${esc(t.id)}">Edit</button><span class="spacer"></span><button class="btn btn-sm btn-danger" data-action="delete-topic" data-id="${esc(t.id)}">Delete</button></div></article>`;}).join(''):`<div class="panel" style="grid-column:1/-1"><div class="empty"><strong>No matching topics</strong>Change the filters or add a topic.</div></div>`;
   }
-  function renderHistory(){const q=$('historySearch').value.trim().toLocaleLowerCase(),streamId=$('historyStreamFilter').value,subjectId=$('historySubjectFilter').value;const filtered=state.history.filter(h=>{const subject=state.subjects.find(s=>s.id===h.subjectId)||state.subjects.find(s=>s.name===h.subjectName),stream=state.streams.find(s=>s.id===h.streamId)||state.streams.find(s=>s.name===h.streamName)||streamFor(subject);return(!q||[h.topicName,h.subjectName,h.streamName,h.note].some(x=>String(x||'').toLocaleLowerCase().includes(q)))&&(streamId==='ALL'||stream?.id===streamId)&&(subjectId==='ALL'||subject?.id===subjectId);}).slice().sort((a,b)=>b.reviewedAt.localeCompare(a.reviewedAt)||String(b.id).localeCompare(String(a.id)));
-    $('historyList').innerHTML=filtered.length?filtered.map(h=>`<article class="history-entry"><div><h3>${esc(h.topicName)}</h3><p>${esc(h.streamName)} · ${esc(h.subjectName)} · ${fmtDate(h.reviewedAt)}</p><p>Next: ${fmtDate(h.dueDate)} · ${h.intervalDays} day interval</p>${h.note?`<div class="history-note">${esc(h.note)}</div>`:''}<div class="history-actions"><button class="btn btn-sm btn-danger" data-action="delete-history" data-id="${esc(h.id)}">Delete entry</button></div></div><div class="history-score">${h.rating}/5<br><span class="muted small">${esc(RATING_LABELS[h.rating])}</span></div></article>`).join(''):`<div class="panel"><div class="empty"><strong>No review records found</strong>Completed reviews will appear here.</div></div>`;
-    $('historyCountLabel').textContent=`Showing ${filtered.length} of ${state.history.length} records. Deleting a history entry does not change the topic schedule.`;
+  function renderHistory(){const q=$('historySearch').value.trim().toLocaleLowerCase(),streamId=$('historyStreamFilter').value,subjectId=$('historySubjectFilter').value;const filtered=state.history.filter(h=>{const subject=state.subjects.find(s=>s.id===h.subjectId)||state.subjects.find(s=>s.name===h.subjectName),stream=state.streams.find(s=>s.id===h.streamId)||state.streams.find(s=>s.name===h.streamName)||streamFor(subject);return(!q||[h.topicName,h.subjectName,h.streamName,h.note].some(x=>String(x||'').toLocaleLowerCase().includes(q)))&&(streamId==='ALL'||stream?.id===streamId)&&(subjectId==='ALL'||subject?.id===subjectId);}).sort((a,b)=>b.reviewedAt.localeCompare(a.reviewedAt)||String(b.id).localeCompare(String(a.id)));
+    const visible=filtered.slice(0,historyVisibleLimit);
+    $('historyList').innerHTML=visible.length?visible.map(h=>`<article class="history-entry"><div><h3>${esc(h.topicName)}</h3><p>${esc(h.streamName)} · ${esc(h.subjectName)} · ${fmtDate(h.reviewedAt)}</p><p>Next: ${fmtDate(h.dueDate)} · ${h.intervalDays} day interval</p>${h.note?`<div class="history-note">${esc(h.note)}</div>`:''}<div class="history-actions"><button class="btn btn-sm btn-danger" data-action="delete-history" data-id="${esc(h.id)}">Delete entry</button></div></div><div class="history-score">${h.rating}/5<br><span class="muted small">${esc(RATING_LABELS[h.rating])}</span></div></article>`).join(''):`<div class="panel"><div class="empty"><strong>No review records found</strong>Completed reviews will appear here.</div></div>`;
+    $('historyCountLabel').textContent=`Showing ${visible.length} of ${filtered.length} matching records (${state.history.length} total). Deleting a history entry does not change the topic schedule.`;
+    $('historyPagination').hidden=visible.length>=filtered.length;
     renderHistoryInsights();
   }
   function renderSetup(){refreshFilterOptions();$('themeSelect').value=state.settings.theme;const streamsMarkup=state.streams.map(st=>{const subjects=state.subjects.filter(s=>s.streamId===st.id);return `<div class="entity"><div><strong>${esc(st.name)}</strong><small>${subjects.length} subject${subjects.length===1?'':'s'}</small>${subjects.map(s=>`<div class="entity" style="padding:8px 0 0 10px"><div><strong style="font-size:12px">${esc(s.name)}</strong><small>${activeTopics().filter(t=>t.subjectId===s.id).length} active topics</small></div><div class="inline-actions"><button class="btn btn-sm" data-action="edit-subject" data-id="${esc(s.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-subject" data-id="${esc(s.id)}" ${state.topics.some(t=>t.subjectId===s.id)?'':''}>Delete</button></div></div>`).join('')}</div><div class="inline-actions"><button class="btn btn-sm" data-action="add-subject-to-stream" data-id="${esc(st.id)}">＋ Subject</button><button class="btn btn-sm" data-action="edit-stream" data-id="${esc(st.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-stream" data-id="${esc(st.id)}" ${subjects.length?'':''}>Delete</button></div></div>`;}).join('');$('structureList').innerHTML=streamsMarkup||'<div class="empty">No streams created.</div>';
@@ -1112,8 +1114,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   let topicSearchTimer=0,historySearchTimer=0,exploreSearchTimer=0;
   $('topicSearch').addEventListener('input',()=>{clearTimeout(topicSearchTimer);topicSearchTimer=setTimeout(renderTopics,110);});
   ['topicStreamFilter','topicSubjectFilter','topicStatusFilter','topicSort'].forEach(id=>$(id).addEventListener('change',renderTopics));
-  $('historySearch').addEventListener('input',()=>{clearTimeout(historySearchTimer);historySearchTimer=setTimeout(renderHistory,110);});
-  ['historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener('change',renderHistory));
+  $('historySearch').addEventListener('input',()=>{clearTimeout(historySearchTimer);historyVisibleLimit=100;historySearchTimer=setTimeout(renderHistory,110);});
+  ['historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener('change',()=>{historyVisibleLimit=100;renderHistory();}));
+  $('historyShowMoreBtn').addEventListener('click',()=>{historyVisibleLimit+=100;renderHistory();});
   $('exploreSearch').addEventListener('input',()=>{clearTimeout(exploreSearchTimer);exploreSearchTimer=setTimeout(renderExplore,100);});
   $('exploreGrid').addEventListener('click',e=>{const b=e.target.closest('[data-explore-action]');if(!b)return;if(b.dataset.exploreAction==='install-course')installCurriculum(null);if(b.dataset.exploreAction==='install-subject')installCurriculum(b.dataset.prefix);});
   $('topicStreamInput').addEventListener('change',refreshTopicSubjectInput);
@@ -1611,5 +1614,15 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 })();
 </script>
 
+<style id="nexus-theme-surface-guard">
+/* Keep common interactive surfaces readable across light, dark, and system modes. */
+:root{--nexus-overlay:var(--surface);--nexus-overlay-text:var(--text);--nexus-overlay-border:var(--border)}
+.field,.control,.hub-input,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),select,textarea{color:var(--text);border-color:var(--border)}
+.dialog-head,.modal-head,.popover,.dropdown-menu{color:var(--text);border-color:var(--border)}
+dialog{color:var(--text);background:var(--surface);border-color:var(--border)}
+dialog::backdrop{background:rgba(0,0,0,.42)}
+:root[data-theme="dark"] dialog::backdrop{background:rgba(0,0,0,.7)}
+@media(prefers-color-scheme:dark){:root[data-theme="system"] dialog::backdrop{background:rgba(0,0,0,.7)}}
+</style>
 </body>
 </html>
