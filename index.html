@@ -587,6 +587,28 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 <script defer src="./fsrs-bundle.js"></script>
+<style id="nexus-analytics-icons-and-light-timer-fix">
+/* Premium, purpose-specific analytics glyphs */
+.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
+.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
+.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
+.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
+[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
+[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
+[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
+[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
+[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
+/* Force timer digits to remain legible against both theme surfaces. */
+#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
+#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
+#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
+#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
+[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
+[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
+[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
+</style>
 </head>
 <body>
   <main class="app">
@@ -1413,113 +1435,88 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 
 <dialog id="accountChoiceDialog" class="account-choice-dialog" aria-labelledby="accountChoiceTitle"><div class="dialog-head"><div class="choice-kicker">IMPORTANT · DATA CHOICE</div><h2 id="accountChoiceTitle">What should happen to your offline data?</h2><p>You have study data on this device. Choose how to handle it for the signed-in account before syncing starts.</p></div><div class="dialog-body"><div class="choice-option"><strong>Merge offline data</strong><p>Keep your offline topics, subjects, reviews, and exams, and combine them with this account’s cloud data. Matching records use the offline copy.</p><button class="btn btn-primary" data-account-choice="merge" type="button">Keep & merge offline data</button></div><div class="choice-option"><strong>Replace offline data with cloud data</strong><p>Discard this device’s current study data and load only the signed-in account’s cloud backup. If there is no backup, start with an empty workspace.</p><button class="btn btn-danger" data-account-choice="replace" type="button">Use cloud data on this device</button></div><div class="choice-option danger-zone"><strong>Replace cloud data with offline data</strong><p>Upload this device’s workspace as the account’s new cloud backup, overwriting the existing copy.</p><button class="btn btn-danger" data-account-choice="replace-cloud" type="button">Overwrite cloud with offline data…</button></div><p class="choice-footnote">All choices apply only to the account just signed into. Data from another account is never merged. Downloaded JSON backups remain untouched.</p></div></dialog>
 <dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog>
-<script>
-/* Stable overflow menu: render in the browser top layer and outside all app stacking contexts. */
-(()=>{
- const init=()=>{
-  const details=document.getElementById('moreMenu');
-  const summary=details?.querySelector('summary');
-  const pop=details?.querySelector('.menu-pop');
-  if(!details||!summary||!pop||details.dataset.stableMenuFix==='2') return;
-  details.dataset.stableMenuFix='2';
+<script id="stable-overflow-menu-fix">
+(() => {
+  const init = () => {
+    const details = document.getElementById('moreMenu');
+    const summary = details && details.querySelector('summary');
+    const pop = details && details.querySelector('.menu-pop');
+    if (!details || !summary || !pop || details.dataset.menuFix === '3') return;
+    details.dataset.menuFix = '3';
 
-  // Move the menu out of transformed/overflow-clipped headers and cards.
-  pop.setAttribute('popover','manual');
-  pop.style.position='fixed';
-  pop.style.inset='auto';
-  pop.style.margin='0';
-  pop.style.zIndex='2147483647';
-  document.body.appendChild(pop);
+    // Portal the menu to body so card/header stacking contexts cannot cover it.
+    document.body.appendChild(pop);
+    Object.assign(pop.style, {
+      position: 'fixed', inset: 'auto', margin: '0',
+      zIndex: '2147483647', display: 'none',
+      maxWidth: 'calc(100vw - 24px)', maxHeight: 'calc(100vh - 24px)',
+      overflowY: 'auto', overscrollBehavior: 'contain'
+    });
 
-  const isOpen=()=>pop.matches(':popover-open');
-  const place=()=>{
-   if(!isOpen()) return;
-   const r=summary.getBoundingClientRect();
-   const vw=document.documentElement.clientWidth;
-   const vv=window.visualViewport;
-   const vh=vv?.height||window.innerHeight;
-   const offsetTop=vv?.offsetTop||0;
-   const margin=12;
-   const width=Math.min(Math.max(pop.scrollWidth,220),Math.min(300,vw-margin*2));
-   pop.style.width=width+'px';
-   pop.style.maxWidth=(vw-margin*2)+'px';
-   pop.style.maxHeight=Math.max(120,vh-margin*2)+'px';
-   pop.style.overflowY='auto';
-   // Measure after width constraints are applied.
-   const height=Math.min(pop.scrollHeight,vh-margin*2);
-   const left=Math.max(margin,Math.min(r.right-width,vw-width-margin));
-   let top=r.bottom+8;
-   if(top+height>vh-margin) top=r.top-height-8;
-   top=Math.max(margin,Math.min(top,vh-height-margin));
-   pop.style.left=left+'px';
-   pop.style.top=(top+offsetTop)+'px';
-   pop.style.right='auto';
+    const isOpen = () => pop.style.display !== 'none';
+    const place = () => {
+      if (!isOpen()) return;
+      const r = summary.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const offsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+      const margin = 12;
+      const width = Math.min(260, vw - margin * 2);
+      pop.style.width = width + 'px';
+      pop.style.maxHeight = Math.max(120, vh - margin * 2) + 'px';
+      const height = Math.min(pop.scrollHeight, vh - margin * 2);
+      const left = Math.max(margin, Math.min(r.right - width, vw - width - margin));
+      let top = r.bottom + 8;
+      if (top + height > vh - margin) top = r.top - height - 8;
+      top = Math.max(margin, Math.min(top, vh - height - margin));
+      pop.style.left = left + 'px';
+      pop.style.top = (top + offsetTop) + 'px';
+    };
+    const close = () => {
+      pop.style.display = 'none';
+      details.open = false;
+      summary.setAttribute('aria-expanded', 'false');
+    };
+    const open = () => {
+      details.open = true;
+      pop.style.display = 'block';
+      summary.setAttribute('aria-expanded', 'true');
+      place();
+      requestAnimationFrame(place);
+    };
+
+    summary.setAttribute('aria-haspopup', 'true');
+    summary.setAttribute('aria-expanded', 'false');
+    summary.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      isOpen() ? close() : open();
+    });
+    pop.addEventListener('click', event => {
+      event.stopPropagation();
+      if (event.target.closest('button, label')) close();
+    });
+    document.addEventListener('click', event => {
+      if (isOpen() && !pop.contains(event.target) && !summary.contains(event.target)) close();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && isOpen()) {
+        close();
+        summary.focus();
+      }
+    });
+    const reposition = () => { if (isOpen()) place(); };
+    window.addEventListener('resize', reposition, {passive:true});
+    window.addEventListener('scroll', reposition, {passive:true, capture:true});
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', reposition, {passive:true});
+      window.visualViewport.addEventListener('scroll', reposition, {passive:true});
+    }
   };
-  const close=()=>{
-   if(isOpen()) pop.hidePopover();
-   summary.setAttribute('aria-expanded','false');
-  };
-  const open=()=>{
-   try{pop.showPopover();}catch(_){return;}
-   summary.setAttribute('aria-expanded','true');
-   requestAnimationFrame(()=>{place();requestAnimationFrame(place);});
-  };
-  summary.setAttribute('aria-haspopup','menu');
-  summary.setAttribute('aria-expanded','false');
-  summary.addEventListener('click',e=>{
-   e.preventDefault();
-   e.stopPropagation();
-   if(isOpen()) close(); else open();
-  });
-  // Do not let clicks inside the menu be interpreted as outside clicks.
-  pop.addEventListener('click',e=>{
-   e.stopPropagation();
-   if(e.target.closest('button,label')) close();
-  });
-  document.addEventListener('click',e=>{
-   if(isOpen()&&!pop.contains(e.target)&&!summary.contains(e.target)) close();
-  });
-  document.addEventListener('keydown',e=>{
-   if(e.key==='Escape'&&isOpen()){close();summary.focus();}
-  });
-  const reposition=()=>{if(isOpen()) place();};
-  window.addEventListener('resize',reposition,{passive:true});
-  window.addEventListener('scroll',reposition,{passive:true,capture:true});
-  window.visualViewport?.addEventListener('resize',reposition,{passive:true});
-  window.visualViewport?.addEventListener('scroll',reposition,{passive:true});
- };
- if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+  else init();
 })();
 </script>
+
 </body>
 </html>
-<style id="nexus-analytics-icons-and-light-timer-fix">
-/* Premium, purpose-specific analytics glyphs */
-.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
-.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
-.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
-.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
-.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
-[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
-[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
-[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
-[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
-[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
-/* Force timer digits to remain legible against both theme surfaces. */
-#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
-#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
-#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
-#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
-[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
-[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
-[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
-@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
-
-/* Fix the header overflow menu stacking/clipping on desktop and mobile. */
-.topbar{position:relative;z-index:100000;overflow:visible!important;isolation:isolate}
-.header-actions{position:relative;z-index:100001;overflow:visible!important}
-.more-menu{position:relative;z-index:100002!important;overflow:visible!important}
-.more-menu[open]{z-index:100003!important}
-.menu-pop{position:fixed!important;z-index:2147483000!important;right:auto!important;max-width:min(300px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;isolation:isolate;opacity:1!important;transform:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
-@media(max-width:600px){.menu-pop{width:min(260px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px);padding:8px!important}.menu-pop button{min-height:44px;white-space:normal}}
-</style>
