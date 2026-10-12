@@ -619,7 +619,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
         <button class="btn btn-icon" id="themeBtn" aria-label="Change theme" title="Change theme">◐</button>
         <button class="btn" id="installBtn" type="button" title="Install Nexus on this device">⇩ Install</button>
         <button class="btn" id="helpBtn" type="button">? How to use</button>
-        <details class="more-menu" id="moreMenu"><summary class="btn btn-icon" aria-label="More options" title="More options">⋯</summary><div class="menu-pop"><button type="button" id="menuBackup">↓ Download backup</button><button type="button" id="menuRestore">↑ Import backup</button><button type="button" id="menuHistoryCsv">⇩ Export history CSV</button><button type="button" id="menuTopicsCsv">⇩ Export topics CSV</button><button type="button" id="menuSettings">⚙ Settings & setup</button></div></details>
+        <div class="more-menu" id="moreMenu"><button type="button" class="btn btn-icon" aria-label="More options" title="More options">⋯</button><div class="menu-pop"><button type="button" id="menuBackup">↓ Download backup</button><button type="button" id="menuRestore">↑ Import backup</button><button type="button" id="menuHistoryCsv">⇩ Export history CSV</button><button type="button" id="menuTopicsCsv">⇩ Export topics CSV</button><button type="button" id="menuSettings">⚙ Settings & setup</button></div></div>
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
     </header>
@@ -1439,7 +1439,7 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 (() => {
   const init = () => {
     const details = document.getElementById('moreMenu');
-    const summary = details && details.querySelector('summary');
+    const summary = details && details.querySelector('button[aria-label="More options"]');
     const pop = details && details.querySelector('.menu-pop');
     if (!details || !summary || !pop || details.dataset.menuFix === '3') return;
     details.dataset.menuFix = '3';
