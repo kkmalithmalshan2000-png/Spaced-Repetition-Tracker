@@ -1065,8 +1065,11 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   $('historyList').addEventListener('click',e=>{const b=e.target.closest('button[data-action="delete-history"]');if(!b)return;const id=b.dataset.id;const entry=state.history.find(h=>h.id===id);if(!entry||!confirm('Delete this history entry? The topic schedule will not change.'))return;startUndo('History entry deleted.');state.history=state.history.filter(h=>h.id!==id);save();renderHistory();notify('History entry deleted.',true);});
   $('structureList').addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const {action,id}=b.dataset;if(action==='edit-stream')openStream(id);if(action==='delete-stream')deleteStream(id);if(action==='add-subject-to-stream')openSubject(null,id);if(action==='edit-subject')openSubject(id);if(action==='delete-subject')deleteSubject(id);});
   $('examList').addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;if(b.dataset.action==='edit-exam')openExam(b.dataset.id);if(b.dataset.action==='delete-exam')deleteExam(b.dataset.id);});
-  ['topicSearch','topicStreamFilter','topicSubjectFilter','topicStatusFilter','topicSort'].forEach(id=>$(id).addEventListener(id==='topicSearch'?'input':'change',renderTopics));
-  ['historySearch','historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener(id==='historySearch'?'input':'change',renderHistory));
+  let topicSearchTimer=null,historySearchTimer=null;
+  $('topicSearch').addEventListener('input',()=>{clearTimeout(topicSearchTimer);topicSearchTimer=setTimeout(renderTopics,100);});
+  ['topicStreamFilter','topicSubjectFilter','topicStatusFilter','topicSort'].forEach(id=>$(id).addEventListener('change',renderTopics));
+  $('historySearch').addEventListener('input',()=>{clearTimeout(historySearchTimer);historySearchTimer=setTimeout(renderHistory,100);});
+  ['historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener('change',renderHistory));
   $('topicStreamInput').addEventListener('change',refreshTopicSubjectInput);
   $('topicForm').addEventListener('submit',saveTopic);$('streamForm').addEventListener('submit',saveStream);$('subjectForm').addEventListener('submit',saveSubject);$('examForm').addEventListener('submit',saveExam);
   $('addTopicBtn').addEventListener('click',()=>openTopic());$('addStreamBtn').addEventListener('click',()=>openStream());$('addSubjectBtn').addEventListener('click',()=>openSubject());$('addExamBtn').addEventListener('click',()=>openExam());
