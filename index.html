@@ -609,6 +609,20 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
 [data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
 @media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
 </style>
+<style id="nexus-explore-performance-polish">
+/* Additive polish: keep the existing design language and use the current theme tokens. */
+.explore-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:clamp(20px,3vw,30px);margin-bottom:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface));border:1px solid var(--border);overflow:hidden}
+.explore-hero-copy{max-width:680px}.explore-eyebrow,.explore-course-kicker{font-size:10px;font-weight:850;letter-spacing:.13em;color:var(--accent);text-transform:uppercase}.explore-hero h3{font-size:clamp(21px,3vw,28px);letter-spacing:-.035em;margin:8px 0}.explore-hero p,.explore-course-top p{color:var(--muted);margin:0;line-height:1.6}
+.explore-hero-stat{display:grid;place-items:center;flex:none;min-width:100px;padding:16px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--surface) 78%,transparent);box-shadow:var(--shadow)}.explore-hero-stat strong{font-size:26px;letter-spacing:-.04em}.explore-hero-stat span{font-size:11px;color:var(--muted)}
+.explore-toolbar{align-items:center;gap:12px}.explore-toolbar .search{flex:1;min-width:180px}.explore-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.explore-course-card{padding:clamp(16px,2.5vw,24px);background:var(--surface);border:1px solid var(--border);overflow:visible}.explore-course-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.explore-course-top h3{margin:6px 0;font-size:clamp(19px,2.5vw,24px);letter-spacing:-.03em}.explore-count-pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);font-size:11px;color:var(--muted);white-space:nowrap}.explore-course-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0;padding-bottom:18px;border-bottom:1px solid var(--border)}.explore-subject-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.explore-subject-card{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:15px;border:1px solid var(--border);border-radius:14px;background:color-mix(in srgb,var(--surface2) 45%,var(--surface));transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.explore-subject-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 38%,var(--border));box-shadow:var(--shadow)}.explore-subject-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;width:100%}.explore-subject-head h4{margin:0;font-size:14px;line-height:1.45}.explore-subject-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.explore-topic-details{width:100%;color:var(--muted);font-size:12px}.explore-topic-details summary{cursor:pointer;color:var(--text);font-weight:650;padding:4px 0}.explore-topic-details ol{padding-left:20px;max-height:220px;overflow:auto;line-height:1.65}.explore-subject-card>.btn{margin-top:auto}.explore-course-card button,.explore-subject-card button{max-width:100%}
+.btn,.tab,.field,summary{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.menu-pop{color:var(--text);background:var(--surface)!important;border-color:var(--border)!important;box-shadow:0 20px 60px rgba(0,0,0,.22)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;isolation:isolate;pointer-events:auto}
+.menu-pop button,.menu-pop label{color:var(--text)!important}
+@media(max-width:850px){.explore-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.explore-hero{align-items:flex-start;gap:12px}.explore-hero-stat{min-width:76px;padding:11px}.explore-hero-stat strong{font-size:22px}.explore-subject-grid{grid-template-columns:minmax(0,1fr)}.explore-course-top{flex-direction:column}.explore-course-actions{align-items:flex-start;flex-direction:column}.explore-subject-head{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.explore-subject-card,.btn,.tab,.field,summary{transition:none!important}.explore-subject-card:hover{transform:none}}
+</style>
 </head>
 <body>
   <main class="app">
@@ -623,7 +637,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
     </header>
-    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌂</span>Home</button><button class="tab" data-view="studyhub" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Study Hub</button><button class="tab" data-view="topics" aria-selected="false"><span class="tab-icon" aria-hidden="true">▦</span>Library</button><button class="tab" data-view="history" aria-selected="false"><span class="tab-icon" aria-hidden="true">◷</span>Activity</button><button class="tab" data-view="setup" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span>Settings</button><button class="tab" data-view="account" aria-selected="false"><span class="tab-icon" aria-hidden="true">☁</span>Sync & backup</button></nav>
+    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌂</span>Home</button><button class="tab" data-view="studyhub" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Study Hub</button><button class="tab" data-view="topics" aria-selected="false"><span class="tab-icon" aria-hidden="true">▦</span>Library</button><button class="tab" data-view="explore" aria-selected="false"><span class="tab-icon" aria-hidden="true">✧</span>Explore</button><button class="tab" data-view="history" aria-selected="false"><span class="tab-icon" aria-hidden="true">◷</span>Activity</button><button class="tab" data-view="setup" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span>Settings</button><button class="tab" data-view="account" aria-selected="false"><span class="tab-icon" aria-hidden="true">☁</span>Sync & backup</button></nav>
 
     <section class="view active" id="view-overview">
       <div class="section-head"><div><h2>Overview</h2><p>See what needs review and track progress across subjects.</p></div><button class="btn btn-primary" id="startReviewBtn">Start review →</button></div>
@@ -645,6 +659,13 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
       <div class="section-head"><div><h2>Topics</h2><p>Add, edit, filter, and review topics from any subject.</p></div><button class="btn btn-primary" id="addTopicBtn">＋ Add topic</button></div>
       <div class="toolbar"><button class="btn btn-sm filters-toggle" id="toggleTopicFilters" type="button">▾ Filters</button></div><div class="toolbar" id="topicFiltersBar" style="display:none"><div class="filters"><input class="field search" id="topicSearch" type="search" placeholder="Search topics, subjects, notes…" aria-label="Search topics"><select class="field" id="topicStreamFilter" aria-label="Filter by stream"><option value="ALL">All streams</option></select><select class="field" id="topicSubjectFilter" aria-label="Filter by subject"><option value="ALL">All subjects</option></select><select class="field" id="topicStatusFilter" aria-label="Filter by status"><option value="ALL">All statuses</option><option value="due-now">Due now + overdue</option><option value="overdue">Overdue</option><option value="due">Due today</option><option value="new">Not reviewed</option><option value="upcoming">Upcoming</option></select></div></div><div class="toolbar"><select class="field" id="topicSort" aria-label="Sort topics" style="max-width:260px"><option value="priority">Sort: review priority</option><option value="stream">Sort: stream and subject</option><option value="name">Sort: topic name (A-Z, natural 1-18)</option><option value="least">Sort: least reviewed first</option></select><span class="status-save" id="topicCountLabel" style="align-self:center"></span></div>
       <div class="topic-grid" id="topicGrid"></div>
+    </section>
+
+    <section class="view" id="view-explore">
+      <div class="section-head"><div><h2>Explore curriculum</h2><p>Browse ready-made study collections and install only the streams, subjects, or topics you want.</p></div></div>
+      <div class="explore-hero panel"><div class="explore-hero-copy"><span class="explore-eyebrow">CURRICULUM MARKETPLACE</span><h3>Build your own study workspace</h3><p>Starter curricula stay here until you choose to add them. Your personal review schedule and history remain yours.</p></div><div class="explore-hero-stat"><strong id="exploreCatalogCount">—</strong><span>starter topics</span></div></div>
+      <div class="toolbar explore-toolbar"><input class="field search" id="exploreSearch" type="search" placeholder="Search streams, subjects, topics…" aria-label="Search the curriculum marketplace"><span class="status-save" id="exploreResultCount"></span></div>
+      <div id="exploreGrid" class="explore-grid"></div>
     </section>
 
     <section class="view" id="view-history">
@@ -789,34 +810,39 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function dayDiff(from,to){if(!validDate(from)||!validDate(to))return 0;return Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000);}
   function fmtDate(s){if(!validDate(s))return '—';return new Date(s+'T12:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});}
   function baseState(){
-    const stream={id:'stream-commerce',name:'වාණිජ (Commerce)'};
-    const subjectDefs=[['sub-bs','ව්‍යාපාර අධ්‍යයනය'],['sub-acc','ගිණුම්කරණය'],['sub-econ','ආර්ථික විද්‍යාව']];
-    const subjects=subjectDefs.map(([id,name],i)=>({id,name,streamId:stream.id,order:i}));
-    const subjectByName=new Map(subjects.map(s=>[s.name,s.id]));
-    const counts={BS:0,ACC:0,ECON:0};
-    const topics=SEED.map(([prefix,subName,name])=>{
-      const n=++counts[prefix], sid=subjectByName.get(subName);
-      return {id:`seed-${prefix.toLowerCase()}-${String(n).padStart(2,'0')}`,subjectId:sid,name,notes:'',custom:false,createdAt:today(),lastReviewed:'',lastRating:null,dueDate:'',intervalDays:0,reviewCount:0,streak:0,lapses:0,archived:false};
-    });
-    return {schema:3,streams:[stream],subjects,topics,exams:[{id:'exam-al-2027',name:'GCE Advanced Level',date:'2027-08-01',type:'Academic exam',notes:''}],history:[],settings:{theme:'system',intervalCap:120}};
+    // New workspaces start empty. Starter curricula are installed explicitly from Explore.
+    return {schema:3,streams:[],subjects:[],topics:[],exams:[],history:[],settings:{theme:'system',intervalCap:120}};
   }
   function safeRead(key){try{const val=localStorage.getItem(key);return val?JSON.parse(val):null;}catch(e){console.warn('Could not read saved data',e);return null;}}
   function normalizeTopic(t, fallbackSub){return {id:String(t.id||makeId('topic')),subjectId:String(t.subjectId||fallbackSub),name:String(t.name||t.topic||'Untitled topic').slice(0,240),notes:String(t.notes||'').slice(0,1000),custom:t.custom!==false,createdAt:validDate(t.createdAt)?t.createdAt:today(),lastReviewed:validDate(t.lastReviewed)?t.lastReviewed:(validDate(t.lastDate)?t.lastDate:''),lastRating:Number(t.lastRating??t.score)>=1&&Number(t.lastRating??t.score)<=5?Number(t.lastRating??t.score):null,dueDate:validDate(t.dueDate)?t.dueDate:(validDate(t.nextDate)?t.nextDate:''),intervalDays:Math.max(0,Math.min(120,Number(t.intervalDays)||0)),reviewCount:Math.max(0,Math.min(100000,Number(t.reviewCount)||0)),streak:Math.max(0,Number(t.streak)||0),lapses:Math.max(0,Number(t.lapses??t.lapseCount)||0),archived:Boolean(t.archived)};}
   function migrateOld(raw){
     const fresh=baseState(); if(!raw||typeof raw!=='object')return fresh;
     const oldTopics=Array.isArray(raw.topics)?raw.topics:[]; const oldHistory=Array.isArray(raw.history)?raw.history:[];
-    const subjMap=new Map(fresh.subjects.map(s=>[s.name,s.id]));
     const oldNameToCurrent = name => LEGACY_SUBJECT_MAP[name]||name;
     const findSubject = name => fresh.subjects.find(s=>s.name===oldNameToCurrent(name));
+    const ensureSubject = name => {
+      const mapped=oldNameToCurrent(String(name||'Imported subject'));
+      let subj=findSubject(mapped);if(subj)return subj;
+      const commerceNames=['ව්‍යාපාර අධ්‍යයනය','ගිණුම්කරණය','ආර්ථික විද්‍යාව'];
+      let stream;
+      if(commerceNames.includes(mapped)){
+        stream=fresh.streams.find(s=>s.id==='stream-commerce');
+        if(!stream){stream={id:'stream-commerce',name:'වාණිජ (Commerce)'};fresh.streams.push(stream);}
+      }else{
+        stream=fresh.streams.find(s=>s.name==='Imported / Other');
+        if(!stream){stream={id:makeId('stream'),name:'Imported / Other'};fresh.streams.push(stream);}
+      }
+      subj={id:({'ව්‍යාපාර අධ්‍යයනය':'sub-bs','ගිණුම්කරණය':'sub-acc','ආර්ථික විද්‍යාව':'sub-econ'})[mapped]||makeId('subject'),name:mapped,streamId:stream.id,order:fresh.subjects.filter(x=>x.streamId===stream.id).length};
+      fresh.subjects.push(subj);return subj;
+    };
     for(const old of oldTopics){
-      let subj=findSubject(old.subject);
-      if(!subj){let st=fresh.streams.find(s=>s.name==='Imported / Other');if(!st){st={id:makeId('stream'),name:'Imported / Other'};fresh.streams.push(st);}subj=fresh.subjects.find(s=>s.streamId===st.id&&s.name===old.subject);if(!subj){subj={id:makeId('subject'),name:String(old.subject||'Imported subject'),streamId:st.id,order:0};fresh.subjects.push(subj);}}
+      const subj=ensureSubject(old.subject);
       let name=old.topic||old.name||'Untitled topic'; let existing=fresh.topics.find(t=>t.subjectId===subj.id&&t.name===name);
       const mapped=normalizeTopic({...old,name,subjectId:subj.id,custom:old.custom===false?false:true, lastReviewed:old.lastReviewed||old.lastDate, lastRating:old.lastRating??old.score,dueDate:old.dueDate||old.nextDate,intervalDays:old.intervalDays||((validDate(old.lastReviewed||old.lastDate)&&validDate(old.dueDate||old.nextDate))?Math.max(1,dayDiff(old.lastReviewed||old.lastDate,old.dueDate||old.nextDate)):0)},subj.id);
       if(existing)Object.assign(existing,mapped,{id:existing.id,subjectId:subj.id,name,custom:false});else fresh.topics.push(mapped);
     }
     fresh.history=oldHistory.map((h,i)=>{
-      const s=findSubject(h.subject);const targetSub=s?.id||fresh.subjects[0].id;const top=fresh.topics.find(t=>t.subjectId===targetSub&&t.name===(h.topic||h.topicName));const rating=Math.min(5,Math.max(1,Number(h.rating??h.score)||3));const reviewed=validDate(h.reviewedAt||h.reviewedDate)?(h.reviewedAt||h.reviewedDate):today();const due=validDate(h.dueDate||h.nextDate)?(h.dueDate||h.nextDate):plusDays(reviewed,({1:1,2:2,3:4,4:7,5:12})[rating]);
+      const s=findSubject(h.subject)||ensureSubject(h.subject);const targetSub=s.id;const top=fresh.topics.find(t=>t.subjectId===targetSub&&t.name===(h.topic||h.topicName));const rating=Math.min(5,Math.max(1,Number(h.rating??h.score)||3));const reviewed=validDate(h.reviewedAt||h.reviewedDate)?(h.reviewedAt||h.reviewedDate):today();const due=validDate(h.dueDate||h.nextDate)?(h.dueDate||h.nextDate):plusDays(reviewed,({1:1,2:2,3:4,4:7,5:12})[rating]);
       return {id:String(h.id||makeId('history')+i),topicId:top?.id||'',streamId:s?.streamId||'',subjectId:s?.id||'',streamName:s?fresh.streams.find(x=>x.id===s.streamId)?.name:'',subjectName:s?.name||String(h.subject||'Imported'),topicName:String(h.topic||h.topicName||'Untitled topic'),reviewedAt:reviewed,rating,intervalDays:Math.max(1,Math.min(120,Number(h.intervalDays)||dayDiff(reviewed,due)||1)),dueDate:due,note:String(h.note||'')};
     });
     const settings=raw.settings||{}; fresh.settings.theme=['system','light','dark'].includes(settings.theme)?settings.theme:'system';
@@ -829,19 +855,34 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
     if(!raw||typeof raw!=='object')throw new Error('Invalid backup format.');
     if(!Array.isArray(raw.streams)||!Array.isArray(raw.subjects)||!Array.isArray(raw.topics))return migrateOld(raw);
     const streams=raw.streams.filter(s=>s&&s.id&&s.name).map(s=>({id:String(s.id),name:String(s.name).slice(0,100)}));
-    if(!streams.length)streams.push({id:'stream-general',name:'General'});
+    const subjects=raw.subjects.filter(s=>s&&s.id&&s.name).map((s,i)=>({id:String(s.id),name:String(s.name).slice(0,100),streamId:String(s.streamId||''),order:Number(s.order)||i}));
+    const topics=raw.topics.filter(t=>t&&t.name).map(t=>normalizeTopic(t,String(t.subjectId||'')));
+    // Empty workspaces are valid; only create a fallback parent when actual topics need one.
+    if(topics.length&&!streams.length)streams.push({id:'stream-general',name:'General'});
+    if(topics.length&&!subjects.length)subjects.push({id:'subject-general',name:'General',streamId:streams[0].id,order:0});
     const streamIds=new Set(streams.map(s=>s.id));
-    const subjects=raw.subjects.filter(s=>s&&s.id&&s.name).map((s,i)=>({id:String(s.id),name:String(s.name).slice(0,100),streamId:streamIds.has(String(s.streamId))?String(s.streamId):streams[0].id,order:Number(s.order)||i}));
+    for(const sub of subjects){if(!streamIds.has(sub.streamId)){if(!streams.length)streams.push({id:'stream-general',name:'General'});sub.streamId=streams[0].id;streamIds.add(sub.streamId);}}
     const subjectIds=new Set(subjects.map(s=>s.id));
-    let topics=raw.topics.filter(t=>t&&t.name).map(t=>normalizeTopic(t,subjectIds.has(String(t.subjectId))?String(t.subjectId):subjects[0]?.id||''));
-    // Preserve a usable parent for imported topics whose subject no longer exists.
-    for(const t of topics){if(!subjectIds.has(t.subjectId)){if(!subjects.length){const s={id:'subject-general',name:'General',streamId:streams[0].id,order:0};subjects.push(s);subjectIds.add(s.id);}t.subjectId=subjects[0].id;}}
+    for(const t of topics){if(!subjectIds.has(t.subjectId)){let sub=subjects[0];if(!sub){sub={id:'subject-general',name:'General',streamId:streams[0].id,order:0};subjects.push(sub);subjectIds.add(sub.id);}t.subjectId=sub.id;}}
     const cleanHistory=Array.isArray(raw.history)?raw.history.slice(0,200000).map((h,i)=>{const rating=Number(h.rating??h.score);const reviewed=validDate(h.reviewedAt||h.reviewedDate)?(h.reviewedAt||h.reviewedDate):today();return {id:String(h.id||`history-${i}-${Date.now()}`),topicId:String(h.topicId||''),streamId:String(h.streamId||''),subjectId:String(h.subjectId||''),streamName:String(h.streamName||''),subjectName:String(h.subjectName||h.subject||'Unknown subject').slice(0,100),topicName:String(h.topicName||h.topic||'Untitled topic').slice(0,240),reviewedAt:reviewed,rating:rating>=1&&rating<=5?rating:3,intervalDays:Math.min(120,Math.max(1,Number(h.intervalDays)||1)),dueDate:validDate(h.dueDate||h.nextDate)?(h.dueDate||h.nextDate):'',note:String(h.note||'').slice(0,1000)};}):[];
     const exams=Array.isArray(raw.exams)?raw.exams.filter(e=>e&&e.name).map(sanitizeExam):[];
     const theme=['system','light','dark'].includes(raw.settings?.theme)?raw.settings.theme:'system';
     return {schema:3,streams,subjects,topics,history:cleanHistory,exams,settings:{theme,intervalCap:120}};
   }
-  function loadState(){const current=safeRead(STORAGE_KEY);if(current){try{return normalizeState(current);}catch(e){console.warn('Saved data was invalid; using recovery defaults',e);}}const old=safeRead('alSrsTrackerV2');if(old){try{return migrateOld(old.state||old);}catch(e){console.warn(e);}}const legacyT=safeRead('alTrackerData'),legacyH=safeRead('alHistoryLog');if(Array.isArray(legacyT)||Array.isArray(legacyH))return migrateOld({topics:legacyT||[],history:legacyH||[]});return baseState();}
+  function detachPristineStarterContent(data){
+    if(!data||!Array.isArray(data.topics))return data;
+    const historyTopicIds=new Set((data.history||[]).map(h=>String(h.topicId||'')));
+    const historyNames=new Set((data.history||[]).map(h=>String(h.topicName||'')));
+    data.topics=data.topics.filter(t=>{
+      const untouched=String(t.id||'').startsWith('seed-')&&t.custom===false&&!t.reviewCount&&!t.lastReviewed&&!t.lastRating&&!t.dueDate&&!historyTopicIds.has(String(t.id))&&!historyNames.has(String(t.name));
+      return !untouched;
+    });
+    data.subjects=(data.subjects||[]).filter(sub=>data.topics.some(t=>t.subjectId===sub.id)||!['sub-bs','sub-acc','sub-econ'].includes(sub.id));
+    data.streams=(data.streams||[]).filter(st=>data.subjects.some(sub=>sub.streamId===st.id)||st.id!=='stream-commerce');
+    data.exams=(data.exams||[]).filter(ex=>!(ex.id==='exam-al-2027'&&ex.name==='GCE Advanced Level'&&ex.date==='2027-08-01'));
+    return data;
+  }
+  function loadState(){const current=safeRead(STORAGE_KEY);if(current){try{return detachPristineStarterContent(normalizeState(current));}catch(e){console.warn('Saved data was invalid; using recovery defaults',e);}}const old=safeRead('alSrsTrackerV2');if(old){try{return migrateOld(old.state||old);}catch(e){console.warn(e);}}const legacyT=safeRead('alTrackerData'),legacyH=safeRead('alHistoryLog');if(Array.isArray(legacyT)||Array.isArray(legacyH))return migrateOld({topics:legacyT||[],history:legacyH||[]});return baseState();}
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));$('saveStatus').textContent='Saved on this device';$('saveStatus').style.color='';if(window.NexusCloudSync)window.NexusCloudSync.schedule();return true;}catch(e){$('saveStatus').textContent='Save failed — export backup';$('saveStatus').style.color='var(--red)';notify('Could not save data. Export a backup and check browser storage.');return false;}}
   function notify(text,undoable=false){$('toastText').textContent=text;$('undoBtn').style.display=undoable?'':'none';$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),6500);}
   function startUndo(text){if(window.NexusClearCascadeUndo)window.NexusClearCascadeUndo();undoState=clone(state);clearTimeout(undoTimer);notify(text,true);undoTimer=setTimeout(()=>{undoState=null;$('undoBtn').style.display='none';},6500);}
@@ -856,7 +897,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function interval(rating,previous){const prev=Math.max(0,Number(previous)||0);let d;if(rating===1)d=1;else if(rating===2)d=prev?Math.max(prev+1,Math.round(prev*1.25)):2;else if(rating===3)d=prev?Math.round(prev*2):4;else if(rating===4)d=prev?Math.round(prev*2.5):7;else d=prev?Math.round(prev*3):12;return Math.min(120,Math.max(1,d));}
   function subjectDisplay(t){const s=subjectFor(t),st=streamFor(s);return {subject:s?.name||'Unknown subject',stream:st?.name||'Unknown stream'};}
   function nearestExam(){return state.exams.filter(e=>validDate(e.date)).slice().sort((a,b)=>{const ad=a.date>=today()?0:1,bd=b.date>=today()?0:1;return ad-bd|| (ad===0?a.date.localeCompare(b.date):b.date.localeCompare(a.date));})[0]||null;}
-  function switchView(name){document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===name)));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));if(name==='topics'){renderSetup();renderTopics();}if(name==='history')renderHistory();if(name==='setup')renderSetup();window.scrollTo({top:0,behavior:'smooth'});}
+  function switchView(name){document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===name)));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));if(name==='topics'){renderSetup();renderTopics();}if(name==='explore')renderExplore();if(name==='history')renderHistory();if(name==='setup')renderSetup();window.scrollTo({top:0,behavior:'smooth'});}
   function statCard(label,value,foot){return `<div class="stat"><div class="stat-label">${esc(label)}</div><div class="stat-value">${esc(value)}</div><div class="stat-foot">${esc(foot)}</div></div>`;}
   function renderOverview(){
     const topics=activeTopics(), due=topics.filter(t=>['overdue','due'].includes(status(t))), newTopics=topics.filter(t=>status(t)==='new');
@@ -907,6 +948,47 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   const naturalCollator = new Intl.Collator(undefined, {numeric:true, sensitivity:'base'});
   function naturalCompare(a,b){ return naturalCollator.compare(a,b); }
 
+  function marketplaceSubjects(){
+    const grouped=new Map();
+    for(const [prefix,subjectName,topicName] of SEED){
+      if(!grouped.has(prefix))grouped.set(prefix,{prefix,name:subjectName,topics:[]});
+      grouped.get(prefix).topics.push(topicName);
+    }
+    return [...grouped.values()];
+  }
+  function renderExplore(){
+    const host=$('exploreGrid');if(!host)return;
+    const subjects=marketplaceSubjects(),q=String($('exploreSearch')?.value||'').trim().toLocaleLowerCase();
+    const matches=subjects.map(sub=>({...sub,visibleTopics:sub.topics.filter(topic=>!q||[sub.name,topic,'වාණිජ Commerce'].some(x=>String(x).toLocaleLowerCase().includes(q)))})).filter(sub=>!q||sub.visibleTopics.length||sub.name.toLocaleLowerCase().includes(q));
+    $('exploreCatalogCount').textContent=SEED.length;
+    $('exploreResultCount').textContent=`${matches.reduce((n,x)=>n+x.visibleTopics.length,0)} topics shown`;
+    const streamExists=state.streams.some(st=>st.id==='stream-commerce'||st.name.toLocaleLowerCase().includes('commerce'));
+    host.innerHTML=`<article class="explore-course-card panel"><div class="explore-course-top"><div><span class="explore-course-kicker">SRI LANKA · A/L</span><h3>වාණිජ (Commerce)</h3><p>Commerce starter curriculum in Sinhala, organised by subject.</p></div><span class="explore-count-pill">${SEED.length} topics</span></div><div class="explore-course-actions"><button type="button" class="btn btn-primary" data-explore-action="install-course">${streamExists?'Add missing topics':'Install full curriculum'} <span aria-hidden="true">→</span></button><span class="muted small">Existing matching topics are never duplicated.</span></div><div class="explore-subject-grid">${matches.map(sub=>{const installedSubject=state.subjects.find(x=>x.name===sub.name&&(state.streams.find(st=>st.id===x.streamId)?.id==='stream-commerce'||state.streams.find(st=>st.id===x.streamId)?.name.toLocaleLowerCase().includes('commerce')));const installedCount=installedSubject?state.topics.filter(t=>t.subjectId===installedSubject.id&&!t.archived&&sub.topics.includes(t.name)).length:0;return `<section class="explore-subject-card"><div class="explore-subject-head"><div><h4>${esc(sub.name)}</h4><p>${sub.visibleTopics.length} matching of ${sub.topics.length} topics</p></div><span class="explore-count-pill">${installedCount}/${sub.topics.length} added</span></div><details class="explore-topic-details"><summary>Preview topic list</summary><ol>${sub.visibleTopics.map(t=>`<li>${esc(t)}</li>`).join('')||'<li>No matching topics</li>'}</ol></details><button type="button" class="btn btn-sm" data-explore-action="install-subject" data-prefix="${esc(sub.prefix)}">${installedCount===sub.topics.length?'Check for updates':'Add subject'} </button></section>`;}).join('')||'<div class="empty">No curriculum matches that search. Try a subject or topic name.</div>'}</div></article>`;
+  }
+  function installCurriculum(prefix){
+    const selected=SEED.filter(row=>!prefix||row[0]===prefix);
+    if(!selected.length)return;
+    let stream=state.streams.find(st=>st.id==='stream-commerce')||state.streams.find(st=>st.name.toLocaleLowerCase().includes('commerce'));
+    if(!stream){stream={id:'stream-commerce',name:'වාණිජ (Commerce)'};if(state.streams.some(st=>st.id===stream.id))stream.id=makeId('stream');state.streams.push(stream);}
+    const prefixNames={BS:'ව්‍යාපාර අධ්‍යයනය',ACC:'ගිණුම්කරණය',ECON:'ආර්ථික විද්‍යාව'};
+    const subjectMap=new Map();
+    for(const [code,subjectName] of Object.entries(prefixNames)){
+      if(prefix&&code!==prefix)continue;
+      let sub=state.subjects.find(x=>x.streamId===stream.id&&x.name===subjectName);
+      if(!sub){const preferred=({BS:'sub-bs',ACC:'sub-acc',ECON:'sub-econ'})[code];sub={id:!state.subjects.some(x=>x.id===preferred)?preferred:makeId('subject'),name:subjectName,streamId:stream.id,order:state.subjects.filter(x=>x.streamId===stream.id).length};state.subjects.push(sub);}
+      subjectMap.set(code,sub);
+    }
+    let added=0;
+    const counts={BS:0,ACC:0,ECON:0};
+    for(const [code,subjectName,name] of SEED){const n=++counts[code];if(prefix&&code!==prefix)continue;const sub=subjectMap.get(code);if(!sub)continue;
+      if(state.topics.some(t=>t.subjectId===sub.id&&t.name===name))continue;
+      let id=`seed-${code.toLowerCase()}-${String(n).padStart(2,'0')}`;if(state.topics.some(t=>t.id===id))id=makeId('topic');
+      state.topics.push({id,subjectId:sub.id,name,notes:'',custom:false,createdAt:today(),lastReviewed:'',lastRating:null,dueDate:'',intervalDays:0,reviewCount:0,streak:0,lapses:0,archived:false});added++;
+    }
+    save();renderAll();renderExplore();
+    notify(added?`Added ${added} curriculum topic${added===1?'':'s'} to your Library.`:'Everything in this selection is already installed.');
+  }
+
   function renderTopics(){
     const q=$('topicSearch').value.trim().toLocaleLowerCase(),streamId=$('topicStreamFilter').value,subjectId=$('topicSubjectFilter').value,stat=$('topicStatusFilter').value,sort=$('topicSort').value;
     let items=activeTopics().filter(t=>{const sub=subjectFor(t),st=streamFor(sub),stt=status(t);return (!q||[t.name,t.notes,sub?.name,st?.name].some(x=>String(x||'').toLocaleLowerCase().includes(q)))&&(streamId==='ALL'||st?.id===streamId)&&(subjectId==='ALL'||t.subjectId===subjectId)&&(stat==='ALL'||(stat==='due-now'?['overdue','due'].includes(stt):stt===stat));});
@@ -922,7 +1004,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function renderSetup(){refreshFilterOptions();$('themeSelect').value=state.settings.theme;const streamsMarkup=state.streams.map(st=>{const subjects=state.subjects.filter(s=>s.streamId===st.id);return `<div class="entity"><div><strong>${esc(st.name)}</strong><small>${subjects.length} subject${subjects.length===1?'':'s'}</small>${subjects.map(s=>`<div class="entity" style="padding:8px 0 0 10px"><div><strong style="font-size:12px">${esc(s.name)}</strong><small>${activeTopics().filter(t=>t.subjectId===s.id).length} active topics</small></div><div class="inline-actions"><button class="btn btn-sm" data-action="edit-subject" data-id="${esc(s.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-subject" data-id="${esc(s.id)}" ${state.topics.some(t=>t.subjectId===s.id)?'':''}>Delete</button></div></div>`).join('')}</div><div class="inline-actions"><button class="btn btn-sm" data-action="add-subject-to-stream" data-id="${esc(st.id)}">＋ Subject</button><button class="btn btn-sm" data-action="edit-stream" data-id="${esc(st.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-stream" data-id="${esc(st.id)}" ${subjects.length?'':''}>Delete</button></div></div>`;}).join('');$('structureList').innerHTML=streamsMarkup||'<div class="empty">No streams created.</div>';
     const exams=state.exams.slice().sort((a,b)=>a.date.localeCompare(b.date));$('examList').innerHTML=exams.length?exams.map(ex=>`<div class="entity"><div><strong>${esc(ex.name)}</strong><small>${fmtDate(ex.date)} · ${esc(ex.type)}${validDate(ex.date)&&ex.date>=today()?` · ${dayDiff(today(),ex.date)} day(s) left`:''}</small>${ex.notes?`<small>${esc(ex.notes)}</small>`:''}</div><div class="inline-actions"><button class="btn btn-sm" data-action="edit-exam" data-id="${esc(ex.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-exam" data-id="${esc(ex.id)}">Delete</button></div></div>`).join(''):'<div class="empty"><strong>No exams scheduled</strong>Add an exam or deadline.</div>';
   }
-  function renderAll(){refreshFilterOptions();renderOverview();renderTopics();renderHistory();renderSetup();applyTheme();}
+  function renderAll(){refreshFilterOptions();renderOverview();renderTopics();renderHistory();renderSetup();if(document.getElementById('view-explore')?.classList.contains('active'))renderExplore();applyTheme();}
   function openReview(id){
     const t=getTopic(id);if(!t)return;
     reviewTopicId=t.id;selectedReviewRating=null;
@@ -1021,8 +1103,13 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   $('historyList').addEventListener('click',e=>{const b=e.target.closest('button[data-action="delete-history"]');if(!b)return;const id=b.dataset.id;const entry=state.history.find(h=>h.id===id);if(!entry||!confirm('Delete this history entry? The topic schedule will not change.'))return;startUndo('History entry deleted.');state.history=state.history.filter(h=>h.id!==id);save();renderHistory();notify('History entry deleted.',true);});
   $('structureList').addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const {action,id}=b.dataset;if(action==='edit-stream')openStream(id);if(action==='delete-stream')deleteStream(id);if(action==='add-subject-to-stream')openSubject(null,id);if(action==='edit-subject')openSubject(id);if(action==='delete-subject')deleteSubject(id);});
   $('examList').addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;if(b.dataset.action==='edit-exam')openExam(b.dataset.id);if(b.dataset.action==='delete-exam')deleteExam(b.dataset.id);});
-  ['topicSearch','topicStreamFilter','topicSubjectFilter','topicStatusFilter','topicSort'].forEach(id=>$(id).addEventListener(id==='topicSearch'?'input':'change',renderTopics));
-  ['historySearch','historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener(id==='historySearch'?'input':'change',renderHistory));
+  let topicSearchTimer=0,historySearchTimer=0,exploreSearchTimer=0;
+  $('topicSearch').addEventListener('input',()=>{clearTimeout(topicSearchTimer);topicSearchTimer=setTimeout(renderTopics,110);});
+  ['topicStreamFilter','topicSubjectFilter','topicStatusFilter','topicSort'].forEach(id=>$(id).addEventListener('change',renderTopics));
+  $('historySearch').addEventListener('input',()=>{clearTimeout(historySearchTimer);historySearchTimer=setTimeout(renderHistory,110);});
+  ['historyStreamFilter','historySubjectFilter'].forEach(id=>$(id).addEventListener('change',renderHistory));
+  $('exploreSearch').addEventListener('input',()=>{clearTimeout(exploreSearchTimer);exploreSearchTimer=setTimeout(renderExplore,100);});
+  $('exploreGrid').addEventListener('click',e=>{const b=e.target.closest('[data-explore-action]');if(!b)return;if(b.dataset.exploreAction==='install-course')installCurriculum(null);if(b.dataset.exploreAction==='install-subject')installCurriculum(b.dataset.prefix);});
   $('topicStreamInput').addEventListener('change',refreshTopicSubjectInput);
   $('topicForm').addEventListener('submit',saveTopic);$('streamForm').addEventListener('submit',saveStream);$('subjectForm').addEventListener('submit',saveSubject);$('examForm').addEventListener('submit',saveExam);
   $('addTopicBtn').addEventListener('click',()=>openTopic());$('addStreamBtn').addEventListener('click',()=>openStream());$('addSubjectBtn').addEventListener('click',()=>openSubject());$('addExamBtn').addEventListener('click',()=>openExam());
