@@ -879,7 +879,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     data.topics=data.topics.filter(t=>{
       const expected=seedExpected.get(String(t.id||''));
       const parent=(data.subjects||[]).find(sub=>sub.id===t.subjectId);
-      const untouched=expected&&expected.name===t.name&&expected.subjectName===parent?.name&&t.custom===false&&!String(t.notes||'').trim()&&!t.archived&&!t.reviewCount&&!t.lastReviewed&&!t.lastRating&&!t.dueDate&&!historyTopicIds.has(String(t.id))&&!historyNames.has(String(t.name));
+      const untouched=expected&&expected.name===t.name&&expected.subjectName===parent?.name&&t.custom===false&&!String(t.notes||'').trim()&&!t.archived&&!t.reviewCount&&!t.lastReviewed&&!t.lastRating&&!t.dueDate&&!t.intervalDays&&!t.streak&&!t.lapses&&!historyTopicIds.has(String(t.id))&&!historyNames.has(String(t.name));
       return !untouched;
     });
     const defaultSubjects={ 'sub-bs':'ව්‍යාපාර අධ්‍යයනය','sub-acc':'ගිණුම්කරණය','sub-econ':'ආර්ථික විද්‍යාව' };
