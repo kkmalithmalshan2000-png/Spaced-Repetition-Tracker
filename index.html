@@ -846,7 +846,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       return {id:String(h.id||makeId('history')+i),topicId:top?.id||'',streamId:s?.streamId||'',subjectId:s?.id||'',streamName:s?fresh.streams.find(x=>x.id===s.streamId)?.name:'',subjectName:s?.name||String(h.subject||'Imported'),topicName:String(h.topic||h.topicName||'Untitled topic'),reviewedAt:reviewed,rating,intervalDays:Math.max(1,Math.min(120,Number(h.intervalDays)||dayDiff(reviewed,due)||1)),dueDate:due,note:String(h.note||'')};
     });
     const settings=raw.settings||{}; fresh.settings.theme=['system','light','dark'].includes(settings.theme)?settings.theme:'system';
-    if(validDate(settings.examDate)){fresh.exams[0].date=settings.examDate;}
+    if(validDate(settings.examDate)){fresh.exams.push({id:'exam-legacy-migrated',name:'GCE Advanced Level',date:settings.examDate,type:'Academic exam',notes:''});}
     if(Array.isArray(settings.exams))fresh.exams=settings.exams.map(ex=>sanitizeExam(ex));
     return fresh;
   }
@@ -873,13 +873,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     if(!data||!Array.isArray(data.topics))return data;
     const historyTopicIds=new Set((data.history||[]).map(h=>String(h.topicId||'')));
     const historyNames=new Set((data.history||[]).map(h=>String(h.topicName||'')));
+    const seedExpected=new Map(),seedCounts={BS:0,ACC:0,ECON:0};
+    const seedSubjectNames={BS:'ව්‍යාපාර අධ්‍යයනය',ACC:'ගිණුම්කරණය',ECON:'ආර්ථික විද්‍යාව'};
+    for(const [prefix,subjectName,name] of SEED){const n=++seedCounts[prefix];seedExpected.set(`seed-${prefix.toLowerCase()}-${String(n).padStart(2,'0')}`,{name,subjectName,subjectId:({BS:'sub-bs',ACC:'sub-acc',ECON:'sub-econ'})[prefix]});}
     data.topics=data.topics.filter(t=>{
-      const untouched=String(t.id||'').startsWith('seed-')&&t.custom===false&&!t.reviewCount&&!t.lastReviewed&&!t.lastRating&&!t.dueDate&&!historyTopicIds.has(String(t.id))&&!historyNames.has(String(t.name));
+      const expected=seedExpected.get(String(t.id||''));
+      const parent=(data.subjects||[]).find(sub=>sub.id===t.subjectId);
+      const untouched=expected&&expected.name===t.name&&expected.subjectName===parent?.name&&t.custom===false&&!String(t.notes||'').trim()&&!t.archived&&!t.reviewCount&&!t.lastReviewed&&!t.lastRating&&!t.dueDate&&!historyTopicIds.has(String(t.id))&&!historyNames.has(String(t.name));
       return !untouched;
     });
-    data.subjects=(data.subjects||[]).filter(sub=>data.topics.some(t=>t.subjectId===sub.id)||!['sub-bs','sub-acc','sub-econ'].includes(sub.id));
-    data.streams=(data.streams||[]).filter(st=>data.subjects.some(sub=>sub.streamId===st.id)||st.id!=='stream-commerce');
-    data.exams=(data.exams||[]).filter(ex=>!(ex.id==='exam-al-2027'&&ex.name==='GCE Advanced Level'&&ex.date==='2027-08-01'));
+    const defaultSubjects={ 'sub-bs':'ව්‍යාපාර අධ්‍යයනය','sub-acc':'ගිණුම්කරණය','sub-econ':'ආර්ථික විද්‍යාව' };
+    data.subjects=(data.subjects||[]).filter(sub=>data.topics.some(t=>t.subjectId===sub.id)||defaultSubjects[sub.id]!==sub.name);
+    data.streams=(data.streams||[]).filter(st=>data.subjects.some(sub=>sub.streamId===st.id)||st.id!=='stream-commerce'||st.name!=='වාණිජ (Commerce)');
+    data.exams=(data.exams||[]).filter(ex=>!(ex.id==='exam-al-2027'&&ex.name==='GCE Advanced Level'&&ex.date==='2027-08-01'&&ex.type==='Academic exam'&&!String(ex.notes||'').trim()));
     return data;
   }
   function loadState(){const current=safeRead(STORAGE_KEY);if(current){try{return detachPristineStarterContent(normalizeState(current));}catch(e){console.warn('Saved data was invalid; using recovery defaults',e);}}const old=safeRead('alSrsTrackerV2');if(old){try{return migrateOld(old.state||old);}catch(e){console.warn(e);}}const legacyT=safeRead('alTrackerData'),legacyH=safeRead('alHistoryLog');if(Array.isArray(legacyT)||Array.isArray(legacyH))return migrateOld({topics:legacyT||[],history:legacyH||[]});return baseState();}
