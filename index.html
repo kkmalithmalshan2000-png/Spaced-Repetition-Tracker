@@ -986,7 +986,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     }
     let added=0;
     const counts={BS:0,ACC:0,ECON:0};
-    for(const [code,subjectName,name] of SEED){const n=++counts[code];if(prefix&&code!==prefix)continue;const sub=subjectMap.get(code);if(!sub)continue;
+    for(const [code,subjectName,name] of SEED){const n=++counts[code];if(prefix&&code!==prefix)continue;if(topicName&&name!==topicName)continue;const sub=subjectMap.get(code);if(!sub)continue;
       if(state.topics.some(t=>t.subjectId===sub.id&&t.name===name))continue;
       let id=`seed-${code.toLowerCase()}-${String(n).padStart(2,'0')}`;if(state.topics.some(t=>t.id===id))id=makeId('topic');
       state.topics.push({id,subjectId:sub.id,name,notes:'',custom:false,createdAt:today(),lastReviewed:'',lastRating:null,dueDate:'',intervalDays:0,reviewCount:0,streak:0,lapses:0,archived:false});added++;
