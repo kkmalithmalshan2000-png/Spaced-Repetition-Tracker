@@ -1055,7 +1055,9 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function install(){$('pwaInstallOption').hidden=false;$('installNote').textContent=installPrompt?'Use the button below to install Nexus through your browser.':'If no install prompt appears, open your browser menu and choose “Install app” or “Add to Home screen” where available.';$('installDialog').showModal();}
   function installPwa(){if(!installPrompt){notify('Open your browser menu and choose Install app or Add to Home screen.');return;}$('installDialog').close();installPrompt.prompt();installPrompt.userChoice.finally(()=>{installPrompt=null;$('pwaInstallOption').hidden=false;});}
   // Events are attached once; dynamic content uses delegated handlers.
-  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));\n  $('marketplaceGrid').addEventListener('click',e=>{if(e.target.closest('[data-marketplace-install]'))installMarketplaceCollection();});\n  $('marketplaceSearch').addEventListener('input',renderMarketplace);
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+  $('marketplaceGrid').addEventListener('click',e=>{if(e.target.closest('[data-marketplace-install]'))installMarketplaceCollection();});
+  $('marketplaceSearch').addEventListener('input',renderMarketplace);
   $('startReviewBtn').addEventListener('click',()=>{const next=activeTopics().filter(t=>['overdue','due'].includes(status(t))).sort((a,b)=>dueRank(status(a))-dueRank(status(b))||(a.dueDate||'').localeCompare(b.dueDate||''))[0]||activeTopics().find(t=>status(t)==='new');if(next)openReview(next.id);else{switchView('topics');notify('No due or new topics found.');}});
   $('viewDueBtn').addEventListener('click',()=>{switchView('topics');$('topicStatusFilter').value='due-now';renderTopics();});
   $('dueQueue').addEventListener('click',e=>{const b=e.target.closest('[data-action="review"]');if(b)openReview(b.dataset.id);});
