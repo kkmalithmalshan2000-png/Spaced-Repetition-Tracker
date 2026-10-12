@@ -587,6 +587,42 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 <script defer src="./fsrs-bundle.js"></script>
+<style id="nexus-analytics-icons-and-light-timer-fix">
+/* Premium, purpose-specific analytics glyphs */
+.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
+.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
+.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
+.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
+[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
+[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
+[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
+[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
+[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
+/* Force timer digits to remain legible against both theme surfaces. */
+#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
+#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
+#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
+#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
+[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
+[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
+[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
+
+/* Fix the header overflow menu stacking/clipping on desktop and mobile. */
+.topbar{position:relative;z-index:100000;overflow:visible!important;isolation:isolate}
+.header-actions{position:relative;z-index:100001;overflow:visible!important}
+.more-menu{position:relative;z-index:100002!important;overflow:visible!important}
+.more-menu[open]{z-index:100003!important}
+.menu-pop{position:fixed!important;z-index:2147483000!important;right:auto!important;max-width:min(300px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;isolation:isolate;opacity:1!important;transform:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
+@media(max-width:600px){.menu-pop{width:min(260px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px);padding:8px!important}.menu-pop button{min-height:44px;white-space:normal}}
+</style>
+<style id="nexus-marketplace-and-menu-fixes">
+.marketplace-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px}.marketplace-search-label{font-weight:750;color:var(--text)}#marketplaceSearch{flex:1;min-width:min(100%,240px);max-width:560px}
+.marketplace-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px;align-items:start}.marketplace-card{min-width:0;padding:22px;border:1px solid var(--border);border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 94%,var(--accentSoft));box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.marketplace-card:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(30,50,80,.10);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}.marketplace-card-top,.marketplace-meta,.marketplace-subject-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.marketplace-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--accentSoft);color:var(--accent);font-size:21px}.marketplace-badge,.marketplace-installed{font-size:11px;font-weight:750;color:var(--muted)}.marketplace-card h3{margin:16px 0 6px;color:var(--text)}.marketplace-card>p{margin:0;color:var(--muted);line-height:1.55}.marketplace-meta{justify-content:flex-start;gap:8px;margin:14px 0;padding-bottom:14px;border-bottom:1px solid var(--border)}.marketplace-meta span{padding:5px 9px;border-radius:999px;background:var(--surface2);font-size:12px;font-weight:700}.marketplace-subjects{display:grid;gap:9px;margin:14px 0}.marketplace-subject{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.marketplace-subject-head>div{display:grid;gap:3px;min-width:0}.marketplace-subject-head strong{overflow-wrap:anywhere}.marketplace-subject-head span{font-size:11px;color:var(--muted)}.marketplace-details{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}.marketplace-details summary{cursor:pointer;color:var(--accent);font-size:12px;font-weight:750;padding:5px 0}.marketplace-details ul{margin:8px 0 2px;padding-left:20px;max-height:220px;overflow:auto;color:var(--muted);font-size:12px;line-height:1.65}.marketplace-install{width:100%;margin-top:8px;min-height:44px}.marketplace-install:disabled{opacity:.72;cursor:default}.marketplace-footnote{font-size:11px!important;margin-top:10px!important}.marketplace-empty{grid-column:1/-1;display:grid;gap:6px;padding:28px;border:1px dashed var(--border);border-radius:var(--radius);color:var(--muted)}
+.topbar{position:relative;z-index:20;overflow:visible!important}.header-actions{position:relative;z-index:21;overflow:visible!important}.more-menu{position:relative;z-index:22!important;overflow:visible!important}.more-menu .menu-pop{display:none}.menu-pop.menu-portal-open{display:block!important;position:fixed!important;inset:auto!important;z-index:2147483647!important;width:min(280px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;overscroll-behavior:contain;background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:14px!important;box-shadow:0 20px 55px rgba(0,0,0,.24)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;opacity:1!important;visibility:visible!important;transform:none!important;isolation:isolate}.menu-pop.menu-portal-open button{min-height:44px;color:var(--text)!important;white-space:normal}.menu-pop.menu-portal-open button:hover{background:var(--surface2)!important}
+@media(max-width:600px){.marketplace-card{padding:16px}.marketplace-tools{align-items:stretch}.marketplace-search-label{width:100%}.menu-pop.menu-portal-open{width:min(270px,calc(100vw - 24px))!important}}@media(prefers-reduced-motion:reduce){.marketplace-card{transition:none}}
+</style>
 </head>
 <body>
   <main class="app">
@@ -601,7 +637,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
     </header>
-    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌂</span>Home</button><button class="tab" data-view="studyhub" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Study Hub</button><button class="tab" data-view="topics" aria-selected="false"><span class="tab-icon" aria-hidden="true">▦</span>Library</button><button class="tab" data-view="history" aria-selected="false"><span class="tab-icon" aria-hidden="true">◷</span>Activity</button><button class="tab" data-view="setup" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span>Settings</button><button class="tab" data-view="account" aria-selected="false"><span class="tab-icon" aria-hidden="true">☁</span>Sync & backup</button></nav>
+    <nav class="tabs" aria-label="Main sections"><button class="tab" data-view="overview" aria-selected="true"><span class="tab-icon" aria-hidden="true">⌂</span>Home</button><button class="tab" data-view="studyhub" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Study Hub</button><button class="tab" data-view="topics" aria-selected="false"><span class="tab-icon" aria-hidden="true">▦</span>Library</button><button class="tab" data-view="explore" aria-selected="false"><span class="tab-icon" aria-hidden="true">✦</span>Explore</button><button class="tab" data-view="history" aria-selected="false"><span class="tab-icon" aria-hidden="true">◷</span>Activity</button><button class="tab" data-view="setup" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span>Settings</button><button class="tab" data-view="account" aria-selected="false"><span class="tab-icon" aria-hidden="true">☁</span>Sync & backup</button></nav>
 
     <section class="view active" id="view-overview">
       <div class="section-head"><div><h2>Overview</h2><p>See what needs review and track progress across subjects.</p></div><button class="btn btn-primary" id="startReviewBtn">Start review →</button></div>
@@ -625,6 +661,11 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
       <div class="topic-grid" id="topicGrid"></div>
     </section>
 
+    <section class="view" id="view-explore">
+      <div class="section-head"><div><h2>Curriculum Explore</h2><p>Browse starter collections and install only the subjects and topics you want. Nothing is added until you choose Install.</p></div></div>
+      <div class="marketplace-tools"><label class="marketplace-search-label" for="marketplaceSearch">Search collections</label><input class="field" id="marketplaceSearch" type="search" placeholder="Search streams, subjects, or topics…" autocomplete="off"><span class="muted small" id="marketplaceCount" aria-live="polite"></span></div>
+      <div class="marketplace-grid" id="marketplaceGrid"></div>
+    </section>
     <section class="view" id="view-history">
       <div class="section-head"><div><h2>Review history</h2><p>Each review stores the rating, date, assigned interval, and optional note.</p></div><button class="btn" id="historyCsvBtn">⇩ Export CSV</button></div>
       <div class="history-insights panel" id="historyInsights" aria-live="polite"></div>
@@ -819,7 +860,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
     const theme=['system','light','dark'].includes(raw.settings?.theme)?raw.settings.theme:'system';
     return {schema:3,streams,subjects,topics,history:cleanHistory,exams,settings:{theme,intervalCap:120}};
   }
-  function loadState(){const current=safeRead(STORAGE_KEY);if(current){try{return normalizeState(current);}catch(e){console.warn('Saved data was invalid; using recovery defaults',e);}}const old=safeRead('alSrsTrackerV2');if(old){try{return migrateOld(old.state||old);}catch(e){console.warn(e);}}const legacyT=safeRead('alTrackerData'),legacyH=safeRead('alHistoryLog');if(Array.isArray(legacyT)||Array.isArray(legacyH))return migrateOld({topics:legacyT||[],history:legacyH||[]});return baseState();}
+  function loadState(){const current=safeRead(STORAGE_KEY);if(current){try{return normalizeState(current);}catch(e){console.warn('Saved data was invalid; using recovery defaults',e);}}const old=safeRead('alSrsTrackerV2');if(old){try{return migrateOld(old.state||old);}catch(e){console.warn(e);}}const legacyT=safeRead('alTrackerData'),legacyH=safeRead('alHistoryLog');if(Array.isArray(legacyT)||Array.isArray(legacyH))return migrateOld({topics:legacyT||[],history:legacyH||[]});return emptyState();}
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));$('saveStatus').textContent='Saved on this device';$('saveStatus').style.color='';if(window.NexusCloudSync)window.NexusCloudSync.schedule();return true;}catch(e){$('saveStatus').textContent='Save failed — export backup';$('saveStatus').style.color='var(--red)';notify('Could not save data. Export a backup and check browser storage.');return false;}}
   function notify(text,undoable=false){$('toastText').textContent=text;$('undoBtn').style.display=undoable?'':'none';$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),6500);}
   function startUndo(text){if(window.NexusClearCascadeUndo)window.NexusClearCascadeUndo();undoState=clone(state);clearTimeout(undoTimer);notify(text,true);undoTimer=setTimeout(()=>{undoState=null;$('undoBtn').style.display='none';},6500);}
@@ -834,7 +875,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function interval(rating,previous){const prev=Math.max(0,Number(previous)||0);let d;if(rating===1)d=1;else if(rating===2)d=prev?Math.max(prev+1,Math.round(prev*1.25)):2;else if(rating===3)d=prev?Math.round(prev*2):4;else if(rating===4)d=prev?Math.round(prev*2.5):7;else d=prev?Math.round(prev*3):12;return Math.min(120,Math.max(1,d));}
   function subjectDisplay(t){const s=subjectFor(t),st=streamFor(s);return {subject:s?.name||'Unknown subject',stream:st?.name||'Unknown stream'};}
   function nearestExam(){return state.exams.filter(e=>validDate(e.date)).slice().sort((a,b)=>{const ad=a.date>=today()?0:1,bd=b.date>=today()?0:1;return ad-bd|| (ad===0?a.date.localeCompare(b.date):b.date.localeCompare(a.date));})[0]||null;}
-  function switchView(name){document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===name)));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));if(name==='topics'){renderSetup();renderTopics();}if(name==='history')renderHistory();if(name==='setup')renderSetup();window.scrollTo({top:0,behavior:'smooth'});}
+  function switchView(name){document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===name)));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));if(name==='topics'){renderSetup();renderTopics();}if(name==='explore')renderMarketplace();if(name==='history')renderHistory();if(name==='setup')renderSetup();window.scrollTo({top:0,behavior:'auto'});}
   function statCard(label,value,foot){return `<div class="stat"><div class="stat-label">${esc(label)}</div><div class="stat-value">${esc(value)}</div><div class="stat-foot">${esc(foot)}</div></div>`;}
   function renderOverview(){
     const topics=activeTopics(), due=topics.filter(t=>['overdue','due'].includes(status(t))), newTopics=topics.filter(t=>status(t)==='new');
@@ -900,7 +941,30 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function renderSetup(){refreshFilterOptions();$('themeSelect').value=state.settings.theme;const streamsMarkup=state.streams.map(st=>{const subjects=state.subjects.filter(s=>s.streamId===st.id);return `<div class="entity"><div><strong>${esc(st.name)}</strong><small>${subjects.length} subject${subjects.length===1?'':'s'}</small>${subjects.map(s=>`<div class="entity" style="padding:8px 0 0 10px"><div><strong style="font-size:12px">${esc(s.name)}</strong><small>${activeTopics().filter(t=>t.subjectId===s.id).length} active topics</small></div><div class="inline-actions"><button class="btn btn-sm" data-action="edit-subject" data-id="${esc(s.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-subject" data-id="${esc(s.id)}" ${state.topics.some(t=>t.subjectId===s.id)?'':''}>Delete</button></div></div>`).join('')}</div><div class="inline-actions"><button class="btn btn-sm" data-action="add-subject-to-stream" data-id="${esc(st.id)}">＋ Subject</button><button class="btn btn-sm" data-action="edit-stream" data-id="${esc(st.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-stream" data-id="${esc(st.id)}" ${subjects.length?'':''}>Delete</button></div></div>`;}).join('');$('structureList').innerHTML=streamsMarkup||'<div class="empty">No streams created.</div>';
     const exams=state.exams.slice().sort((a,b)=>a.date.localeCompare(b.date));$('examList').innerHTML=exams.length?exams.map(ex=>`<div class="entity"><div><strong>${esc(ex.name)}</strong><small>${fmtDate(ex.date)} · ${esc(ex.type)}${validDate(ex.date)&&ex.date>=today()?` · ${dayDiff(today(),ex.date)} day(s) left`:''}</small>${ex.notes?`<small>${esc(ex.notes)}</small>`:''}</div><div class="inline-actions"><button class="btn btn-sm" data-action="edit-exam" data-id="${esc(ex.id)}">Edit</button><button class="btn btn-sm btn-danger" data-action="delete-exam" data-id="${esc(ex.id)}">Delete</button></div></div>`).join(''):'<div class="empty"><strong>No exams scheduled</strong>Add an exam or deadline.</div>';
   }
-  function renderAll(){refreshFilterOptions();renderOverview();renderTopics();renderHistory();renderSetup();applyTheme();}
+  function renderMarketplace(){
+    const root=$('marketplaceGrid');if(!root)return;
+    const q=($('marketplaceSearch')?.value||'').trim().toLocaleLowerCase(),groups=new Map();
+    for(const [code,subject,topic] of SEED){if(!groups.has(subject))groups.set(subject,[]);groups.get(subject).push({code,subject,topic});}
+    const streamName='වාණිජ (Commerce)';
+    const subjects=[...groups.entries()].map(([name,topics])=>({name,topics:topics.filter(t=>!q||[streamName,name,t.topic,'Sri Lankan GCE Advanced Level Commerce'].some(x=>x.toLocaleLowerCase().includes(q)))})).filter(s=>s.topics.length);
+    const count=subjects.reduce((n,s)=>n+s.topics.length,0);$('marketplaceCount').textContent=`${count} topic${count===1?'':'s'} match`;
+    if(!subjects.length){root.innerHTML='<div class="marketplace-empty"><strong>No topics match that search.</strong><span>Try a subject name or topic keyword.</span></div>';return;}
+    const installed=subjectName=>{const sub=state.subjects.find(s=>s.name===subjectName&&state.streams.some(st=>st.id===s.streamId&&st.name===streamName));return sub?sub.id:null;};
+    const already=(s,t)=>{const sid=installed(s.name);return !!sid&&state.topics.some(x=>x.subjectId===sid&&x.name===t.topic);};
+    root.innerHTML=`<article class="marketplace-card"><div class="marketplace-card-top"><div class="marketplace-icon" aria-hidden="true">✦</div><span class="marketplace-badge">Offline-ready</span></div><h3>Sri Lankan GCE Advanced Level · Commerce</h3><p>Starter topics for Business Studies, Accounting, and Economics. Install once, then edit them like your own topics.</p><div class="marketplace-meta"><span>${subjects.length} subjects shown</span><span>${count} topics shown</span></div><div class="marketplace-subjects">${subjects.map(s=>{const added=s.topics.filter(t=>already(s,t)).length;return `<div class="marketplace-subject"><div class="marketplace-subject-head"><div><strong>${esc(s.name)}</strong><span>${s.topics.length} topics in search</span></div><span class="marketplace-installed">${added} added</span></div><details class="marketplace-details"><summary>Preview topics</summary><ul>${s.topics.map(t=>`<li>${esc(t.topic)}${already(s,t)?' · Installed':''}</li>`).join('')}</ul></details></div>`;}).join('')}</div><button class="btn btn-primary marketplace-install" type="button" data-marketplace-install="commerce" ${SEED.every(([,s,t])=>already({name:s},{topic:t}))?'disabled':''}>＋ Install missing starter topics</button><p class="marketplace-footnote">Existing reviews and topics are never overwritten. Only missing starter topics are added.</p></article>`;
+  }
+  function installMarketplaceCollection(){
+    const streamName='වාණිජ (Commerce)';let stream=state.streams.find(s=>s.name===streamName);
+    if(!stream){stream={id:makeId('stream'),name:streamName};state.streams.push(stream);}
+    const subjects=new Map(state.subjects.filter(s=>s.streamId===stream.id).map(s=>[s.name,s.id]));let added=0,subjectCount=0;
+    for(const [,name,topicName] of SEED){let sid=subjects.get(name);if(!sid){const sub={id:makeId('subject'),name,streamId:stream.id,order:state.subjects.filter(s=>s.streamId===stream.id).length};state.subjects.push(sub);sid=sub.id;subjects.set(name,sid);subjectCount++;}
+      if(state.topics.some(t=>t.subjectId===sid&&t.name===topicName))continue;
+      state.topics.push({id:makeId('topic'),subjectId:sid,name:topicName,notes:'',custom:true,createdAt:today(),lastReviewed:'',lastRating:null,dueDate:'',intervalDays:0,reviewCount:0,streak:0,lapses:0,archived:false});added++;
+    }
+    if(!added){notify('This collection is already installed.');return;}
+    save();renderAll();notify(`Installed ${added} topics across ${subjectCount} new subjects.`,true);
+  }
+  function renderAll(){refreshFilterOptions();renderOverview();renderTopics();renderHistory();renderSetup();renderMarketplace();applyTheme();}
   function openReview(id){
     const t=getTopic(id);if(!t)return;
     reviewTopicId=t.id;selectedReviewRating=null;
@@ -991,7 +1055,7 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
   function install(){$('pwaInstallOption').hidden=false;$('installNote').textContent=installPrompt?'Use the button below to install Nexus through your browser.':'If no install prompt appears, open your browser menu and choose “Install app” or “Add to Home screen” where available.';$('installDialog').showModal();}
   function installPwa(){if(!installPrompt){notify('Open your browser menu and choose Install app or Add to Home screen.');return;}$('installDialog').close();installPrompt.prompt();installPrompt.userChoice.finally(()=>{installPrompt=null;$('pwaInstallOption').hidden=false;});}
   // Events are attached once; dynamic content uses delegated handlers.
-  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));\n  $('marketplaceGrid').addEventListener('click',e=>{if(e.target.closest('[data-marketplace-install]'))installMarketplaceCollection();});\n  $('marketplaceSearch').addEventListener('input',renderMarketplace);
   $('startReviewBtn').addEventListener('click',()=>{const next=activeTopics().filter(t=>['overdue','due'].includes(status(t))).sort((a,b)=>dueRank(status(a))-dueRank(status(b))||(a.dueDate||'').localeCompare(b.dueDate||''))[0]||activeTopics().find(t=>status(t)==='new');if(next)openReview(next.id);else{switchView('topics');notify('No due or new topics found.');}});
   $('viewDueBtn').addEventListener('click',()=>{switchView('topics');$('topicStatusFilter').value='due-now';renderTopics();});
   $('dueQueue').addEventListener('click',e=>{const b=e.target.closest('[data-action="review"]');if(b)openReview(b.dataset.id);});
@@ -1393,7 +1457,7 @@ function loadSupabaseLibrary(){if(window.supabase&&window.supabase.createClient)
 function setControls(){const logged=!!session;if(el('cloudSignOutBtn'))el('cloudSignOutBtn').disabled=!logged;if(el('cloudGoogleSignInBtn'))el('cloudGoogleSignInBtn').hidden=logged;if(el('cloudEmailSignInBtn'))el('cloudEmailSignInBtn').hidden=logged;if(el('cloudAccount'))el('cloudAccount').textContent=logged?(session.user.email||'Signed-in account'):'Not signed in — offline mode is available';if(el('cloudAccount'))el('cloudAccount').title=logged?'Account ID: '+session.user.id:'Your data stays on this device while signed out.';}
 function snapshot(){return {app:'Nexus Spaced Repetition Tracker',schema:4,exportedAt:new Date().toISOString(),state:clone(state),featureState:window.NexusGetFeatureState?window.NexusGetFeatureState():{}};}
 async function fetchRemote(){const {data,error}=await client.from('nexus_user_data').select('payload,updated_at').eq('user_id',session.user.id).maybeSingle();if(error)throw error;return data;}
-function emptyState(){return {schema:3,streams:[{id:'stream-general',name:'General'}],subjects:[{id:'subject-general',name:'General',streamId:'stream-general',order:0}],topics:[],exams:[],history:[],settings:{theme:state.settings.theme||'system',intervalCap:120}};}
+function emptyState(){return {schema:3,streams:[],subjects:[],topics:[],exams:[],history:[],settings:{theme:state?.settings?.theme||'system',intervalCap:120}};}
 function mergeState(local,remote){const l=normalizeState(local),r=normalizeState(remote),union=(a,b)=>{const m=new Map();for(const x of b||[])m.set(String(x.id),clone(x));for(const x of a||[])m.set(String(x.id),clone(x));return Array.from(m.values());};const streams=union(l.streams,r.streams),subjects=union(l.subjects,r.subjects),topics=union(l.topics,r.topics),exams=union(l.exams,r.exams),history=union(l.history,r.history);if(!streams.length)streams.push({id:'stream-general',name:'General'});const streamIds=new Set(streams.map(x=>x.id));for(const sub of subjects)if(!streamIds.has(sub.streamId))sub.streamId=streams[0].id;const subjectIds=new Set(subjects.map(x=>x.id));for(const t of topics)if(!subjectIds.has(t.subjectId)){const fallback=subjects[0]||{id:'subject-general',name:'General',streamId:streams[0].id,order:0};if(!subjectIds.has(fallback.id))subjects.push(fallback);t.subjectId=fallback.id;}return normalizeState({...r,streams,subjects,topics,exams,history,settings:{...r.settings,...l.settings}});}
 function hasLocalWork(s){return !!(s&&(s.topics?.length||s.history?.length||s.exams?.length||s.streams?.length>1||s.subjects?.length>1));}
 function chooseLocalData(){return new Promise(resolve=>{const dlg=el('accountChoiceDialog');if(!dlg){resolve('merge');return;}let done=false;const finish=v=>{if(done)return;done=true;dlg.removeEventListener('close',onClose);if(dlg.open)dlg.close();resolve(v);};const onClose=()=>{if(!done){done=true;resolve('merge');}};dlg.addEventListener('close',onClose);dlg.querySelectorAll('[data-account-choice]').forEach(b=>b.onclick=()=>finish(b.dataset.accountChoice));if(!dlg.open)dlg.showModal();});}
@@ -1414,112 +1478,23 @@ window.NexusCloudSync={schedule,upload};document.addEventListener('DOMContentLoa
 <dialog id="accountChoiceDialog" class="account-choice-dialog" aria-labelledby="accountChoiceTitle"><div class="dialog-head"><div class="choice-kicker">IMPORTANT · DATA CHOICE</div><h2 id="accountChoiceTitle">What should happen to your offline data?</h2><p>You have study data on this device. Choose how to handle it for the signed-in account before syncing starts.</p></div><div class="dialog-body"><div class="choice-option"><strong>Merge offline data</strong><p>Keep your offline topics, subjects, reviews, and exams, and combine them with this account’s cloud data. Matching records use the offline copy.</p><button class="btn btn-primary" data-account-choice="merge" type="button">Keep & merge offline data</button></div><div class="choice-option"><strong>Replace offline data with cloud data</strong><p>Discard this device’s current study data and load only the signed-in account’s cloud backup. If there is no backup, start with an empty workspace.</p><button class="btn btn-danger" data-account-choice="replace" type="button">Use cloud data on this device</button></div><div class="choice-option danger-zone"><strong>Replace cloud data with offline data</strong><p>Upload this device’s workspace as the account’s new cloud backup, overwriting the existing copy.</p><button class="btn btn-danger" data-account-choice="replace-cloud" type="button">Overwrite cloud with offline data…</button></div><p class="choice-footnote">All choices apply only to the account just signed into. Data from another account is never merged. Downloaded JSON backups remain untouched.</p></div></dialog>
 <dialog id="focusModeDialog" class="focus-dialog" aria-labelledby="focusModeTitle"><div class="focus-shell"><div class="focus-top"><span class="focus-live"><i></i> FOCUS SESSION</span><button class="btn btn-icon" type="button" data-focus-action="stop" aria-label="Stop session and return to app">×</button></div><div class="focus-orbit"><div class="focus-orbit-inner"><div class="focus-clock" id="focusModeClock">00:00</div><div class="focus-clock-label" id="focusModeStatus">Ready when you are</div></div></div><p class="focus-topic-label" id="focusModeTopic">Deep work, one thing at a time.</p><div class="focus-controls"><button class="focus-control secondary" type="button" data-focus-action="reset" aria-label="Reset session">↺</button><button class="focus-control primary" type="button" data-focus-action="pause" id="focusPauseBtn" aria-label="Pause timer">Ⅱ</button><button class="focus-control secondary" type="button" data-focus-action="stop" aria-label="Stop and log session">■</button></div><div class="focus-footer"><span id="focusModeGoal">Session target · —</span><span>Saved locally · works offline</span></div><p class="focus-hint">Keep this window open while you study. Stop the session to return to the rest of Nexus.</p></div></dialog><dialog id="reviewCalendarDialog" class="calendar-dialog" aria-labelledby="reviewCalendarTitle"><div class="calendar-window"><div class="calendar-window-head"><div><p class="eyebrow">PLAN AHEAD</p><h2 id="reviewCalendarTitle">Review calendar</h2><p>Upcoming reviews and exam dates, at a glance.</p></div><button class="btn btn-icon" type="button" data-calendar-action="close" aria-label="Close calendar">×</button></div><div class="calendar-toolbar"><button class="btn" data-calendar-action="prev">←</button><strong id="reviewCalendarMonth"></strong><button class="btn" data-calendar-action="next">→</button><select class="field" id="reviewCalendarWindow" aria-label="Calendar range"><option value="1">Jump: 1 month</option><option value="3">Jump: 3 months</option><option value="6">Jump: 6 months</option><option value="12">Jump: 12 months</option></select></div><div class="calendar-legend"><span><i class="legend-review"></i> Reviews due</span><span><i class="legend-exam"></i> Exam</span></div><div id="reviewCalendarGrid" class="review-calendar-grid"></div><div id="reviewCalendarDetails" class="calendar-details" aria-live="polite"></div></div></dialog>
 <script>
-/* Stable overflow menu: render in the browser top layer and outside all app stacking contexts. */
+/* Stable header menu: fixed viewport portal with explicit, deterministic open/close state. */
 (()=>{
  const init=()=>{
-  const details=document.getElementById('moreMenu');
-  const summary=details?.querySelector('summary');
-  const pop=details?.querySelector('.menu-pop');
-  if(!details||!summary||!pop||details.dataset.stableMenuFix==='2') return;
-  details.dataset.stableMenuFix='2';
-
-  // Move the menu out of transformed/overflow-clipped headers and cards.
-  pop.setAttribute('popover','manual');
-  pop.style.position='fixed';
-  pop.style.inset='auto';
-  pop.style.margin='0';
-  pop.style.zIndex='2147483647';
-  document.body.appendChild(pop);
-
-  const isOpen=()=>pop.matches(':popover-open');
-  const place=()=>{
-   if(!isOpen()) return;
-   const r=summary.getBoundingClientRect();
-   const vw=document.documentElement.clientWidth;
-   const vv=window.visualViewport;
-   const vh=vv?.height||window.innerHeight;
-   const offsetTop=vv?.offsetTop||0;
-   const margin=12;
-   const width=Math.min(Math.max(pop.scrollWidth,220),Math.min(300,vw-margin*2));
-   pop.style.width=width+'px';
-   pop.style.maxWidth=(vw-margin*2)+'px';
-   pop.style.maxHeight=Math.max(120,vh-margin*2)+'px';
-   pop.style.overflowY='auto';
-   // Measure after width constraints are applied.
-   const height=Math.min(pop.scrollHeight,vh-margin*2);
-   const left=Math.max(margin,Math.min(r.right-width,vw-width-margin));
-   let top=r.bottom+8;
-   if(top+height>vh-margin) top=r.top-height-8;
-   top=Math.max(margin,Math.min(top,vh-height-margin));
-   pop.style.left=left+'px';
-   pop.style.top=(top+offsetTop)+'px';
-   pop.style.right='auto';
-  };
-  const close=()=>{
-   if(isOpen()) pop.hidePopover();
-   summary.setAttribute('aria-expanded','false');
-  };
-  const open=()=>{
-   try{pop.showPopover();}catch(_){return;}
-   summary.setAttribute('aria-expanded','true');
-   requestAnimationFrame(()=>{place();requestAnimationFrame(place);});
-  };
-  summary.setAttribute('aria-haspopup','menu');
-  summary.setAttribute('aria-expanded','false');
-  summary.addEventListener('click',e=>{
-   e.preventDefault();
-   e.stopPropagation();
-   if(isOpen()) close(); else open();
-  });
-  // Do not let clicks inside the menu be interpreted as outside clicks.
-  pop.addEventListener('click',e=>{
-   e.stopPropagation();
-   if(e.target.closest('button,label')) close();
-  });
-  document.addEventListener('click',e=>{
-   if(isOpen()&&!pop.contains(e.target)&&!summary.contains(e.target)) close();
-  });
-  document.addEventListener('keydown',e=>{
-   if(e.key==='Escape'&&isOpen()){close();summary.focus();}
-  });
-  const reposition=()=>{if(isOpen()) place();};
-  window.addEventListener('resize',reposition,{passive:true});
-  window.addEventListener('scroll',reposition,{passive:true,capture:true});
-  window.visualViewport?.addEventListener('resize',reposition,{passive:true});
-  window.visualViewport?.addEventListener('scroll',reposition,{passive:true});
- };
- if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+  const details=document.getElementById('moreMenu'),summary=details?.querySelector('summary'),pop=details?.querySelector('.menu-pop');
+  if(!details||!summary||!pop||details.dataset.stableMenuFix==='3')return;details.dataset.stableMenuFix='3';
+  pop.removeAttribute('popover');pop.classList.remove('menu-portal-open');pop.style.display='none';document.body.appendChild(pop);
+  const isOpen=()=>pop.classList.contains('menu-portal-open');
+  const place=()=>{if(!isOpen())return;const r=summary.getBoundingClientRect(),vw=document.documentElement.clientWidth,vv=window.visualViewport,vh=vv?.height||window.innerHeight,offsetTop=vv?.offsetTop||0,margin=12,width=Math.min(280,vw-margin*2);pop.style.width=width+'px';pop.style.maxWidth=(vw-margin*2)+'px';pop.style.maxHeight=Math.max(120,vh-margin*2)+'px';const height=Math.min(pop.scrollHeight,vh-margin*2),left=Math.max(margin,Math.min(r.right-width,vw-width-margin));let top=r.bottom+8;if(top+height>vh-margin)top=r.top-height-8;top=Math.max(margin,Math.min(top,vh-height-margin));pop.style.left=left+'px';pop.style.top=(top+offsetTop)+'px';pop.style.right='auto';};
+  const close=()=>{pop.classList.remove('menu-portal-open');summary.setAttribute('aria-expanded','false');pop.style.display='none';};
+  const open=()=>{pop.style.display='block';pop.classList.add('menu-portal-open');summary.setAttribute('aria-expanded','true');requestAnimationFrame(()=>{place();requestAnimationFrame(place);});};
+  summary.setAttribute('aria-haspopup','menu');summary.setAttribute('aria-expanded','false');summary.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();isOpen()?close():open();});
+  pop.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button,label'))close();});
+  document.addEventListener('pointerdown',e=>{if(isOpen()&&!pop.contains(e.target)&&!summary.contains(e.target))close();},{capture:true});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){close();summary.focus();}});
+  const reposition=()=>{if(isOpen())place();};window.addEventListener('resize',reposition,{passive:true});window.addEventListener('scroll',reposition,{passive:true,capture:true});window.visualViewport?.addEventListener('resize',reposition,{passive:true});window.visualViewport?.addEventListener('scroll',reposition,{passive:true});
+ };if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 </body>
 </html>
-<style id="nexus-analytics-icons-and-light-timer-fix">
-/* Premium, purpose-specific analytics glyphs */
-.insight-metric .insight-icon{position:relative;isolation:isolate;width:44px;height:44px;margin:0 0 13px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent) 5%,var(--surface2)));border:1px solid color-mix(in srgb,var(--accent) 19%,var(--border));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 5px 14px color-mix(in srgb,var(--accent) 9%,transparent);transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,border-color .32s ease}
-.insight-metric .insight-icon:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.65),transparent 62%);opacity:.7;z-index:-1}
-.insight-metric .insight-icon svg{width:22px;height:22px;display:block;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--accent) 15%,transparent))}
-.insight-metric:hover .insight-icon{transform:translateY(-2px) scale(1.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px color-mix(in srgb,var(--accent) 17%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
-.insight-icon-momentum{color:#7c5cff!important}.insight-icon-mastery{color:#0d9f87!important;background:linear-gradient(145deg,#dffaf2,#edfdf8)!important;border-color:rgba(13,159,135,.22)!important}.insight-icon-load{color:#d97706!important;background:linear-gradient(145deg,#fff0d5,#fff9ed)!important;border-color:rgba(217,119,6,.22)!important}.insight-icon-goal{color:#4778e8!important;background:linear-gradient(145deg,#e3edff,#f2f6ff)!important;border-color:rgba(71,120,232,.22)!important}
-[data-theme="dark"] .insight-metric .insight-icon{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#181722),color-mix(in srgb,var(--accent) 7%,#101014));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.22)}
-[data-theme="dark"] .insight-metric .insight-icon:before{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.12),transparent 66%);opacity:1}
-[data-theme="dark"] .insight-icon-mastery{color:#55dfc1!important;background:linear-gradient(145deg,#10372f,#14231f)!important;border-color:rgba(85,223,193,.25)!important}
-[data-theme="dark"] .insight-icon-load{color:#ffc16a!important;background:linear-gradient(145deg,#382710,#241c13)!important;border-color:rgba(255,193,106,.24)!important}
-[data-theme="dark"] .insight-icon-goal{color:#9ab9ff!important;background:linear-gradient(145deg,#1b2b4b,#171e30)!important;border-color:rgba(154,185,255,.25)!important}
-/* Force timer digits to remain legible against both theme surfaces. */
-#focusModeDialog .focus-shell,#focusModeDialog .focus-dialog{color:var(--text)!important}
-#focusModeDialog .focus-clock,#focusModeDialog .focus-time,#focusModeDialog .focus-countdown,#focusModeDialog .focus-timer,#focusModeDialog .focus-digits,#focusModeDialog .focus-time-value{color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-shadow:0 2px 18px color-mix(in srgb,var(--text) 9%,transparent)}
-#focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 70%)!important}
-#focusModeDialog .focus-clock-label,#focusModeDialog .focus-footer,#focusModeDialog .focus-hint{color:var(--muted)!important}
-[data-theme="light"] #focusModeDialog .focus-shell,[data-theme="light"] #focusModeDialog .focus-dialog{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,255,.09),transparent 48%),#f8f8fc!important;color:#17151f!important}
-[data-theme="light"] #focusModeDialog .focus-orbit{background:radial-gradient(circle at 50% 38%,#fff,#f0eff8 75%)!important;border-color:rgba(124,92,255,.28)!important;box-shadow:0 0 0 13px rgba(124,92,255,.045),0 0 0 28px rgba(124,92,255,.025),0 0 42px rgba(38,29,82,.07)!important}
-[data-theme="light"] #focusModeDialog .focus-clock,[data-theme="light"] #focusModeDialog .focus-time,[data-theme="light"] #focusModeDialog .focus-countdown,[data-theme="light"] #focusModeDialog .focus-timer,[data-theme="light"] #focusModeDialog .focus-digits,[data-theme="light"] #focusModeDialog .focus-time-value{color:#17151f!important;-webkit-text-fill-color:#17151f!important;text-shadow:none!important}
-@media(prefers-reduced-motion:reduce){.insight-metric .insight-icon{transition:none}}
-
-/* Fix the header overflow menu stacking/clipping on desktop and mobile. */
-.topbar{position:relative;z-index:100000;overflow:visible!important;isolation:isolate}
-.header-actions{position:relative;z-index:100001;overflow:visible!important}
-.more-menu{position:relative;z-index:100002!important;overflow:visible!important}
-.more-menu[open]{z-index:100003!important}
-.menu-pop{position:fixed!important;z-index:2147483000!important;right:auto!important;max-width:min(300px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;isolation:isolate;opacity:1!important;transform:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
-@media(max-width:600px){.menu-pop{width:min(260px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px);padding:8px!important}.menu-pop button{min-height:44px;white-space:normal}}
-</style>
