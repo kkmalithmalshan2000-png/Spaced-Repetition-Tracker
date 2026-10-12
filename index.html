@@ -979,7 +979,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     const prefixNames={BS:'ව්‍යාපාර අධ්‍යයනය',ACC:'ගිණුම්කරණය',ECON:'ආර්ථික විද්‍යාව'};
     const subjectMap=new Map();
     for(const [code,subjectName] of Object.entries(prefixNames)){
-      if(prefix&&code!==prefix)continue;
+      if(!selected.some(row=>row[0]===code))continue;
       let sub=state.subjects.find(x=>x.streamId===stream.id&&x.name===subjectName);
       if(!sub){const preferred=({BS:'sub-bs',ACC:'sub-acc',ECON:'sub-econ'})[code];sub={id:!state.subjects.some(x=>x.id===preferred)?preferred:makeId('subject'),name:subjectName,streamId:stream.id,order:state.subjects.filter(x=>x.streamId===stream.id).length};state.subjects.push(sub);}
       subjectMap.set(code,sub);
