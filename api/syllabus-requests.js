@@ -41,8 +41,8 @@ async function countVotes(requestId, token) {
   });
   if (!response.ok) return null;
   const range = response.headers.get('content-range') || '';
-  const total = Number(range.slice(range.lastIndexOf('/') + 1));
-  return Number.isFinite(total) ? total : null;
+  const match = range.match(/\/(\d+)$/);
+  return match ? Number(match[1]) : null;
 }
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
