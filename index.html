@@ -587,11 +587,11 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
 @media(max-width:600px){.community-request-card{align-items:stretch;flex-direction:column;padding:17px}.community-request-actions>*{flex:1}.syllabus-dialog-inner{padding:17px}}
 
 
-/* NEXUS horizontal brand banner: isolated header-only styling */
+/* NEXUS horizontal brand banner: preserve the logo's native aspect ratio */
 .brand{flex:1 1 auto;min-width:0}
-.brand-banner{display:block;width:min(100%,360px);height:auto;max-height:78px;object-fit:contain;object-position:left center}
-@media(max-width:760px){.brand-banner{width:min(100%,320px);max-height:68px}}
-@media(max-width:540px){.topbar{flex-wrap:wrap}.brand{flex:1 1 100%;width:100%}.brand-banner{width:min(100%,300px);max-height:64px}.header-actions{width:100%;max-width:none;justify-content:flex-start;flex-wrap:wrap}}
+.brand-banner{display:block;width:min(100%,360px);height:auto;max-width:100%;object-fit:contain;object-position:left center}
+@media(max-width:760px){.brand-banner{width:min(100%,320px)}}
+@media(max-width:540px){.topbar{flex-wrap:wrap}.brand{flex:1 1 100%;width:100%}.brand-banner{width:min(100%,300px)}.header-actions{width:100%;max-width:none;justify-content:flex-start;flex-wrap:wrap}}
 </style>
 
   <!-- Vercel Web Analytics -->
