@@ -1744,5 +1744,13 @@ dialog .dialog-inner,dialog>div{max-height:none}
 })();
 </script>
 
+<style id="community-vote-delete-styles">
+.community-item{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.community-item-main{min-width:0;flex:1}
+.community-item-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.community-vote[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700}
+.community-delete{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--border))}
+@media(max-width:600px){.community-item{flex-direction:column}.community-item-actions{width:100%;justify-content:flex-start}.community-item-actions .btn{min-height:40px}}
+</style>
 </body>
 </html>
