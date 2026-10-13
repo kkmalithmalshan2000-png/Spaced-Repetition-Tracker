@@ -587,11 +587,17 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
 @media(max-width:600px){.community-request-card{align-items:stretch;flex-direction:column;padding:17px}.community-request-actions>*{flex:1}.syllabus-dialog-inner{padding:17px}}
 
 
-/* NEXUS horizontal brand banner: preserve the logo's native aspect ratio */
-.brand{flex:1 1 auto;min-width:0}
-.brand-banner{display:block;width:min(100%,360px);height:auto;max-width:100%;object-fit:contain;object-position:left center}
-@media(max-width:760px){.brand-banner{width:min(100%,320px)}}
-@media(max-width:540px){.topbar{flex-wrap:wrap}.brand{flex:1 1 100%;width:100%}.brand-banner{width:min(100%,300px)}.header-actions{width:100%;max-width:none;justify-content:flex-start;flex-wrap:wrap}}
+/* Responsive header branding: keep the mark proportional and make the wordmark the visual focus. */
+.topbar{padding:clamp(12px,1.8vw,20px);border:1px solid var(--border);border-radius:20px;min-width:0}
+.brand{flex:1 1 auto;min-width:0;gap:14px}
+.brandmark{width:clamp(46px,5vw,64px);height:clamp(46px,5vw,64px);flex:none;overflow:hidden;border-radius:18px;display:grid;place-items:center;animation:none}
+.brandmark img{display:block;width:100%;height:100%;padding:4px;object-fit:contain;object-position:center;border-radius:inherit}
+.brand-copy{flex:1 1 auto;min-width:0}
+.brand-title{margin:0;font-size:clamp(30px,3.5vw,44px);font-weight:900;line-height:1;letter-spacing:.075em;white-space:nowrap}
+.brand-subtitle{margin:7px 0 0;color:var(--muted);font-size:clamp(11px,1.35vw,14px);font-weight:650;letter-spacing:.095em;line-height:1.25;text-transform:uppercase}
+.header-actions{flex:0 1 auto;min-width:0}
+@media(max-width:850px){.topbar{align-items:center;flex-wrap:wrap}.brand{flex:1 1 100%;width:100%}.header-actions{width:100%;max-width:none;justify-content:flex-start;flex-wrap:wrap}}
+@media(max-width:540px){.topbar{gap:12px;padding:13px}.brand{gap:11px}.brandmark{width:48px;height:48px;border-radius:14px}.brand-title{font-size:clamp(28px,8vw,36px);letter-spacing:.055em}.brand-subtitle{font-size:10px;letter-spacing:.075em}.header-actions{width:100%;max-width:none;justify-content:flex-start;flex-wrap:wrap}}
 </style>
 
   <!-- Vercel Web Analytics -->
@@ -640,7 +646,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <body>
   <main class="app">
     <header class="topbar">
-      <div class="brand"><img class="brand-banner" src="./assets/nexus-logo-banner.svg" alt="NEXUS — Spaced Repetition Tracker" width="620" height="184"></div>
+      <div class="brand"><div class="brandmark" aria-hidden="true"><img src="./icon-192.png" alt="" width="192" height="192"></div><div class="brand-copy"><h1 class="brand-title">NEXUS</h1><p class="brand-subtitle">Spaced Repetition Tracker</p></div></div>
       <div class="header-actions">
         <span class="statusline" id="saveStatus" role="status">Saved on this device</span>
         <button class="btn btn-icon" id="themeBtn" aria-label="Change theme" title="Change theme">◐</button>
