@@ -23,6 +23,7 @@ async function currentUser(token) {
 async function db(path, token, options = {}) {
   return fetch(SUPABASE_URL + '/rest/v1/' + path, {
     method: options.method || 'GET',
+    cache: 'no-store',
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: 'Bearer ' + token,
@@ -32,6 +33,16 @@ async function db(path, token, options = {}) {
     },
     body: options.body === undefined ? undefined : JSON.stringify(options.body)
   });
+}
+async function countVotes(requestId, token) {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_votes?select=request_id&request_id=eq.' + encodeURIComponent(requestId), {
+    method: 'GET', cache: 'no-store',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, Accept: 'application/json', Prefer: 'count=exact', Range: '0-0' }
+  });
+  if (!response.ok) return null;
+  const range = response.headers.get('content-range') || '';
+  const total = Number(range.slice(range.lastIndexOf('/') + 1));
+  return Number.isFinite(total) ? total : null;
 }
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -44,7 +55,8 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const user = await currentUser(token);
       const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id,nexus_syllabus_votes(count)&order=created_at.desc&limit=200', {
-        headers: { apikey: SUPABASE_ANON_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}), Accept: 'application/json' }
+        cache: 'no-store',
+        headers: { apikey: SUPABASE_ANON_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}), Accept: 'application/json', 'Cache-Control': 'no-cache, no-store, max-age=0' }
       });
       if (!requestsResponse.ok) return json(res, 503, { error: 'Community wishlist storage is not configured or is temporarily unavailable. Check the Supabase setup guide.' });
       const requests = await requestsResponse.json();
@@ -89,11 +101,15 @@ module.exports = async function handler(req, res) {
       if (action === 'upvote') {
         const vote = await db('nexus_syllabus_votes', token, { method: 'POST', prefer: 'return=representation,resolution=ignore-duplicates', body: { request_id: id, user_id: user.id } });
         if (!vote.ok) return json(res, 502, { error: 'Could not save your upvote. Please try again.' });
-        return json(res, 200, { upvoted: true, id });
+        const voteRows = await vote.json();
+        const votes = await countVotes(id, token);
+        return json(res, 200, { upvoted: true, id, votes, changed: Array.isArray(voteRows) && voteRows.length > 0 });
       }
       const removed = await db('nexus_syllabus_votes?request_id=eq.' + encodeURIComponent(id) + '&user_id=eq.' + encodeURIComponent(user.id), token, { method: 'DELETE', prefer: 'return=representation' });
       if (!removed.ok) return json(res, 502, { error: 'Could not remove your upvote. Please try again.' });
-      return json(res, 200, { upvoted: false, id });
+      const removedRows = await removed.json();
+      const votes = await countVotes(id, token);
+      return json(res, 200, { upvoted: false, id, votes, changed: Array.isArray(removedRows) && removedRows.length > 0 });
     }
     const name = clean(input.name, 120), category = clean(input.category, 100), topics = clean(input.topics, 3000);
     if (!name || !category) return json(res, 400, { error: 'Subject/course name and category are required.' });
