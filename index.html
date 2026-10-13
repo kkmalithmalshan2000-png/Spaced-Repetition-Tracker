@@ -1686,73 +1686,56 @@ dialog .dialog-inner,dialog>div{max-height:none}
   const boot=()=>{
     const explore=document.querySelector('#view-explore');
     if(!explore || document.querySelector('#communityRequestCard')) return;
-    const hero=explore.querySelector('.explore-hero');
-    if(!hero) return;
-    const card=document.createElement('section');
-    card.id='communityRequestCard';card.className='community-request-card';
-    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Browse community requests first so you can support an existing suggestion instead of duplicating it.</p></div><div class="community-request-actions"><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
+    const hero=explore.querySelector('.explore-hero'); if(!hero)return;
+    const card=document.createElement('section');card.id='communityRequestCard';card.className='community-request-card';
+    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Browse requests and upvote the curricula learners need most.</p></div><div class="community-request-actions"><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
     hero.insertAdjacentElement('afterend',card);
     const tabs=document.createElement('div');tabs.className='community-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Curriculum lists');
     tabs.innerHTML='<button type="button" class="community-tab" role="tab" aria-selected="true" data-community-tab="available">Available curricula</button><button type="button" class="community-tab" role="tab" aria-selected="false" data-community-tab="requests">Community wishlist / requests</button>';
     card.insertAdjacentElement('afterend',tabs);
     const list=document.createElement('div');list.id='communityRequestList';list.className='community-list';list.hidden=true;tabs.insertAdjacentElement('afterend',list);
     const dialog=document.createElement('dialog');dialog.id='syllabusRequestDialog';
-    dialog.innerHTML='<div class="syllabus-dialog-inner"><div class="syllabus-dialog-head"><div><h3>Request a syllabus</h3><p class="muted">Help us prioritise the curricula learners need.</p></div><button type="button" class="btn btn-ghost" id="closeSyllabusRequest" aria-label="Close">✕</button></div><form id="syllabusRequestForm"><label for="syllabusName">Subject / course name *</label><input class="field" id="syllabusName" name="name" maxlength="120" required placeholder="e.g. AP Physics 1, JLPT N3"><label for="syllabusCategory">Category / exam board *</label><input class="field" id="syllabusCategory" name="category" maxlength="100" required placeholder="e.g. High School, University, Professional"><label for="syllabusTopics">Key topics / chapters (optional)</label><textarea class="field" id="syllabusTopics" name="topics" maxlength="3000" rows="4" placeholder="Paste a rough syllabus outline, if available"></textarea><label for="syllabusEmail">Email for an update (optional)</label><input class="field" id="syllabusEmail" name="email" type="email" maxlength="254" placeholder="you@example.com"><p class="community-notice">Your request may appear publicly in the community wishlist. Your email address will not be shown there.</p><div id="syllabusFormStatus" class="community-meta" role="status" aria-live="polite"></div><div class="syllabus-dialog-foot"><button type="button" class="btn btn-ghost" id="cancelSyllabusRequest">Cancel</button><button type="submit" class="btn btn-primary" id="submitSyllabusRequest">Submit request</button></div></form></div>';
+    dialog.innerHTML='<div class="syllabus-dialog-inner"><div class="syllabus-dialog-head"><div><h3>Request a syllabus</h3><p class="muted">Help prioritise the curricula learners need.</p></div><button type="button" class="btn btn-ghost" id="closeSyllabusRequest" aria-label="Close">✕</button></div><form id="syllabusRequestForm"><label for="syllabusName">Subject / course name *</label><input class="field" id="syllabusName" name="name" maxlength="120" required placeholder="e.g. AP Physics 1, JLPT N3"><label for="syllabusCategory">Category / exam board *</label><input class="field" id="syllabusCategory" name="category" maxlength="100" required placeholder="e.g. High School, University, Professional"><label for="syllabusTopics">Key topics / chapters (optional)</label><textarea class="field" id="syllabusTopics" name="topics" maxlength="3000" rows="4" placeholder="Paste a rough syllabus outline, if available"></textarea><p class="community-notice">You must sign in to submit a shared request. Your email address is not collected or published.</p><div id="syllabusFormStatus" class="community-meta" role="status" aria-live="polite"></div><div class="syllabus-dialog-foot"><button type="button" class="btn btn-ghost" id="cancelSyllabusRequest">Cancel</button><button type="submit" class="btn btn-primary" id="submitSyllabusRequest">Submit request</button></div></form></div>';
     document.body.appendChild(dialog);
     const form=dialog.querySelector('#syllabusRequestForm'),status=dialog.querySelector('#syllabusFormStatus'),submit=dialog.querySelector('#submitSyllabusRequest');
-    const localKey='nexus.communitySyllabusRequests.v1';
-    const safeLocal=()=>{try{return JSON.parse(localStorage.getItem(localKey)||'[]')}catch(_){return []}};
-    const saveLocal=items=>{try{localStorage.setItem(localKey,JSON.stringify(items))}catch(_){}};
-    let community=[],activeTab='available';
+    let community=[],activeTab='available',signedIn=false;
     const escapeHTML=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const norm=s=>String(s||'').trim().toLocaleLowerCase();
+    // Read only the current Supabase session token from the app's existing browser session.
+    const accessToken=()=>{try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('sb-')&&k.endsWith('-auth-token')){const v=JSON.parse(localStorage.getItem(k)||'{}');if(v.access_token)return v.access_token;}}}catch(_){}return ''};
+    const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers});};
     const render=()=>{
       const search=(document.querySelector('#exploreSearch')?.value||'').trim().toLocaleLowerCase();
-      list.hidden=activeTab!=='requests';
-      const grid=explore.querySelector('#exploreGrid');
-      if(grid)grid.hidden=activeTab==='requests';
-      const toolbar=explore.querySelector('.explore-toolbar');
-      if(toolbar)toolbar.hidden=false;
+      list.hidden=activeTab!=='requests';const grid=explore.querySelector('#exploreGrid');if(grid)grid.hidden=activeTab==='requests';
+      const toolbar=explore.querySelector('.explore-toolbar');if(toolbar)toolbar.hidden=false;
       const searchField=explore.querySelector('#exploreSearch');if(searchField)searchField.placeholder=activeTab==='requests'?'Search community requests…':'Search streams, subjects, topics…';
       tabs.querySelectorAll('[data-community-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.communityTab===activeTab)));
       if(activeTab!=='requests')return;
-      const local=safeLocal();
-      const merged=[...community];
-      local.forEach(x=>{if(!merged.some(y=>norm(y.name)===norm(x.name)&&norm(y.category)===norm(x.category)))merged.push(x)});
-      const filtered=merged.filter(x=>(norm(x.name)+' '+norm(x.category)+' '+norm(x.topics)).includes(search)).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
-      if(!filtered.length){list.innerHTML='<div class="community-empty">No matching requests yet. Be the first to suggest this curriculum.</div>';return}
-      list.innerHTML=filtered.map(x=>'<article class="community-item"><h4>'+escapeHTML(x.name)+'</h4><div class="community-meta">'+escapeHTML(x.category||'Uncategorised')+' · '+(x.status==='pending'?'Saved on this device — awaiting connection':'Community request')+'</div>'+(x.topics?'<p>'+escapeHTML(x.topics)+'</p>':'')+'</article>').join('');
+      const filtered=community.filter(x=>(norm(x.name)+' '+norm(x.category)+' '+norm(x.topics)).includes(search)).sort((a,b)=>(Number(b.votes)||0)-(Number(a.votes)||0)||new Date(b.createdAt||0)-new Date(a.createdAt||0));
+      if(!filtered.length){list.innerHTML='<div class="community-empty">No community requests yet. Be the first to suggest a curriculum.</div>';return}
+      list.innerHTML=filtered.map(x=>'<article class="community-item" data-request-id="'+escapeHTML(x.id)+'"><div class="community-item-main"><h4>'+escapeHTML(x.name)+'</h4><div class="community-meta">'+escapeHTML(x.category||'Uncategorised')+' · '+new Date(x.createdAt||Date.now()).toLocaleDateString()+'</div>'+(x.topics?'<p>'+escapeHTML(x.topics)+'</p>':'')+'</div><div class="community-item-actions"><button type="button" class="btn community-vote" data-action="'+(x.hasUpvoted?'remove-upvote':'upvote')+'" data-id="'+escapeHTML(x.id)+'" aria-pressed="'+String(!!x.hasUpvoted)+'" title="'+(x.hasUpvoted?'Remove your upvote':'Upvote this request')+'">'+(x.hasUpvoted?'▲ Upvoted':'▲ Upvote')+' · '+(Number(x.votes)||0)+'</button>'+(x.isOwner?'<button type="button" class="btn btn-danger community-delete" data-action="delete" data-id="'+escapeHTML(x.id)+'">Delete my request</button>':'')+'</div></article>').join('');
     };
+    const loadRequests=async()=>{try{const r=await api('',{});const data=await r.json();if(!r.ok)throw new Error(data.error||'Wishlist unavailable');community=Array.isArray(data.requests)?data.requests:[];signedIn=!!data.signedIn;render()}catch(e){list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
     tabs.addEventListener('click',e=>{const b=e.target.closest('[data-community-tab]');if(!b)return;activeTab=b.dataset.communityTab;render();if(activeTab==='requests')loadRequests()});
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
-    const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');
-    dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);
-    dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
-    const loadRequests=async()=>{
-      try{const r=await fetch('/api/syllabus-requests',{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('unavailable');const data=await r.json();community=Array.isArray(data.requests)?data.requests:[];render()}
-      catch(_){community=[];render()}
-    };
+    const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
+    list.addEventListener('click',async e=>{
+      const b=e.target.closest('button[data-action]');if(!b)return;const id=b.dataset.id,action=b.dataset.action;
+      if(!accessToken()){alert('Please sign in to Nexus before upvoting or deleting community requests.');return}
+      if(action==='delete'&&!confirm('Delete your request permanently? Other users’ requests cannot be deleted.'))return;
+      b.disabled=true;
+      try{const response=action==='delete'?await api('',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}):await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Action failed');await loadRequests()}
+      catch(err){alert(err.message||'Could not complete the action.');b.disabled=false}
+    });
     form.addEventListener('submit',async e=>{
       e.preventDefault();if(!form.reportValidity())return;
-      const payload={name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),topics:form.elements.topics.value.trim(),email:form.elements.email.value.trim()};
-      if(!payload.name||!payload.category)return;
-      const all=[...community,...safeLocal()];
-      if(all.some(x=>norm(x.name)===norm(payload.name)&&norm(x.category)===norm(payload.category))){
-        status.textContent='A similar request already exists. Check the wishlist before submitting another.';activeTab='requests';render();return;
-      }
+      if(!accessToken()){status.textContent='Sign in to Nexus first. Shared requests must be linked to your account so only you can delete them.';return}
+      const payload={name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),topics:form.elements.topics.value.trim()};
+      if(community.some(x=>norm(x.name)===norm(payload.name)&&norm(x.category)===norm(payload.category))){status.textContent='A similar request already exists. Please upvote it instead.';return}
       submit.disabled=true;submit.textContent='Submitting…';status.textContent='Sending request…';
-      try{
-        if(!navigator.onLine)throw new Error('offline');
-        const response=await fetch('/api/syllabus-requests',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(payload)});
-        const result=await response.json().catch(()=>({}));
-        if(!response.ok)throw new Error(result.error||'The server could not accept the request.');
-        community.unshift(result.request||{...payload,createdAt:new Date().toISOString(),status:'submitted'});
-        status.textContent='Request submitted. Thank you — your suggestion has been recorded.';
-      }catch(err){
-        const pending={name:payload.name,category:payload.category,topics:payload.topics,createdAt:new Date().toISOString(),status:'pending'};
-        const locals=safeLocal();locals.unshift(pending);saveLocal(locals);
-        status.textContent='Could not reach the community server. Saved on this device; reconnect and submit again to share it with everyone.';
-      }finally{submit.disabled=false;submit.textContent='Submit request';render();setTimeout(()=>{if(status.textContent.startsWith('Request submitted'))close()},1200)}
+      try{const response=await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||'The server could not accept the request.');community.unshift(result.request);status.textContent='Request submitted successfully.';render();setTimeout(close,800)}
+      catch(err){status.textContent=err.message||'Could not submit the request.'}
+      finally{submit.disabled=false;submit.textContent='Submit request'}
     });
     const originalSearch=document.querySelector('#exploreSearch');if(originalSearch)originalSearch.addEventListener('input',render);
     render();loadRequests();
