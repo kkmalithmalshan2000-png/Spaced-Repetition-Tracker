@@ -14,11 +14,12 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  // Default FSRS-6 parameters (21). Replace with optimised values if you have them.
+  // Current baseline FSRS-6 parameter set (21 weights) from the open-spaced-repetition
+  // algorithm specification. These are defaults, not user-trained personal parameters.
   const DEFAULT_W = [
-    0.2172, 1.1771, 3.2602, 16.1507, 7.0114, 0.57, 2.0966, 0.0069, 1.5261,
-    0.112, 1.0178, 1.849, 0.1133, 0.3127, 2.2934, 0.2191, 3.0004, 0.7536,
-    0.3332, 0.1437, 0.2,
+    0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
+    0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
+    0.0912, 0.0658, 0.1542,
   ];
 
   const DEFAULTS = {
@@ -364,7 +365,14 @@
     const pending = t && r >= 1 && r <= 5 ? N.review(t, r, new Date()) : null;
     const before = t ? t.reviewCount : 0;
     if (rating === undefined) origSave(); else origSave(rating);
-    if (pending && t.reviewCount > before) { t.fsrs = pending.fsrs; save(); } // origSave returns early on invalid input
+    if (pending && t.reviewCount > before) {
+      // A user-selected date overrides the scheduled due date, but not the FSRS memory update.
+      // Keep the stored card's due date aligned with the date shown in Nexus.
+      const customDue = document.getElementById("reviewCustomDue")?.value || "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(customDue)) pending.fsrs.due = customDue;
+      t.fsrs = pending.fsrs;
+      save();
+    } // origSave returns early on invalid input
   };
 
   // 3) One-time/ongoing migration: build FSRS state for reviewed topics that lack it.
