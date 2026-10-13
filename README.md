@@ -88,3 +88,33 @@ To persist submissions and populate the shared wishlist, configure the following
 - `SYLLABUS_REQUEST_WEBHOOK_URL` — optional private HTTPS webhook for notifications. If configured, it receives the submitted fields including the optional email address. Email addresses are deliberately excluded from public GitHub issues.
 
 Without `GITHUB_TOKEN` or `SYLLABUS_REQUEST_WEBHOOK_URL`, the API returns a clear unavailable response; the app keeps an offline request draft in that user's browser, but it is not shared with other users until successfully submitted. Configure secrets only in Vercel environment variables, never in client-side code.
+
+
+## Community syllabus wishlist setup (upvotes and owner-only deletion)
+
+The community wishlist uses the app's existing Supabase authentication. Users must sign in to submit a request, upvote it, or delete a request they own. Each account can upvote a request once; no downvotes are available. Supabase Row Level Security (RLS) enforces ownership and vote uniqueness on the database, not just in the UI.
+
+### One-time Supabase setup
+
+1. Open the Supabase project used by Nexus: https://supabase.com/dashboard/project/txugbdavblpettcnhcxl
+2. Open **SQL Editor** and create a new query.
+3. Open `supabase/syllabus-community.sql` in this repository, copy its full contents into the SQL Editor, and run it.
+4. Confirm that the `nexus_syllabus_requests` and `nexus_syllabus_votes` tables were created.
+
+### Vercel environment variables
+
+The API uses the same public Supabase project as Nexus. In the Vercel project settings, add these variables for **Preview** and **Production** if they are not already present:
+
+- `SUPABASE_URL` = `https://txugbdavblpettcnhcxl.supabase.co`
+- `SUPABASE_ANON_KEY` = the project's **publishable/anon key** (never use a service-role or secret key here).
+
+Redeploy the preview after adding environment variables. No service-role key is required; requests are made with each user's session token and database RLS policies.
+
+### Manual test checklist
+
+- Sign in as Account A and submit a request.
+- Sign in as Account B (preferably in a separate browser profile) and confirm the request appears.
+- Account B upvotes it; the count increases by one. Repeated clicks must not create additional votes.
+- Account B must not see a delete button for Account A's request. Even a crafted API call must be rejected by RLS.
+- Account A sees **Delete my request** and can delete it; its votes are removed automatically.
+- Verify signed-out users can browse the wishlist but are prompted to sign in before submitting or upvoting.
