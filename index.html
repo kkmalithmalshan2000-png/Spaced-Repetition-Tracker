@@ -1725,6 +1725,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
       if(!accessToken()){alert('Please sign in to Nexus before upvoting or deleting community requests.');return}
       if(action==='delete'&&!confirm('Delete your request permanently? Other users’ requests cannot be deleted.'))return;
       pendingRequests.add(String(id));
+      requestLoadId++; // Invalidate any older GET that could overwrite this optimistic action.
       const prior=community.find(x=>String(x.id)===String(id));
       if(action==='delete'){community=community.filter(x=>String(x.id)!==String(id));}
       else if(prior){const wasUpvoted=!!prior.hasUpvoted;prior.hasUpvoted=action==='upvote';prior.votes=Math.max(0,(Number(prior.votes)||0)+(action==='upvote'?(wasUpvoted?0:1):(wasUpvoted?-1:0)));}
