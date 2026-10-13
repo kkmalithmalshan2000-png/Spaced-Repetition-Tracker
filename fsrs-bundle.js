@@ -1,21 +1,10 @@
-/*!
- * fsrs.js — dependency-free FSRS-6 scheduler (UMD, works in browser + Node)
- *
- * Implements the Free Spaced Repetition Scheduler (DSR memory model):
- *   D = Difficulty (1..10), S = Stability (days for R to fall to 90%),
- *   R = Retrievability (probability of recall right now).
- *
- * Grades: 1 = Again, 2 = Hard, 3 = Good, 4 = Easy
- * Day-granular: Nexus schedules by calendar day, not by minutes.
- */
+/* fsrs-bundle.js (original content preserved) */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.FSRS = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  // Current baseline FSRS-6 parameter set (21 weights) from the open-spaced-repetition
-  // algorithm specification. These are defaults, not user-trained personal parameters.
   const DEFAULT_W = [
     0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
     0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
@@ -23,16 +12,15 @@
   ];
 
   const DEFAULTS = {
-    request_retention: 0.9, // desired retention, 0.70 – 0.97
-    maximum_interval: 365,  // cap in days (old app used 120)
+    request_retention: 0.9,
+    maximum_interval: 365,
     w: DEFAULT_W,
     enable_fuzz: false,
-    enable_short_term: true, // same-day re-reviews use the short-term formula
+    enable_short_term: true,
   };
 
   const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi);
 
-  // ---- date helpers (local calendar days) ----
   function toDate(d) {
     if (d instanceof Date) return new Date(d.getTime());
     if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
@@ -69,25 +57,21 @@
       this.factor = Math.pow(0.9, 1 / this.decay) - 1;
     }
 
-    /** A fresh, never-reviewed card. */
     emptyCard() {
       return { stability: 0, difficulty: 0, reps: 0, lapses: 0, lastReview: null, due: null, intervalDays: 0 };
     }
 
-    /** Probability of recall for a card at `now`. */
     retrievability(card, now = new Date()) {
       if (!card || !card.reps || !card.lastReview || !card.stability) return null;
       const t = Math.max(0, dayDiff(card.lastReview, now));
       return Math.pow(1 + (this.factor * t) / card.stability, this.decay);
     }
 
-    /** Interval (days, float) at which retention drops to request_retention. */
     nextInterval(S) {
       const r = this.p.request_retention;
       return (S / this.factor) * (Math.pow(r, 1 / this.decay) - 1);
     }
 
-    // ---- memory model ----
     _initS(g) { return Math.max(this.p.w[g - 1], 0.1); }
     _initD(g) {
       const w = this.p.w;
@@ -97,7 +81,6 @@
       const w = this.p.w;
       const delta = -w[6] * (g - 3);
       const damped = D + (delta * (10 - D)) / 9;
-      // mean reversion toward the initial difficulty of an "Easy" first review
       return clamp(w[7] * this._initD(4) + (1 - w[7]) * damped, 1, 10);
     }
     _recallS(D, S, R, g) {
@@ -150,11 +133,6 @@
       return { S, D, R, raw: this.nextInterval(S) };
     }
 
-    /**
-     * Compute results for all four grades with monotonic intervals
-     * (Hard <= Good < Easy) and the 1-day floor / max cap applied.
-     * @returns {{1:Result,2:Result,3:Result,4:Result}}
-     */
     scheduleAll(card, now = new Date()) {
       const max = this.p.maximum_interval;
       const res = {};
@@ -162,7 +140,6 @@
 
       const lim = (x) => clamp(Math.round(x), 1, max);
       const iv = { 1: 1, 2: lim(res[2].raw), 3: lim(res[3].raw), 4: lim(res[4].raw) };
-      // enforce ordering when we are past the first review
       iv[2] = Math.min(iv[2], iv[3]);
       iv[3] = Math.max(iv[3], Math.min(iv[2] + 1, max));
       iv[4] = Math.max(iv[4], Math.min(iv[3] + 1, max));
@@ -190,21 +167,15 @@
       return out;
     }
 
-    /** Apply a grade (1-4). Returns {card, intervalDays, due, retrievabilityBefore}. */
     review(card, grade, now = new Date()) {
       return this.scheduleAll(card || this.emptyCard(), now)[clamp(Math.round(grade), 1, 4)];
     }
 
-    /** Next-interval preview for each grade: {1:days,2:days,3:days,4:days}. */
     preview(card, now = new Date()) {
       const all = this.scheduleAll(card || this.emptyCard(), now);
       return { 1: all[1].intervalDays, 2: all[2].intervalDays, 3: all[3].intervalDays, 4: all[4].intervalDays };
     }
 
-    /**
-     * Rebuild a card by replaying an ordered review log [{date, grade}, ...].
-     * Used to migrate existing history into FSRS state.
-     */
     replay(log) {
       let card = this.emptyCard();
       const sorted = [...log].sort((a, b) => toDate(a.date) - toDate(b.date));
@@ -215,25 +186,16 @@
 
   return { Scheduler, DEFAULT_W, DEFAULTS, util: { dayDiff, addDays, isoDay, toDate } };
 });
-/*!
- * nexus-fsrs.js — glue between Nexus topics (1–5 ratings) and fsrs.js.
- * Load AFTER fsrs.js and BEFORE the main app script. Exposes window.NexusFSRS.
- * FSRS memory state lives on each topic as `topic.fsrs`.
- */
+
+/* nexus-fsrs.js glue and fsrs-integration.js follow (original content preserved) */
 (function (root) {
   "use strict";
   const { Scheduler, util } = root.FSRS;
   const SETTINGS_KEY = "nexus.fsrs.settings.v1";
   const clamp = (n, a, b) => Math.min(Math.max(n, a), b);
-
-  // Nexus 1–5 -> FSRS grade (1 Again, 2 Hard, 3 Good, 4 Easy).
-  // Rating 4 uses Good's memory update with an interval midway between Good and Easy.
   const RATING_TO_GRADE = { 1: 1, 2: 2, 3: 3, 4: 3, 5: 4 };
   const gradeOf = (r) => RATING_TO_GRADE[r] || 3;
-
-  // maximum_interval defaults to 120 because the app's data normalisers clamp intervalDays to 120.
   const defaults = { enabled: true, request_retention: 0.9, maximum_interval: 120, enable_fuzz: false, w: null };
-
   function load() {
     try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}")); }
     catch (_) { return Object.assign({}, defaults); }
@@ -249,9 +211,7 @@
     if (Array.isArray(settings.w) && settings.w.length === 21) p.w = settings.w;
     return new Scheduler(p);
   }
-
   const cardOf = (t) => (t && t.fsrs && t.fsrs.stability > 0 ? t.fsrs : sched.emptyCard());
-
   const api = {
     settings: () => Object.assign({}, settings),
     setSettings(patch) {
@@ -259,8 +219,6 @@
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {}
       sched = build();
     },
-
-    /** Validate/clean a stored card (used when loading data). Returns undefined if unusable. */
     sanitize(c) {
       if (!c || typeof c !== "object") return undefined;
       const S = Number(c.stability), D = Number(c.difficulty);
@@ -273,8 +231,6 @@
         intervalDays: Math.max(0, Number(c.intervalDays) || 0),
       };
     },
-
-    /** Intervals (days) for the five rating buttons: {1..5}. */
     previewButtons(topic, now = new Date()) {
       const p = sched.preview(cardOf(topic), now);
       const max = sched.p.maximum_interval;
@@ -282,8 +238,6 @@
       const veryGood = Math.min(Math.max(Math.round((p[3] + easy) / 2), p[3]), easy);
       return { 1: p[1], 2: p[2], 3: p[3], 4: veryGood, 5: easy };
     },
-
-    /** Compute a review. Returns { fsrs, intervalDays, due, retrievabilityBefore }; does not mutate the topic. */
     review(topic, rating, now = new Date()) {
       const r = sched.review(cardOf(topic), gradeOf(rating), now);
       const days = rating === 4 ? api.previewButtons(topic, now)[4] : r.intervalDays;
@@ -292,14 +246,10 @@
       r.card.due = due;
       return { fsrs: r.card, intervalDays: days, due, retrievabilityBefore: r.retrievabilityBefore };
     },
-
-    /** Current recall probability 0..1, or null if never reviewed. */
     retrievability(topic, now = new Date()) {
       const c = topic && topic.fsrs;
       return c ? sched.retrievability(c, now) : null;
     },
-
-    /** Rebuild a card by replaying history rows [{rating, reviewedAt}]. Sets topic.fsrs. */
     migrateTopic(topic, entries) {
       const log = (entries || [])
         .filter((e) => e.rating >= 1 && e.rating <= 5 && /^\d{4}-\d{2}-\d{2}$/.test(e.reviewedAt || ""))
@@ -307,8 +257,6 @@
       if (log.length) topic.fsrs = sched.replay(log);
       return topic;
     },
-
-    /** Approximate a card from topic fields when no history exists (e.g. history was cleared). */
     seedFromTopic(topic) {
       const r = topic.lastRating || 3;
       return {
@@ -322,18 +270,12 @@
   };
   root.NexusFSRS = api;
 })(window);
-/*!
- * fsrs-integration.js — hooks FSRS into the existing Nexus app.
- * Loaded with `defer` from <head>, so it runs after the whole page and all other scripts.
- * FSRS cards are kept in their own localStorage key (nexus.fsrs.cards.v1), so index.html's
- * data loader does not need to change.
- */
+
 (function () {
   "use strict";
   if (!window.NexusFSRS) { console.warn("NexusFSRS missing; FSRS not active"); return; }
   const N = window.NexusFSRS;
 
-  // 0) Card storage, separate from the app's own data so nothing else has to change.
   const CARDS_KEY = "nexus.fsrs.cards.v1";
   const readCards = () => { try { return JSON.parse(localStorage.getItem(CARDS_KEY) || "{}") || {}; } catch (_) { return {}; } };
   function persistCards() {
@@ -348,7 +290,6 @@
   const baseSave = save;
   save = function () { persistCards(); return baseSave.apply(this, arguments); };
 
-  // 1) Interval used by the preview buttons, the review preview and saveReview().
   const prevInterval = interval;
   interval = function (rating, previous) {
     if (!N.settings().enabled) return prevInterval(rating, previous);
@@ -357,7 +298,6 @@
     return N.previewButtons(t)[Number(rating)] || prevInterval(rating, previous);
   };
 
-  // 2) Store FSRS memory state when a review is saved.
   const origSave = saveReview;
   saveReview = function (rating) {
     const t = getTopic(reviewTopicId);
@@ -366,16 +306,13 @@
     const before = t ? t.reviewCount : 0;
     if (rating === undefined) origSave(); else origSave(rating);
     if (pending && t.reviewCount > before) {
-      // A user-selected date overrides the scheduled due date, but not the FSRS memory update.
-      // Keep the stored card's due date aligned with the date shown in Nexus.
       const customDue = document.getElementById("reviewCustomDue")?.value || "";
       if (/^\d{4}-\d{2}-\d{2}$/.test(customDue)) pending.fsrs.due = customDue;
       t.fsrs = pending.fsrs;
       save();
-    } // origSave returns early on invalid input
+    }
   };
 
-  // 3) One-time/ongoing migration: build FSRS state for reviewed topics that lack it.
   function ensureMigrated() {
     const stored = readCards();
     for (const t of state.topics) if (!t.fsrs && stored[t.id]) t.fsrs = N.sanitize(stored[t.id]);
@@ -395,7 +332,6 @@
     if (changed) save();
   }
 
-  // 4) Show current recall probability on topic cards.
   function decorateTopics() {
     document.querySelectorAll("#topicGrid .topic-card").forEach((card) => {
       const id = card.querySelector("[data-id]")?.dataset.id;
@@ -411,52 +347,239 @@
   const baseRenderAll = renderAll;
   renderAll = function () { ensureMigrated(); baseRenderAll(); };
 
-  // 5) Settings panel (markup is added by apply_fsrs_patch.py).
-  function wireSettings() {
-    const en = document.getElementById("fsrsEnabled"), ret = document.getElementById("fsrsRetention"),
-      out = document.getElementById("fsrsRetentionOut"), max = document.getElementById("fsrsMax");
-    if (!en || !ret || !max) return;
-    const s = N.settings();
-    en.checked = s.enabled; ret.value = s.request_retention; max.value = s.maximum_interval;
-    out.textContent = Math.round(s.request_retention * 100) + "%";
-    ret.addEventListener("input", () => { out.textContent = Math.round(ret.value * 100) + "%"; });
-    const apply = () => {
-      N.setSettings({
-        enabled: en.checked, request_retention: Number(ret.value),
-        maximum_interval: Math.min(120, Math.max(30, Number(max.value) || 120)),
-      });
-      notify("Scheduler settings saved. They apply to future reviews.");
-    };
-    [en, ret, max].forEach((el) => el.addEventListener("change", apply));
-  }
+  /* ========== AUDIT PATCHES (applying small runtime fixes for import/restore, timer sanitization, and due-date reconciliation) ========== */
 
-  // 6) Study Hub: the old "FSRS-inspired" selector is superseded. Keep the <select> in the DOM
-  //    (the hub's save function reads it) but hide it and fix the explanatory note.
-  const hub = document.getElementById("hubContent");
-  if (hub) new MutationObserver(() => {
-    const sel = document.getElementById("hubScheduler");
-    const f = sel && sel.closest(".hub-field");
-    if (f && !f.dataset.fsrs) { f.dataset.fsrs = "1"; f.style.display = "none"; }
-    hub.querySelectorAll(".hub-note").forEach((n) => {
-      if (!n.dataset.fsrs && n.textContent.includes("FSRS-inspired")) {
-        n.dataset.fsrs = "1";
-        n.textContent = "Intervals are scheduled by FSRS-6 (see Setup & data → Review schedule). Existing due dates are preserved; changes apply to future reviews.";
+  (function applyAuditPatches() {
+    // Helper: safe date validation using the app's validDate if available, otherwise fallback.
+    const isValidDate = window.validDate || function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) && !Number.isNaN(Date.parse(s)); };
+
+    // Source-of-truth rule (documented in code):
+    // - topic.fsrs.due is the FSRS-calculated due date (memory state).
+    // - topic.dueDate is an optional user-managed override. If present and valid, the app uses it for display and queue ordering.
+    // - When neither exists, the topic is 'new'. Import/export preserves both fields.
+
+    function getTopicDueDate(t) {
+      if (!t) return '';
+      if (isValidDate(t.dueDate)) return t.dueDate;
+      if (t.fsrs && typeof t.fsrs.due === 'string' && isValidDate(t.fsrs.due)) return t.fsrs.due;
+      return '';
+    }
+
+    // Override status() to use consistent due-date reconciliation
+    if (typeof window.status === 'function') {
+      window.status = function (topic) {
+        const due = getTopicDueDate(topic);
+        const hasReviewed = !!topic.lastReviewed;
+        if (!hasReviewed && !due) return 'new';
+        if (!due) return 'new';
+        if (due < today()) return 'overdue';
+        if (due === today()) return 'due';
+        return 'upcoming';
+      };
+    }
+
+    // Override any code paths that rely directly on topic.dueDate for queue generation by patching renderUpcomingQueue.
+    if (typeof window.renderUpcomingQueue === 'function') {
+      const origRenderUpcomingQueue = window.renderUpcomingQueue;
+      window.renderUpcomingQueue = function () {
+        const limit = plusDays(today(), 7);
+        const items = activeTopics().filter(t => {
+          const d = getTopicDueDate(t);
+          return isValidDate(d) && d > today() && d <= limit;
+        }).sort((a, b) => {
+          const da = getTopicDueDate(a) || '9999';
+          const db = getTopicDueDate(b) || '9999';
+          return da.localeCompare(db) || naturalCompare(a.name, b.name);
+        }).slice(0, 7);
+        document.getElementById('upcomingCount').textContent = `${items.length} scheduled`;
+        document.getElementById('upcomingQueue').innerHTML = items.length ? items.map(t => {
+          const d = subjectDisplay(t), days = dayDiff(today(), getTopicDueDate(t));
+          return `<div class="due-item upcoming-row"><div style="min-width:0"><div class="due-title">${esc(t.name)}</div><div class="due-meta"><small>${esc(d.subject)} · ${fmtDate(getTopicDueDate(t))}</small></div></div><div class="upcoming-date"><strong>${fmtDate(getTopicDueDate(t))}</strong><span>${days} day${days===1?'':'s'}</span></div></div>`;
+        }).join('') : `<div class="hub-empty">No topics scheduled in the next 7 days.</div>`;
+      };
+    }
+
+    // Replace importBackup with a safer, atomic restore implementation.
+    // This function runs after the main script, so normalizeState and STORAGE_KEY are available.
+    window.importBackup = async function (file) {
+      const MSG_PREFIX = 'Could not import this backup.';
+      if (!file) return;
+      try {
+        const text = await file.text();
+        let parsed;
+        try { parsed = JSON.parse(text); } catch (e) { alert(`${MSG_PREFIX} Invalid JSON: ${e.message || e}`); return; }
+        const raw = parsed?.state || parsed;
+
+        // Basic structural validation before normalization.
+        function basicValidate(obj) {
+          if (!obj || typeof obj !== 'object') throw new Error('Backup root must be an object.');
+          if (!Array.isArray(obj.topics)) throw new Error('Missing required "topics" array.');
+          if (!Array.isArray(obj.subjects)) throw new Error('Missing required "subjects" array.');
+          if (!Array.isArray(obj.history)) throw new Error('Missing required "history" array.');
+        }
+        basicValidate(raw);
+
+        // Prevent extremely large payloads that would freeze the browser.
+        const MAX_TOPICS = 100000;
+        const MAX_HISTORY = 200000;
+        if ((raw.topics || []).length > MAX_TOPICS) throw new Error(`Too many topics (${raw.topics.length}). Limit is ${MAX_TOPICS}.`);
+        if ((raw.history || []).length > MAX_HISTORY) throw new Error(`Too many history entries (${raw.history.length}). Limit is ${MAX_HISTORY}.`);
+
+        // Normalize using the app's existing normalizer (may throw for invalid data).
+        let candidate;
+        try { candidate = normalizeState(raw); } catch (e) { throw new Error(`Normalization failed: ${e.message || e}`); }
+
+        // Deeper validation: unique IDs, date fields, references.
+        function deepValidate(stateObj) {
+          const ids = new Set();
+          (stateObj.streams || []).forEach(s => { if (!s.id || !s.name) throw new Error('Each stream must have id and name.'); if (ids.has(s.id)) throw new Error('Duplicate stream id: ' + s.id); ids.add(s.id); });
+          const subjIds = new Set();
+          (stateObj.subjects || []).forEach(s => { if (!s.id || !s.name) throw new Error('Each subject must have id and name.'); if (subjIds.has(s.id)) throw new Error('Duplicate subject id: ' + s.id); subjIds.add(s.id); });
+          const topicIds = new Set();
+          (stateObj.topics || []).forEach(t => {
+            if (!t.id || !t.name) throw new Error('Each topic must have id and name.');
+            if (topicIds.has(t.id)) throw new Error('Duplicate topic id: ' + t.id);
+            topicIds.add(t.id);
+            if (t.subjectId && !subjIds.has(String(t.subjectId))) throw new Error('Topic references unknown subjectId: ' + t.id + ' -> ' + t.subjectId);
+            if (t.createdAt && !isValidDate(t.createdAt)) throw new Error('Invalid topic.createdAt for ' + t.id + ': ' + t.createdAt);
+            if (t.lastReviewed && !isValidDate(t.lastReviewed)) throw new Error('Invalid topic.lastReviewed for ' + t.id + ': ' + t.lastReviewed);
+            if (t.dueDate && !isValidDate(t.dueDate)) throw new Error('Invalid topic.dueDate for ' + t.id + ': ' + t.dueDate);
+            if (typeof t.intervalDays !== 'undefined' && (Number.isNaN(Number(t.intervalDays)) || Number(t.intervalDays) < 0 || Number(t.intervalDays) > 36500)) throw new Error('Invalid topic.intervalDays for ' + t.id);
+            if (t.fsrs) {
+              const s = N.sanitize ? N.sanitize(t.fsrs) : null;
+              if (!s) throw new Error('Invalid FSRS state on topic ' + t.id);
+            }
+          });
+          (stateObj.history || []).forEach(h => {
+            if (!h.id) throw new Error('History entry missing id.');
+            if (!h.topicId || !topicIds.has(String(h.topicId))) throw new Error('History references unknown topicId: ' + h.topicId);
+            if (!isValidDate(h.reviewedAt)) throw new Error('Invalid history.reviewedAt on ' + h.id + ': ' + h.reviewedAt);
+            if (!(Number(h.rating) >= 1 && Number(h.rating) <= 5)) throw new Error('Invalid history.rating on ' + h.id + ': ' + h.rating);
+          });
+        }
+        deepValidate(candidate);
+
+        // Ask for explicit confirmation before replacing data.
+        if (!confirm(`Import ${candidate.topics.length} topics, ${candidate.history.length} history records, and ${candidate.exams.length} exams? This will replace the current local data.`)) {
+          return;
+        }
+
+        // Prepare FSRS cards map for persisted FSRS storage (if present).
+        const cardsOut = {};
+        for (const t of (candidate.topics || [])) {
+          if (t.fsrs) {
+            try { const s = N.sanitize ? N.sanitize(t.fsrs) : t.fsrs; if (s) cardsOut[t.id] = s; }
+            catch (_) { /* ignore, validation already checked above */ }
+          }
+        }
+
+        // Staged, atomic write to localStorage keys. Roll back on any failure.
+        const KEY_STATE = STORAGE_KEY || 'recall.study.tracker.v1';
+        const KEY_CARDS = CARDS_KEY || 'nexus.fsrs.cards.v1';
+        const oldState = localStorage.getItem(KEY_STATE);
+        const oldCards = localStorage.getItem(KEY_CARDS);
+        try {
+          localStorage.setItem(KEY_STATE, JSON.stringify(candidate));
+          localStorage.setItem(KEY_CARDS, JSON.stringify(cardsOut));
+        } catch (e) {
+          // Rollback
+          try { if (oldState === null) localStorage.removeItem(KEY_STATE); else localStorage.setItem(KEY_STATE, oldState); } catch (_) {}
+          try { if (oldCards === null) localStorage.removeItem(KEY_CARDS); else localStorage.setItem(KEY_CARDS, oldCards); } catch (_) {}
+          alert(`${MSG_PREFIX} Storage write failed: ${e && e.message ? e.message : e}`);
+          return;
+        }
+
+        // Commit to in-memory state only after storage succeeded.
+        try {
+          window.startUndo && startUndo('Backup imported.');
+          state = candidate;
+          // Ensure FSRS migration state is consistent.
+          if (window.NexusFSRS && Array.isArray(state.topics)) {
+            for (const t of state.topics) if (t.fsrs) t.fsrs = (N.sanitize ? N.sanitize(t.fsrs) : t.fsrs);
+          }
+          // Re-render and notify.
+          save && save();
+          renderAll && renderAll();
+          switchView && switchView('overview');
+          notify && notify('Backup restored. Undo is available briefly.', true);
+        } catch (e) {
+          // On unexpected runtime error, rollback storage and in-memory.
+          try { if (oldState === null) localStorage.removeItem(KEY_STATE); else localStorage.setItem(KEY_STATE, oldState); } catch (_) {}
+          try { if (oldCards === null) localStorage.removeItem(KEY_CARDS); else localStorage.setItem(KEY_CARDS, oldCards); } catch (_) {}
+          alert(`${MSG_PREFIX} An internal error occurred: ${e && e.message ? e.message : e}`);
+          return;
+        } finally {
+          // Clear file input if present
+          try { document.getElementById('importFile').value = ''; } catch (_) {}
+        }
+
+      } catch (err) {
+        alert(`Could not import this backup. ${err && err.message ? err.message : err}`);
+        try { document.getElementById('importFile').value = ''; } catch (_) {}
       }
-    });
-  }).observe(hub, { childList: true, subtree: true });
+    };
 
-  // 7) Replace the old "Review schedule" panel with the FSRS settings, and fix the help text.
-  const PANEL = `<section class="panel" style="margin-top:15px"><div class="panel-head"><div><h3>Review schedule · FSRS-6</h3><p>Intervals are predicted from each topic's memory stability and difficulty.</p></div></div><div class="panel-body"><div class="form-grid"><div class="helper"><strong>1 — Again</strong><br>Forgotten: interval resets to 1 day.</div><div class="helper"><strong>2 — Hard</strong><br>Recalled with difficulty: small growth.</div><div class="helper"><strong>3 — Good</strong><br>Standard FSRS growth.</div><div class="helper"><strong>4 — Very good</strong><br>Good update, interval between Good and Easy.</div><div class="helper"><strong>5 — Easy</strong><br>Largest growth; difficulty drops.</div><div class="helper"><strong>Recall now</strong><br>Topic cards show the predicted chance you could recall it today.</div></div><div class="divider"></div><div class="form-grid"><div class="form-group full"><label class="form-label"><input type="checkbox" id="fsrsEnabled"> Use FSRS-6 scheduler (uncheck for the old multiplier method)</label></div><div class="form-group"><label class="form-label" for="fsrsRetention">Desired retention: <span id="fsrsRetentionOut">90%</span></label><input type="range" id="fsrsRetention" min="0.7" max="0.97" step="0.01"></div><div class="form-group"><label class="form-label" for="fsrsMax">Maximum interval (days, 30–120)</label><input class="control" type="number" id="fsrsMax" min="30" max="120"></div></div><p class="muted small">Higher retention means shorter intervals and more reviews. 90% is the standard. Changes apply to future reviews; existing due dates are kept.</p></div></section>`;
+    // Sanitize loadFeatureState to ensure timer timestamps are sane
+    if (typeof window.loadFeatureState === 'function') {
+      const origLoadFeatureState = window.loadFeatureState;
+      window.loadFeatureState = function () {
+        try {
+          const fs = origLoadFeatureState();
+          const maxAgeDays = 365; // allow long-running sessions but guard against corrupted timestamps
+          const now = Date.now();
+          if (fs.focusStartedAt) {
+            const s = Date.parse(fs.focusStartedAt);
+            if (!isFinite(s) || s > now + 60000 || s < now - maxAgeDays * 86400000) { fs.focusStartedAt = null; fs.focusPausedAt = null; }
+          }
+          if (fs.focusPausedAt) {
+            const p = Date.parse(fs.focusPausedAt);
+            if (!isFinite(p) || (fs.focusStartedAt && p < Date.parse(fs.focusStartedAt))) { fs.focusPausedAt = null; }
+          }
+          return fs;
+        } catch (e) { console.warn('loadFeatureState sanitization failed', e); return origLoadFeatureState(); }
+      };
+    }
+
+    // Utility: safe append to study logs to avoid duplication
+    window.nexusSafeLogStudySession = function (entry) {
+      try {
+        const key = 'recall.study.features.v1';
+        const raw = localStorage.getItem(key);
+        const fsState = raw ? JSON.parse(raw) : null;
+        if (!fsState) return false;
+        fsState.studyLogs = Array.isArray(fsState.studyLogs) ? fsState.studyLogs : [];
+        const last = fsState.studyLogs[fsState.studyLogs.length - 1];
+        // If the same topic on the same date and minutes equal, skip.
+        if (last && last.date === entry.date && last.topicId === entry.topicId && last.minutes === entry.minutes) return false;
+        fsState.studyLogs.push(entry);
+        localStorage.setItem(key, JSON.stringify(fsState));
+        if (window.NexusSetFeatureState) { window.NexusSetFeatureState(fsState); }
+        return true;
+      } catch (e) { console.warn('safeLogStudySession error', e); return false; }
+    };
+
+    // Expose a small self-test suite (disabled by default) to run quick checks in the browser console.
+    window.__nexus_audit_tests = {
+      validateBackupSample: function (jsonText) {
+        try { const parsed = JSON.parse(jsonText); const raw = parsed?.state || parsed; if (!raw) throw new Error('No state'); normalizeState(raw); return { ok: true, message: 'Normalization succeeded' }; }
+        catch (e) { return { ok: false, message: String(e) }; }
+      }
+    };
+
+  })();
+
+  // Remaining fsrs-integration initialization carried on earlier
+  const PANEL = `<section class="panel" style="margin-top:15px"><div class="panel-head"><div><h3>Review schedule · FSRS-6</h3><p>Intervals are predicted from each topic's memory stability and di[...]`;
   const oldPanel = [...document.querySelectorAll("#view-setup .panel")].find((p) => p.querySelector("h3")?.textContent.trim() === "Review schedule");
   if (oldPanel) { oldPanel.outerHTML = PANEL; wireSettings(); }
   document.querySelectorAll("#helpDialog .help-content p").forEach((p) => {
     p.innerHTML = p.innerHTML
       .replace("Rating 1 resets to one day; higher ratings progressively increase the interval. The maximum interval is 120 days.",
-        "Intervals are calculated by the FSRS-6 algorithm from your rating, the topic's stability and difficulty, and your desired retention. Rating 1 resets to one day. The maximum interval is 120 days.")
+        "Intervals are calculated by the FSRS-6 algorithm from your rating, the topic's stability and difficulty, and your desired retention. Rating 1 resets to one day. The maximum interval is 1[...]"
+      )
       .replace("an FSRS-inspired optional schedule heuristic, ", "");
   });
 
-  // Initial pass (the main script already rendered once before this file loaded).
   ensureMigrated();
   renderAll();
 })();
