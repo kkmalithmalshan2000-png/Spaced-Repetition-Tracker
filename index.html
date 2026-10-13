@@ -1712,7 +1712,8 @@ dialog .dialog-inner,dialog>div{max-height:none}
       const grid=explore.querySelector('#exploreGrid');
       if(grid)grid.hidden=activeTab==='requests';
       const toolbar=explore.querySelector('.explore-toolbar');
-      if(toolbar)toolbar.hidden=activeTab==='requests';
+      if(toolbar)toolbar.hidden=false;
+      const searchField=explore.querySelector('#exploreSearch');if(searchField)searchField.placeholder=activeTab==='requests'?'Search community requests…':'Search streams, subjects, topics…';
       tabs.querySelectorAll('[data-community-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.communityTab===activeTab)));
       if(activeTab!=='requests')return;
       const local=safeLocal();
