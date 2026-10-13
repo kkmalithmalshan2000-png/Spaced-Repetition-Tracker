@@ -44,7 +44,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const user = await currentUser(token);
       const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id,syllabus_request_votes(count)&order=created_at.desc&limit=200', {
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + (token || SUPABASE_ANON_KEY), Accept: 'application/json' }
+        headers: { apikey: SUPABASE_ANON_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}), Accept: 'application/json' }
       });
       if (!requestsResponse.ok) return json(res, 503, { error: 'Community wishlist storage is not configured or is temporarily unavailable. Check the Supabase setup guide.' });
       const requests = await requestsResponse.json();
