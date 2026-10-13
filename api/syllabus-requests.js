@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
       }
       return json(res, 200, { requests: requests.map(x => ({
         id: x.id, name: x.name, category: x.category, topics: x.topics || '',
-        createdAt: x.created_at, votes: Array.isArray(x.syllabus_request_votes) && x.nexus_syllabus_votes[0] ? Number(x.syllabus_request_votes[0].count || 0) : 0,
+        createdAt: x.created_at, votes: Array.isArray(x.nexus_syllabus_votes) && x.nexus_syllabus_votes[0] ? Number(x.nexus_syllabus_votes[0].count || 0) : 0,
         isOwner: !!user && user.id === x.owner_id, hasUpvoted: myVotes.has(x.id), status: 'community'
       })), signedIn: !!user });
     }
