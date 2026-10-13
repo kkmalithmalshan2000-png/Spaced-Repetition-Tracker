@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const user = await currentUser(token);
-      const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id,syllabus_request_votes(count)&order=created_at.desc&limit=200', {
+      const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id,nexus_syllabus_votes(count)&order=created_at.desc&limit=200', {
         headers: { apikey: SUPABASE_ANON_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}), Accept: 'application/json' }
       });
       if (!requestsResponse.ok) return json(res, 503, { error: 'Community wishlist storage is not configured or is temporarily unavailable. Check the Supabase setup guide.' });
@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
       }
       return json(res, 200, { requests: requests.map(x => ({
         id: x.id, name: x.name, category: x.category, topics: x.topics || '',
-        createdAt: x.created_at, votes: Array.isArray(x.syllabus_request_votes) && x.syllabus_request_votes[0] ? Number(x.syllabus_request_votes[0].count || 0) : 0,
+        createdAt: x.created_at, votes: Array.isArray(x.syllabus_request_votes) && x.nexus_syllabus_votes[0] ? Number(x.syllabus_request_votes[0].count || 0) : 0,
         isOwner: !!user && user.id === x.owner_id, hasUpvoted: myVotes.has(x.id), status: 'community'
       })), signedIn: !!user });
     }
