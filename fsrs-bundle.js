@@ -364,7 +364,14 @@
     const pending = t && r >= 1 && r <= 5 ? N.review(t, r, new Date()) : null;
     const before = t ? t.reviewCount : 0;
     if (rating === undefined) origSave(); else origSave(rating);
-    if (pending && t.reviewCount > before) { t.fsrs = pending.fsrs; save(); } // origSave returns early on invalid input
+    if (pending && t.reviewCount > before) {
+      // A user-selected date overrides the scheduled due date, but not the FSRS memory update.
+      // Keep the stored card's due date aligned with the date shown in Nexus.
+      const customDue = document.getElementById("reviewCustomDue")?.value || "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(customDue)) pending.fsrs.due = customDue;
+      t.fsrs = pending.fsrs;
+      save();
+    } // origSave returns early on invalid input
   };
 
   // 3) One-time/ongoing migration: build FSRS state for reviewed topics that lack it.
