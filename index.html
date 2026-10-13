@@ -1698,12 +1698,12 @@ dialog .dialog-inner,dialog>div{max-height:none}
     dialog.innerHTML='<div class="syllabus-dialog-inner"><div class="syllabus-dialog-head"><div><h3>Request a syllabus</h3><p class="muted">Help prioritise the curricula learners need.</p></div><button type="button" class="btn btn-ghost" id="closeSyllabusRequest" aria-label="Close">✕</button></div><form id="syllabusRequestForm"><label for="syllabusName">Subject / course name *</label><input class="field" id="syllabusName" name="name" maxlength="120" required placeholder="e.g. AP Physics 1, JLPT N3"><label for="syllabusCategory">Category / exam board *</label><input class="field" id="syllabusCategory" name="category" maxlength="100" required placeholder="e.g. High School, University, Professional"><label for="syllabusTopics">Key topics / chapters (optional)</label><textarea class="field" id="syllabusTopics" name="topics" maxlength="3000" rows="4" placeholder="Paste a rough syllabus outline, if available"></textarea><p class="community-notice">You must sign in to submit a shared request. Your email address is not collected or published.</p><div id="syllabusFormStatus" class="community-meta" role="status" aria-live="polite"></div><div class="syllabus-dialog-foot"><button type="button" class="btn btn-ghost" id="cancelSyllabusRequest">Cancel</button><button type="submit" class="btn btn-primary" id="submitSyllabusRequest">Submit request</button></div></form></div>';
     document.body.appendChild(dialog);
     const form=dialog.querySelector('#syllabusRequestForm'),status=dialog.querySelector('#syllabusFormStatus'),submit=dialog.querySelector('#submitSyllabusRequest');
-    let community=[],activeTab='available',signedIn=false;
+    let community=[],activeTab='available',signedIn=false,requestLoadId=0;const pendingRequests=new Set();
     const escapeHTML=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const norm=s=>String(s||'').trim().toLocaleLowerCase();
     // Read only the current Supabase session token from the app's existing browser session.
     const accessToken=()=>{try{const live=window.NexusCommunitySession&&window.NexusCommunitySession();if(live&&live.access_token)return live.access_token;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('sb-')&&k.endsWith('-auth-token')){const v=JSON.parse(localStorage.getItem(k)||'{}');if(v.access_token)return v.access_token;}}}catch(_){}return ''};
-    const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers});};
+    const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers,cache:'no-store'});};
     const render=()=>{
       const search=(document.querySelector('#exploreSearch')?.value||'').trim().toLocaleLowerCase();
       list.hidden=activeTab!=='requests';const grid=explore.querySelector('#exploreGrid');if(grid)grid.hidden=activeTab==='requests';
@@ -1713,19 +1713,25 @@ dialog .dialog-inner,dialog>div{max-height:none}
       if(activeTab!=='requests')return;
       const filtered=community.filter(x=>(norm(x.name)+' '+norm(x.category)+' '+norm(x.topics)).includes(search)).sort((a,b)=>(Number(b.votes)||0)-(Number(a.votes)||0)||new Date(b.createdAt||0)-new Date(a.createdAt||0));
       if(!filtered.length){list.innerHTML='<div class="community-empty">No community requests yet. Be the first to suggest a curriculum.</div>';return}
-      list.innerHTML=filtered.map(x=>'<article class="community-item" data-request-id="'+escapeHTML(x.id)+'"><div class="community-item-main"><h4>'+escapeHTML(x.name)+'</h4><div class="community-meta">'+escapeHTML(x.category||'Uncategorised')+' · '+new Date(x.createdAt||Date.now()).toLocaleDateString()+'</div>'+(x.topics?'<p>'+escapeHTML(x.topics)+'</p>':'')+'</div><div class="community-item-actions"><button type="button" class="btn community-vote" data-action="'+(x.hasUpvoted?'remove-upvote':'upvote')+'" data-id="'+escapeHTML(x.id)+'" aria-pressed="'+String(!!x.hasUpvoted)+'" title="'+(x.hasUpvoted?'Remove your upvote':'Upvote this request')+'">'+(x.hasUpvoted?'▲ Upvoted':'▲ Upvote')+' · '+(Number(x.votes)||0)+'</button>'+(x.isOwner?'<button type="button" class="btn btn-danger community-delete" data-action="delete" data-id="'+escapeHTML(x.id)+'">Delete my request</button>':'')+'</div></article>').join('');
+      list.innerHTML=filtered.map(x=>'<article class="community-item" data-request-id="'+escapeHTML(x.id)+'"><div class="community-item-main"><h4>'+escapeHTML(x.name)+'</h4><div class="community-meta">'+escapeHTML(x.category||'Uncategorised')+' · '+new Date(x.createdAt||Date.now()).toLocaleDateString()+'</div>'+(x.topics?'<p>'+escapeHTML(x.topics)+'</p>':'')+'</div><div class="community-item-actions"><button type="button" class="btn community-vote" data-action="'+(x.hasUpvoted?'remove-upvote':'upvote')+'" data-id="'+escapeHTML(x.id)+'" aria-pressed="'+String(!!x.hasUpvoted)+'" title="'+(x.hasUpvoted?'Remove your upvote':'Upvote this request')+'" '+(pendingRequests.has(String(x.id))?'disabled':'')+' >'+(x.hasUpvoted?'▲ Upvoted':'▲ Upvote')+' · '+(Number(x.votes)||0)+'</button>'+(x.isOwner?'<button type="button" class="btn btn-danger community-delete" data-action="delete" data-id="'+escapeHTML(x.id)+'" '+(pendingRequests.has(String(x.id))?'disabled':'')+'>Delete my request</button>':'')+'</div></article>').join('');
     };
-    const loadRequests=async()=>{try{const r=await api('',{});const data=await r.json();if(!r.ok)throw new Error(data.error||'Wishlist unavailable');community=Array.isArray(data.requests)?data.requests:[];signedIn=!!data.signedIn;render()}catch(e){list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
+    const loadRequests=async()=>{const loadId=++requestLoadId;try{const r=await api('',{});const data=await r.json();if(loadId!==requestLoadId)return;if(!r.ok)throw new Error(data.error||'Wishlist unavailable');community=Array.isArray(data.requests)?data.requests:[];signedIn=!!data.signedIn;render()}catch(e){if(loadId!==requestLoadId)return;list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
     tabs.addEventListener('click',e=>{const b=e.target.closest('[data-community-tab]');if(!b)return;activeTab=b.dataset.communityTab;render();if(activeTab==='requests')loadRequests()});
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
     const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
     list.addEventListener('click',async e=>{
       const b=e.target.closest('button[data-action]');if(!b)return;const id=b.dataset.id,action=b.dataset.action;
+      if(pendingRequests.has(String(id)))return;
       if(!accessToken()){alert('Please sign in to Nexus before upvoting or deleting community requests.');return}
       if(action==='delete'&&!confirm('Delete your request permanently? Other users’ requests cannot be deleted.'))return;
-      b.disabled=true;
+      pendingRequests.add(String(id));
+      const prior=community.find(x=>String(x.id)===String(id));
+      if(action==='delete'){community=community.filter(x=>String(x.id)!==String(id));}
+      else if(prior){const wasUpvoted=!!prior.hasUpvoted;prior.hasUpvoted=action==='upvote';prior.votes=Math.max(0,(Number(prior.votes)||0)+(action==='upvote'?(wasUpvoted?0:1):(wasUpvoted?-1:0)));}
+      render();
       try{const response=action==='delete'?await api('',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}):await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Action failed');await loadRequests()}
-      catch(err){alert(err.message||'Could not complete the action.');b.disabled=false}
+      catch(err){await loadRequests();alert(err.message||'Could not complete the action.')}
+      finally{pendingRequests.delete(String(id));render()}
     });
     form.addEventListener('submit',async e=>{
       e.preventDefault();if(!form.reportValidity())return;
