@@ -76,3 +76,15 @@ The database and client connection are configured. To allow authentication redir
 4. Email magic-link sign-in can then be used. For Google sign-in, open [Auth Providers](https://supabase.com/dashboard/project/txugbdavblpettcnhcxl/auth/providers), enable Google, and enter the OAuth Client ID and Client Secret from a Google Cloud OAuth web application. Add the Supabase callback URL shown on that provider page to the Google OAuth client's authorized redirect URIs.
 
 The Supabase project-management connection available here does not expose Auth URL/provider settings, and Google OAuth requires credentials from your Google account. Those settings must be completed in the dashboard before sign-in can be fully verified. The app will continue to work offline and keep local data while cloud sign-in is not configured.
+
+## Community syllabus requests (Vercel)
+
+The Explore Curriculum view includes a request form and community wishlist. The API route is `/api/syllabus-requests`.
+
+To persist submissions and populate the shared wishlist, configure the following in **Vercel → Project → Settings → Environment Variables**, then redeploy:
+
+- `GITHUB_TOKEN` — a fine-grained GitHub token with **Issues: Read and write** permission for this repository. The API creates one issue per request and lists those issues in the wishlist.
+- `GITHUB_REPOSITORY` — optional; defaults to `kkmalithmalshan2000-png/Spaced-Repetition-Tracker`.
+- `SYLLABUS_REQUEST_WEBHOOK_URL` — optional private HTTPS webhook for notifications. If configured, it receives the submitted fields including the optional email address. Email addresses are deliberately excluded from public GitHub issues.
+
+Without `GITHUB_TOKEN` or `SYLLABUS_REQUEST_WEBHOOK_URL`, the API returns a clear unavailable response; the app keeps an offline request draft in that user's browser, but it is not shared with other users until successfully submitted. Configure secrets only in Vercel environment variables, never in client-side code.
