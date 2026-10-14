@@ -1688,7 +1688,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
     if(!explore || document.querySelector('#communityRequestCard')) return;
     const hero=explore.querySelector('.explore-hero'); if(!hero)return;
     const card=document.createElement('section');card.id='communityRequestCard';card.className='community-request-card';
-    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Browse requests and upvote the curricula learners need most.</p></div><div class="community-request-actions"><a class="btn btn-ghost" href="https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues?q=is%3Aissue+is%3Aopen+%5BNexus+Curriculum+Request%5D" target="_blank" rel="noopener noreferrer">View open requests on GitHub ↗</a><button type="button" class="btn btn-ghost" id="syncSyllabusRequests" hidden>Sync existing requests to GitHub</button><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
+    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Each account can have one active request at a time; delete it to submit another.</p></div><div class="community-request-actions"><a class="btn btn-ghost" href="https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues?q=is%3Aissue+is%3Aopen+%5BNexus+Curriculum+Request%5D" target="_blank" rel="noopener noreferrer">View open requests on GitHub ↗</a><button type="button" class="btn btn-ghost" id="syncSyllabusRequests" hidden>Sync existing requests to GitHub</button><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
     hero.insertAdjacentElement('afterend',card);
     const tabs=document.createElement('div');tabs.className='community-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Curriculum lists');
     tabs.innerHTML='<button type="button" class="community-tab" role="tab" aria-selected="true" data-community-tab="available">Available curricula</button><button type="button" class="community-tab" role="tab" aria-selected="false" data-community-tab="requests">Community wishlist / requests</button>';
@@ -1706,6 +1706,13 @@ dialog .dialog-inner,dialog>div{max-height:none}
     const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=await accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers,cache:'no-store'});};
     const render=()=>{
       const search=(document.querySelector('#exploreSearch')?.value||'').trim().toLocaleLowerCase();
+      const requestButton=document.querySelector('#openSyllabusRequest');
+      const hasOwnActiveRequest=signedIn&&community.some(x=>x.isOwner);
+      if(requestButton){
+        requestButton.disabled=hasOwnActiveRequest;
+        requestButton.textContent=hasOwnActiveRequest?'You have an active request':'Request a syllabus';
+        requestButton.title=hasOwnActiveRequest?'Delete your active request before submitting another.':'Request a syllabus';
+      }
       list.hidden=activeTab!=='requests';const grid=explore.querySelector('#exploreGrid');if(grid)grid.hidden=activeTab==='requests';
       const toolbar=explore.querySelector('.explore-toolbar');if(toolbar)toolbar.hidden=false;
       const searchField=explore.querySelector('#exploreSearch');if(searchField)searchField.placeholder=activeTab==='requests'?'Search community requests…':'Search streams, subjects, topics…';
@@ -1781,6 +1788,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
     form.addEventListener('submit',async e=>{
       e.preventDefault();if(!form.reportValidity())return;
       if(!accessToken()){status.textContent='Sign in to Nexus first. Shared requests must be linked to your account so only you can delete them.';return}
+      if(community.some(x=>x.isOwner)){status.textContent='You already have an active request. Delete it, or ask the admin to remove it, before submitting another.';return}
       const payload={name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),topics:form.elements.topics.value.trim()};
       if(community.some(x=>norm(x.name)===norm(payload.name)&&norm(x.category)===norm(payload.category))){status.textContent='A similar request already exists. Please upvote it instead.';return}
       submit.disabled=true;submit.textContent='Submitting…';status.textContent='Sending request…';
