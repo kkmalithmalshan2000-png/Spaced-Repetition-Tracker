@@ -252,11 +252,26 @@ module.exports = async function handler(req, res) {
     const inserted = await db('nexus_syllabus_requests', token, { method: 'POST', body: { name, category, topics, owner_id: user.id } });
     if (!inserted.ok) {
       const insertError = await inserted.json().catch(() => ({}));
-      if (inserted.status === 409 || insertError.code === '23505') {
+      const errorText = [insertError.message, insertError.details, insertError.hint].filter(Boolean).join(' ');
+      const looksLikeOwnerConflict = /nexus_syllabus_requests_one_active_per_owner|duplicate key|unique constraint/i.test(errorText);
+      if (inserted.status === 409 || insertError.code === '23505' || looksLikeOwnerConflict) {
         return json(res, 409, {
           code: 'ACTIVE_REQUEST_EXISTS',
-          error: 'You already have an active syllabus request. Delete your current request, or ask the admin to remove it, before submitting another.'
+          error: 'You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.'
         });
+      }
+      // Some PostgREST/database configurations return a generic error body for a
+      // unique-index rejection. Verify whether the account already owns a request
+      // before showing the unrelated schema/policy troubleshooting message.
+      const existingAfterFailure = await db('nexus_syllabus_requests?select=id&owner_id=eq.' + encodeURIComponent(user.id) + '&limit=1', token);
+      if (existingAfterFailure.ok) {
+        const existingRows = await existingAfterFailure.json();
+        if (Array.isArray(existingRows) && existingRows.length) {
+          return json(res, 409, {
+            code: 'ACTIVE_REQUEST_EXISTS',
+            error: 'You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.'
+          });
+        }
       }
       return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
     }
