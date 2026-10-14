@@ -1739,7 +1739,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
       else if(prior){prior.hasUpvoted=action==='upvote';prior.votes=Math.max(0,(Number(priorState.votes)||0)+(action==='upvote'?(priorState.hasUpvoted?0:1):(priorState.hasUpvoted?-1:0)));}
       render(); // Optimistic UI: reflect the intended action without waiting for the network.
       try{
-        const response=action==='delete'
+        const response=(action==='delete'||action==='admin-delete')
           ?await api('',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})})
           :await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id})});
         const result=await response.json();if(!response.ok)throw new Error(result.error||'Action failed');
