@@ -118,3 +118,19 @@ Redeploy the preview after adding environment variables. No service-role key is 
 - Account B must not see a delete button for Account A's request. Even a crafted API call must be rejected by RLS.
 - Account A sees **Delete my request** and can delete it; its votes are removed automatically.
 - Verify signed-out users can browse the wishlist but are prompted to sign in before submitting or upvoting.
+
+
+## Public request tracker and administrator controls
+
+Nexus mirrors community curriculum requests to the public GitHub Issues tracker at https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues. New submissions are saved to the shared Supabase wishlist and mirrored to GitHub. Existing wishlist items can be synchronised in batches using the administrator-only **Sync existing requests to GitHub** button in Explore Curriculum. Each mirrored issue contains a stable Nexus request ID so it can be found and closed later.
+
+### Vercel environment variables for the public request tracker
+
+Set these in Vercel Project → Settings → Environment Variables for Preview and Production, then redeploy the matching deployment:
+
+- `GITHUB_TOKEN`: a fine-grained GitHub token with **Issues: Read and write** access to this repository.
+- `GITHUB_REPOSITORY`: optional; defaults to `kkmalithmalshan2000-png/Spaced-Repetition-Tracker`.
+- `NEXUS_ADMIN_USER_ID`: the UUID of the owner's Nexus Supabase Auth user. Find it in Supabase Dashboard → Authentication → Users. Only this authenticated account receives administrator controls and can remove any community request.
+- `SUPABASE_SERVICE_ROLE_KEY`: the Supabase service-role key for this project. It is used only inside the Vercel serverless function for administrator deletion. **Never add this key to browser code, GitHub, or any public file.**
+
+Regular users can still delete only requests they created. The configured Nexus administrator can mark any request fulfilled and remove it from the in-app wishlist; the corresponding GitHub issue is closed as completed. The administrator sync action mirrors pre-existing requests in batches, avoiding a large single serverless request. If the GitHub mirror is temporarily unavailable, a newly submitted request remains saved in the shared Supabase wishlist and can be synced later.
