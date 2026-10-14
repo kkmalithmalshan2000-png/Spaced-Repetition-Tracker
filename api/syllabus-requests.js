@@ -235,8 +235,31 @@ module.exports = async function handler(req, res) {
     }
     const name = clean(input.name, 120), category = clean(input.category, 100), topics = clean(input.topics, 3000);
     if (!name || !category) return json(res, 400, { error: 'Subject/course name and category are required.' });
+
+    // Enforce one active request per authenticated user. The unique database index
+    // in supabase/migrations/20261014_one_active_syllabus_request_per_user.sql
+    // closes the race between simultaneous submissions; this check provides a clear message.
+    const activeRequest = await db('nexus_syllabus_requests?select=id&owner_id=eq.' + encodeURIComponent(user.id) + '&limit=1', token);
+    if (!activeRequest.ok) return json(res, 503, { error: 'Could not verify your existing requests. Please try again shortly.' });
+    const activeRows = await activeRequest.json();
+    if (Array.isArray(activeRows) && activeRows.length) {
+      return json(res, 409, {
+        code: 'ACTIVE_REQUEST_EXISTS',
+        error: 'You already have an active syllabus request. Delete your current request, or ask the admin to remove it, before submitting another.'
+      });
+    }
+
     const inserted = await db('nexus_syllabus_requests', token, { method: 'POST', body: { name, category, topics, owner_id: user.id } });
-    if (!inserted.ok) return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
+    if (!inserted.ok) {
+      const insertError = await inserted.json().catch(() => ({}));
+      if (inserted.status === 409 || insertError.code === '23505') {
+        return json(res, 409, {
+          code: 'ACTIVE_REQUEST_EXISTS',
+          error: 'You already have an active syllabus request. Delete your current request, or ask the admin to remove it, before submitting another.'
+        });
+      }
+      return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
+    }
     const rows = await inserted.json();
     const row = rows[0];
     let githubSynced = false, githubIssueUrl = '';
