@@ -1688,14 +1688,14 @@ dialog .dialog-inner,dialog>div{max-height:none}
     if(!explore || document.querySelector('#communityRequestCard')) return;
     const hero=explore.querySelector('.explore-hero'); if(!hero)return;
     const card=document.createElement('section');card.id='communityRequestCard';card.className='community-request-card';
-    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Browse requests and upvote the curricula learners need most.</p></div><div class="community-request-actions"><a class="btn btn-ghost" href="https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues?q=is%3Aissue+is%3Aopen+%5BNexus+Curriculum+Request%5D" target="_blank" rel="noopener noreferrer">View open requests on GitHub ↗</a><button type="button" class="btn btn-ghost" id="syncSyllabusRequests" hidden>Sync existing requests to GitHub</button><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
+    card.innerHTML='<div><span class="explore-eyebrow">COMMUNITY CURRICULUM</span><h3>Can’t find your subject? Request a curriculum</h3><p>Suggest an exam, course, or qualification. Each account may have only one active request at a time. To request a different syllabus, delete your current request first, or ask the admin to remove it.</p></div><div class="community-request-actions"><a class="btn btn-ghost" href="https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues?q=is%3Aissue+is%3Aopen+%5BNexus+Curriculum+Request%5D" target="_blank" rel="noopener noreferrer">View open requests on GitHub ↗</a><button type="button" class="btn btn-ghost" id="syncSyllabusRequests" hidden>Sync existing requests to GitHub</button><button type="button" class="btn btn-primary" id="openSyllabusRequest">Request a syllabus</button></div>';
     hero.insertAdjacentElement('afterend',card);
     const tabs=document.createElement('div');tabs.className='community-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Curriculum lists');
     tabs.innerHTML='<button type="button" class="community-tab" role="tab" aria-selected="true" data-community-tab="available">Available curricula</button><button type="button" class="community-tab" role="tab" aria-selected="false" data-community-tab="requests">Community wishlist / requests</button>';
     card.insertAdjacentElement('afterend',tabs);
     const list=document.createElement('div');list.id='communityRequestList';list.className='community-list';list.hidden=true;tabs.insertAdjacentElement('afterend',list);
     const dialog=document.createElement('dialog');dialog.id='syllabusRequestDialog';
-    dialog.innerHTML='<div class="syllabus-dialog-inner"><div class="syllabus-dialog-head"><div><h3>Request a syllabus</h3><p class="muted">Help prioritise the curricula learners need.</p></div><button type="button" class="btn btn-ghost" id="closeSyllabusRequest" aria-label="Close">✕</button></div><form id="syllabusRequestForm"><label for="syllabusName">Subject / course name *</label><input class="field" id="syllabusName" name="name" maxlength="120" required placeholder="e.g. AP Physics 1, JLPT N3"><label for="syllabusCategory">Category / exam board *</label><input class="field" id="syllabusCategory" name="category" maxlength="100" required placeholder="e.g. High School, University, Professional"><label for="syllabusTopics">Key topics / chapters (optional)</label><textarea class="field" id="syllabusTopics" name="topics" maxlength="3000" rows="4" placeholder="Paste a rough syllabus outline, if available"></textarea><p class="community-notice">You must sign in to submit a shared request. Your email address is not collected or published.</p><div id="syllabusFormStatus" class="community-meta" role="status" aria-live="polite"></div><div class="syllabus-dialog-foot"><button type="button" class="btn btn-ghost" id="cancelSyllabusRequest">Cancel</button><button type="submit" class="btn btn-primary" id="submitSyllabusRequest">Submit request</button></div></form></div>';
+    dialog.innerHTML='<div class="syllabus-dialog-inner"><div class="syllabus-dialog-head"><div><h3>Request a syllabus</h3><p class="muted">Each account can have one active request at a time. To request a different syllabus, delete your current request first, or ask the admin to remove it.</p></div><button type="button" class="btn btn-ghost" id="closeSyllabusRequest" aria-label="Close">✕</button></div><form id="syllabusRequestForm"><label for="syllabusName">Subject / course name *</label><input class="field" id="syllabusName" name="name" maxlength="120" required placeholder="e.g. AP Physics 1, JLPT N3"><label for="syllabusCategory">Category / exam board *</label><input class="field" id="syllabusCategory" name="category" maxlength="100" required placeholder="e.g. High School, University, Professional"><label for="syllabusTopics">Key topics / chapters (optional)</label><textarea class="field" id="syllabusTopics" name="topics" maxlength="3000" rows="4" placeholder="Paste a rough syllabus outline, if available"></textarea><p class="community-notice">You must sign in to submit a shared request. You can have only one active request per account; delete your current request before submitting a different one. Your email address is not collected or published.</p><div id="syllabusFormStatus" class="community-meta" role="status" aria-live="polite"></div><div class="syllabus-dialog-foot"><button type="button" class="btn btn-ghost" id="cancelSyllabusRequest">Cancel</button><button type="submit" class="btn btn-primary" id="submitSyllabusRequest">Submit request</button></div></form></div>';
     document.body.appendChild(dialog);
     const form=dialog.querySelector('#syllabusRequestForm'),status=dialog.querySelector('#syllabusFormStatus'),submit=dialog.querySelector('#submitSyllabusRequest'),syncButton=document.querySelector('#syncSyllabusRequests');
     let community=[],activeTab='available',signedIn=false,isAdminUser=false,requestLoadId=0;const pendingRequests=new Set(),pendingDeletes=new Set(),deletedRequestIds=new Set();
@@ -1706,6 +1706,13 @@ dialog .dialog-inner,dialog>div{max-height:none}
     const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=await accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers,cache:'no-store'});};
     const render=()=>{
       const search=(document.querySelector('#exploreSearch')?.value||'').trim().toLocaleLowerCase();
+      const requestButton=document.querySelector('#openSyllabusRequest');
+      const hasOwnActiveRequest=signedIn&&community.some(x=>x.isOwner);
+      if(requestButton){
+        requestButton.disabled=hasOwnActiveRequest;
+        requestButton.textContent=hasOwnActiveRequest?'You have an active request':'Request a syllabus';
+        requestButton.title=hasOwnActiveRequest?'Delete your active request before submitting another.':'Request a syllabus';
+      }
       list.hidden=activeTab!=='requests';const grid=explore.querySelector('#exploreGrid');if(grid)grid.hidden=activeTab==='requests';
       const toolbar=explore.querySelector('.explore-toolbar');if(toolbar)toolbar.hidden=false;
       const searchField=explore.querySelector('#exploreSearch');if(searchField)searchField.placeholder=activeTab==='requests'?'Search community requests…':'Search streams, subjects, topics…';
@@ -1720,11 +1727,13 @@ dialog .dialog-inner,dialog>div{max-height:none}
     // Refresh ownership/upvote state when the shared app session becomes available or changes.
     window.addEventListener('nexus:community-session',()=>{if(activeTab==='requests')loadRequests()});
     if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()});
-    // Realtime database events are primary; polling/focus refresh is a fallback if Realtime is unavailable.
+    // Refresh promptly when returning to the app, and poll more frequently as a fallback
+    // when Realtime events are delayed or unavailable.
     const refreshVisibleWishlist=()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
-    setInterval(refreshVisibleWishlist,15000);
+    setInterval(refreshVisibleWishlist,5000);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
+    window.addEventListener('pageshow',refreshVisibleWishlist);
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
     const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
     list.addEventListener('click',async e=>{
@@ -1758,7 +1767,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
         if((action==='delete'||action==='admin-delete')&&priorState&&!community.some(x=>String(x.id)===key))community.splice(Math.min(Math.max(priorIndex,0),community.length),0,priorState);
         else if(priorState){const current=community.find(x=>String(x.id)===key);if(current)Object.assign(current,priorState);}
         await loadRequests();alert(err.message||'Could not complete the action.');
-      }finally{pendingRequests.delete(key);render()}
+      }finally{pendingRequests.delete(key);render();if(activeTab==='requests')loadRequests()}
     });
 
     if(syncButton)syncButton.addEventListener('click',async()=>{
@@ -1781,11 +1790,21 @@ dialog .dialog-inner,dialog>div{max-height:none}
     form.addEventListener('submit',async e=>{
       e.preventDefault();if(!form.reportValidity())return;
       if(!accessToken()){status.textContent='Sign in to Nexus first. Shared requests must be linked to your account so only you can delete them.';return}
+      if(community.some(x=>x.isOwner)){status.textContent='You already have an active request. Delete it, or ask the admin to remove it, before submitting another.';return}
       const payload={name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),topics:form.elements.topics.value.trim()};
       if(community.some(x=>norm(x.name)===norm(payload.name)&&norm(x.category)===norm(payload.category))){status.textContent='A similar request already exists. Please upvote it instead.';return}
       submit.disabled=true;submit.textContent='Submitting…';status.textContent='Sending request…';
       try{const response=await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||'The server could not accept the request.');community.unshift(result.request);status.textContent=result.githubSynced?'Request submitted and added to the public GitHub tracker.':'Request saved to the community wishlist, but GitHub mirroring is not configured or is temporarily unavailable.';render();setTimeout(close,1400)}
-      catch(err){status.textContent=err.message||'Could not submit the request.'}
+      catch(err){
+        let message=err.message||'Could not submit the request.';
+        if(/could not save the request|active request|duplicate key|unique constraint/i.test(message)){
+          await loadRequests();
+          if(community.some(x=>x.isOwner)){
+            message='You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.';
+          }
+        }
+        status.textContent=message;
+      }
       finally{submit.disabled=false;submit.textContent='Submit request'}
     });
     const originalSearch=document.querySelector('#exploreSearch');if(originalSearch)originalSearch.addEventListener('input',render);

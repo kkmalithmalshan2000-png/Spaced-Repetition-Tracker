@@ -1,8 +1,11 @@
 // Vercel Serverless Function: shared syllabus requests with authenticated voting and owner-only deletion.
-// Configure SUPABASE_URL and SUPABASE_ANON_KEY in Vercel. The browser sends the signed-in user's access token;
-// Supabase Row Level Security is the final enforcement layer for ownership and vote uniqueness.
-const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://txugbdavblpettcnhcxl.supabase.co').replace(/\/$/, '');
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_sQkKOf-CfHlG7mvA2sFjIg_qcezI2Fa';
+// Configure SUPABASE_URL and SUPABASE_ANON_KEY as Vercel environment variables.
+// Deliberately fail closed when configuration is missing; never silently fall back to production.
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const VERCEL_ENV = process.env.VERCEL_ENV || 'development';
+const PREVIEW_WRITES_ENABLED = process.env.NEXUS_ALLOW_PREVIEW_WRITES === 'true';
+const PRODUCTION_ORIGIN = 'https://spaced-repetition-tracker-delta.vercel.app';
 const MAX_BODY = 12000;
 const NEXUS_ADMIN_USER_ID = (process.env.NEXUS_ADMIN_USER_ID || '').trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -138,10 +141,26 @@ async function adminDeleteRequest(id) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = String(req.headers.origin || '');
+  const previewOrigin = process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '';
+  const allowedOrigins = new Set([PRODUCTION_ORIGIN, previewOrigin].filter(Boolean));
+  if (allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
+  res.setHeader('Access-Control-Max-Age', '600');
+  if (req.method === 'OPTIONS') {
+    if (origin && !allowedOrigins.has(origin)) return json(res, 403, { error: 'Origin not allowed.' });
+    res.statusCode = 204; return res.end();
+  }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return json(res, 503, { error: 'Community API is not configured for this deployment.' });
+  }
+  if (VERCEL_ENV === 'preview' && req.method !== 'GET' && !PREVIEW_WRITES_ENABLED) {
+    return json(res, 403, { error: 'Community writes are disabled in preview deployments.' });
+  }
   const auth = String(req.headers.authorization || '');
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   try {
@@ -216,8 +235,46 @@ module.exports = async function handler(req, res) {
     }
     const name = clean(input.name, 120), category = clean(input.category, 100), topics = clean(input.topics, 3000);
     if (!name || !category) return json(res, 400, { error: 'Subject/course name and category are required.' });
+
+    // Enforce one active request per authenticated user. The unique database index
+    // in supabase/migrations/20261014_one_active_syllabus_request_per_user.sql
+    // closes the race between simultaneous submissions; this check provides a clear message.
+    const activeRequest = await db('nexus_syllabus_requests?select=id&owner_id=eq.' + encodeURIComponent(user.id) + '&limit=1', token);
+    if (!activeRequest.ok) return json(res, 503, { error: 'Could not verify your existing requests. Please try again shortly.' });
+    const activeRows = await activeRequest.json();
+    if (Array.isArray(activeRows) && activeRows.length) {
+      return json(res, 409, {
+        code: 'ACTIVE_REQUEST_EXISTS',
+        error: 'You already have an active syllabus request. Delete your current request, or ask the admin to remove it, before submitting another.'
+      });
+    }
+
     const inserted = await db('nexus_syllabus_requests', token, { method: 'POST', body: { name, category, topics, owner_id: user.id } });
-    if (!inserted.ok) return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
+    if (!inserted.ok) {
+      const insertError = await inserted.json().catch(() => ({}));
+      const errorText = [insertError.message, insertError.details, insertError.hint].filter(Boolean).join(' ');
+      const looksLikeOwnerConflict = /nexus_syllabus_requests_one_active_per_owner|duplicate key|unique constraint/i.test(errorText);
+      if (inserted.status === 409 || insertError.code === '23505' || looksLikeOwnerConflict) {
+        return json(res, 409, {
+          code: 'ACTIVE_REQUEST_EXISTS',
+          error: 'You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.'
+        });
+      }
+      // Some PostgREST/database configurations return a generic error body for a
+      // unique-index rejection. Verify whether the account already owns a request
+      // before showing the unrelated schema/policy troubleshooting message.
+      const existingAfterFailure = await db('nexus_syllabus_requests?select=id&owner_id=eq.' + encodeURIComponent(user.id) + '&limit=1', token);
+      if (existingAfterFailure.ok) {
+        const existingRows = await existingAfterFailure.json();
+        if (Array.isArray(existingRows) && existingRows.length) {
+          return json(res, 409, {
+            code: 'ACTIVE_REQUEST_EXISTS',
+            error: 'You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.'
+          });
+        }
+      }
+      return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
+    }
     const rows = await inserted.json();
     const row = rows[0];
     let githubSynced = false, githubIssueUrl = '';
