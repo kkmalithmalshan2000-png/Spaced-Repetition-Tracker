@@ -1,8 +1,11 @@
 // Vercel Serverless Function: shared syllabus requests with authenticated voting and owner-only deletion.
-// Configure SUPABASE_URL and SUPABASE_ANON_KEY in Vercel. The browser sends the signed-in user's access token;
-// Supabase Row Level Security is the final enforcement layer for ownership and vote uniqueness.
-const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://txugbdavblpettcnhcxl.supabase.co').replace(/\/$/, '');
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_sQkKOf-CfHlG7mvA2sFjIg_qcezI2Fa';
+// Configure SUPABASE_URL and SUPABASE_ANON_KEY as Vercel environment variables.
+// Deliberately fail closed when configuration is missing; never silently fall back to production.
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const VERCEL_ENV = process.env.VERCEL_ENV || 'development';
+const PREVIEW_WRITES_ENABLED = process.env.NEXUS_ALLOW_PREVIEW_WRITES === 'true';
+const PRODUCTION_ORIGIN = 'https://spaced-repetition-tracker-delta.vercel.app';
 const MAX_BODY = 12000;
 const NEXUS_ADMIN_USER_ID = (process.env.NEXUS_ADMIN_USER_ID || '').trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -138,10 +141,26 @@ async function adminDeleteRequest(id) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = String(req.headers.origin || '');
+  const previewOrigin = process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '';
+  const allowedOrigins = new Set([PRODUCTION_ORIGIN, previewOrigin].filter(Boolean));
+  if (allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
+  res.setHeader('Access-Control-Max-Age', '600');
+  if (req.method === 'OPTIONS') {
+    if (origin && !allowedOrigins.has(origin)) return json(res, 403, { error: 'Origin not allowed.' });
+    res.statusCode = 204; return res.end();
+  }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return json(res, 503, { error: 'Community API is not configured for this deployment.' });
+  }
+  if (VERCEL_ENV === 'preview' && req.method !== 'GET' && !PREVIEW_WRITES_ENABLED) {
+    return json(res, 403, { error: 'Community writes are disabled in preview deployments.' });
+  }
   const auth = String(req.headers.authorization || '');
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   try {
