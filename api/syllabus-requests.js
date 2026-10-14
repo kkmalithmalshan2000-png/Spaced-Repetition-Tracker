@@ -4,6 +4,12 @@
 const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://txugbdavblpettcnhcxl.supabase.co').replace(/\/$/, '');
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_sQkKOf-CfHlG7mvA2sFjIg_qcezI2Fa';
 const MAX_BODY = 12000;
+const NEXUS_ADMIN_USER_ID = (process.env.NEXUS_ADMIN_USER_ID || '').trim();
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const GITHUB_REPOSITORY = (process.env.GITHUB_REPOSITORY || 'kkmalithmalshan2000-png/Spaced-Repetition-Tracker').trim();
+const SYNC_BATCH_SIZE = 20;
+const isAdmin = user => !!(user && NEXUS_ADMIN_USER_ID && user.id === NEXUS_ADMIN_USER_ID);
 const json = (res, status, payload) => {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -44,6 +50,93 @@ async function countVotes(requestId, token) {
   const match = range.match(/\/(\d+)$/);
   return match ? Number(match[1]) : null;
 }
+
+const githubHeaders = () => ({
+  Accept: 'application/vnd.github+json',
+  Authorization: 'Bearer ' + GITHUB_TOKEN,
+  'X-GitHub-Api-Version': '2022-11-28',
+  'Content-Type': 'application/json'
+});
+async function github(path, options = {}) {
+  if (!GITHUB_TOKEN) throw new Error('GitHub request tracking is not configured. Add GITHUB_TOKEN in Vercel environment variables.');
+  const response = await fetch('https://api.github.com/repos/' + GITHUB_REPOSITORY + path, {
+    method: options.method || 'GET', cache: 'no-store', headers: githubHeaders(),
+    body: options.body === undefined ? undefined : JSON.stringify(options.body)
+  });
+  const payload = response.status === 204 ? null : await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload && payload.message ? payload.message : 'GitHub request failed (' + response.status + ').');
+  return payload;
+}
+const requestMarker = id => 'Nexus Request ID: ' + id;
+function issueBody(request) {
+  return [
+    'A curriculum request submitted through Nexus: Spaced Repetition Tracker.',
+    '',
+    '**Requested curriculum:** ' + clean(request.name, 120),
+    '**Category / exam board:** ' + clean(request.category, 100),
+    '',
+    '**Topics / chapters requested:**',
+    clean(request.topics, 3000) || 'No topic outline provided.',
+    '',
+    '---',
+    requestMarker(request.id),
+    'Submitted from the Nexus community request form.'
+  ].join('\n');
+}
+async function listGithubIssues() {
+  const all = [];
+  for (let page = 1; page <= 10; page++) {
+    const batch = await github('/issues?state=all&per_page=100&page=' + page);
+    const issues = Array.isArray(batch) ? batch.filter(x => !x.pull_request) : [];
+    all.push(...issues);
+    if (!Array.isArray(batch) || batch.length < 100) break;
+  }
+  return all;
+}
+async function createGithubIssue(request) {
+  return github('/issues', { method: 'POST', body: {
+    title: '[Nexus Curriculum Request] ' + clean(request.name, 120),
+    body: issueBody(request)
+  }});
+}
+function findGithubIssue(issues, id) {
+  const marker = requestMarker(id);
+  return issues.find(issue => String(issue.body || '').includes(marker)) || null;
+}
+async function closeGithubIssueForRequest(id, reason) {
+  if (!GITHUB_TOKEN) return { closed: false, configured: false };
+  try {
+    const issue = findGithubIssue(await listGithubIssues(), id);
+    if (!issue || issue.state === 'closed') return { closed: !!issue, configured: true };
+    await github('/issues/' + issue.number, { method: 'PATCH', body: { state: 'closed', state_reason: reason || 'completed' } });
+    return { closed: true, configured: true };
+  } catch (error) {
+    console.error('Could not close mirrored Nexus issue:', error && error.message);
+    return { closed: false, configured: true };
+  }
+}
+async function syncGithubBatch(requests) {
+  if (!GITHUB_TOKEN) throw new Error('GitHub request tracking is not configured. Add GITHUB_TOKEN in Vercel environment variables.');
+  const issues = await listGithubIssues();
+  const missing = requests.filter(request => !findGithubIssue(issues, request.id));
+  const batch = missing.slice(0, SYNC_BATCH_SIZE);
+  let synced = 0;
+  for (const request of batch) { await createGithubIssue(request); synced++; }
+  return { synced, total: requests.length, remaining: Math.max(0, missing.length - synced) };
+}
+async function adminDeleteRequest(id) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error('Admin deletion is not configured yet. Add SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.');
+  return fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?id=eq.' + encodeURIComponent(id), {
+    method: 'DELETE', cache: 'no-store',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
+      Accept: 'application/json',
+      Prefer: 'return=representation'
+    }
+  });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
@@ -69,7 +162,7 @@ module.exports = async function handler(req, res) {
         id: x.id, name: x.name, category: x.category, topics: x.topics || '',
         createdAt: x.created_at, votes: Array.isArray(x.nexus_syllabus_votes) && x.nexus_syllabus_votes[0] ? Number(x.nexus_syllabus_votes[0].count || 0) : 0,
         isOwner: !!user && user.id === x.owner_id, hasUpvoted: myVotes.has(x.id), status: 'community'
-      })), signedIn: !!user });
+      })), signedIn: !!user, isAdmin: isAdmin(user) });
     }
     if (req.method !== 'POST' && req.method !== 'DELETE') {
       res.setHeader('Allow', 'GET, POST, DELETE, OPTIONS');
@@ -84,15 +177,25 @@ module.exports = async function handler(req, res) {
     }
     let input;
     try { input = JSON.parse(raw || '{}'); } catch (_) { return json(res, 400, { error: 'Invalid request body.' }); }
+    if (req.method === 'POST' && clean(input.action, 30) === 'sync-github') {
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only the Nexus administrator can synchronise requests to GitHub.' });
+      const response = await db('nexus_syllabus_requests?select=id,name,category,topics,created_at&order=created_at.desc&limit=200', token);
+      if (!response.ok) return json(res, 502, { error: 'Could not read the community request list for synchronisation.' });
+      const result = await syncGithubBatch(await response.json());
+      return json(res, 200, { ...result, issuesUrl: 'https://github.com/' + GITHUB_REPOSITORY + '/issues?q=is%3Aissue+is%3Aopen+%5BNexus+Curriculum+Request%5D' });
+    }
     if (req.method === 'DELETE') {
       const id = clean(String(input.id || ''), 80);
       if (!id) return json(res, 400, { error: 'Request ID is required.' });
-      // RLS permits deleting only rows whose owner_id matches the authenticated JWT user.
-      const deleted = await db('nexus_syllabus_requests?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(user.id), token, { method: 'DELETE', prefer: 'return=representation' });
-      if (!deleted.ok) return json(res, 502, { error: 'Could not delete this request. Please try again.' });
+      const admin = isAdmin(user);
+      let deleted;
+      if (admin) deleted = await adminDeleteRequest(id);
+      else deleted = await db('nexus_syllabus_requests?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(user.id), token, { method: 'DELETE', prefer: 'return=representation' });
+      if (!deleted.ok) return json(res, 502, { error: 'Could not delete this request. Please check the server configuration and try again.' });
       const rows = await deleted.json();
-      if (!rows.length) return json(res, 403, { error: 'You can delete only requests you created.' });
-      return json(res, 200, { deleted: true, id });
+      if (!rows.length) return json(res, admin ? 404 : 403, { error: admin ? 'This request no longer exists.' : 'You can delete only requests you created.' });
+      const githubResult = await closeGithubIssueForRequest(id, admin ? 'completed' : 'not_planned');
+      return json(res, 200, { deleted: true, id, isAdmin: admin, githubIssueClosed: githubResult.closed, githubConfigured: githubResult.configured });
     }
     const action = clean(input.action, 30);
     if (action === 'upvote' || action === 'remove-upvote') {
@@ -117,7 +220,15 @@ module.exports = async function handler(req, res) {
     if (!inserted.ok) return json(res, 502, { error: 'Could not save the request. Ensure the Supabase syllabus tables and policies are installed.' });
     const rows = await inserted.json();
     const row = rows[0];
-    return json(res, 201, { request: { id: row.id, name: row.name, category: row.category, topics: row.topics || '', createdAt: row.created_at, votes: 0, isOwner: true, hasUpvoted: false, status: 'community' } });
+    let githubSynced = false, githubIssueUrl = '';
+    try {
+      const issue = await createGithubIssue(row);
+      githubSynced = true;
+      githubIssueUrl = issue && issue.html_url || '';
+    } catch (error) {
+      console.error('Nexus request saved but GitHub mirror failed:', error && error.message);
+    }
+    return json(res, 201, { request: { id: row.id, name: row.name, category: row.category, topics: row.topics || '', createdAt: row.created_at, votes: 0, isOwner: true, hasUpvoted: false, status: 'community' }, githubSynced, githubIssueUrl });
   } catch (error) {
     console.error('Syllabus request API failed:', error && error.message);
     return json(res, 500, { error: 'Unable to process this request right now.' });
