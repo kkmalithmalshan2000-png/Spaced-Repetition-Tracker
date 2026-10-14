@@ -1727,11 +1727,13 @@ dialog .dialog-inner,dialog>div{max-height:none}
     // Refresh ownership/upvote state when the shared app session becomes available or changes.
     window.addEventListener('nexus:community-session',()=>{if(activeTab==='requests')loadRequests()});
     if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()});
-    // Realtime database events are primary; polling/focus refresh is a fallback if Realtime is unavailable.
+    // Refresh promptly when returning to the app, and poll more frequently as a fallback
+    // when Realtime events are delayed or unavailable.
     const refreshVisibleWishlist=()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
-    setInterval(refreshVisibleWishlist,15000);
+    setInterval(refreshVisibleWishlist,5000);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
+    window.addEventListener('pageshow',refreshVisibleWishlist);
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
     const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
     list.addEventListener('click',async e=>{
@@ -1765,7 +1767,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
         if((action==='delete'||action==='admin-delete')&&priorState&&!community.some(x=>String(x.id)===key))community.splice(Math.min(Math.max(priorIndex,0),community.length),0,priorState);
         else if(priorState){const current=community.find(x=>String(x.id)===key);if(current)Object.assign(current,priorState);}
         await loadRequests();alert(err.message||'Could not complete the action.');
-      }finally{pendingRequests.delete(key);render()}
+      }finally{pendingRequests.delete(key);render();if(activeTab==='requests')loadRequests()}
     });
 
     if(syncButton)syncButton.addEventListener('click',async()=>{
@@ -1793,7 +1795,16 @@ dialog .dialog-inner,dialog>div{max-height:none}
       if(community.some(x=>norm(x.name)===norm(payload.name)&&norm(x.category)===norm(payload.category))){status.textContent='A similar request already exists. Please upvote it instead.';return}
       submit.disabled=true;submit.textContent='Submitting…';status.textContent='Sending request…';
       try{const response=await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||'The server could not accept the request.');community.unshift(result.request);status.textContent=result.githubSynced?'Request submitted and added to the public GitHub tracker.':'Request saved to the community wishlist, but GitHub mirroring is not configured or is temporarily unavailable.';render();setTimeout(close,1400)}
-      catch(err){status.textContent=err.message||'Could not submit the request.'}
+      catch(err){
+        let message=err.message||'Could not submit the request.';
+        if(/could not save the request|active request|duplicate key|unique constraint/i.test(message)){
+          await loadRequests();
+          if(community.some(x=>x.isOwner)){
+            message='You already have an active syllabus request. Each account can have only one at a time. Delete your current request, or ask the admin to remove it, before submitting another.';
+          }
+        }
+        status.textContent=message;
+      }
       finally{submit.disabled=false;submit.textContent='Submit request'}
     });
     const originalSearch=document.querySelector('#exploreSearch');if(originalSearch)originalSearch.addEventListener('input',render);
