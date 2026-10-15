@@ -66,6 +66,7 @@ BEGIN
        OR has_table_privilege('anon', t, 'UPDATE')
        OR has_table_privilege('anon', t, 'DELETE')
        OR has_table_privilege('anon', t, 'TRUNCATE')
+       OR has_table_privilege('anon', t, 'MAINTAIN')
        OR has_table_privilege('anon', t, 'REFERENCES')
        OR has_table_privilege('anon', t, 'TRIGGER') THEN
       RAISE EXCEPTION 'Unexpected anon privileges remain on %; transaction aborted.', t;
@@ -76,6 +77,7 @@ BEGIN
        OR NOT has_table_privilege('authenticated', t, 'DELETE')
        OR has_table_privilege('authenticated', t, 'UPDATE')
        OR has_table_privilege('authenticated', t, 'TRUNCATE')
+       OR has_table_privilege('authenticated', t, 'MAINTAIN')
        OR has_table_privilege('authenticated', t, 'REFERENCES')
        OR has_table_privilege('authenticated', t, 'TRIGGER') THEN
       RAISE EXCEPTION 'Unexpected authenticated privileges remain on %; transaction aborted.', t;
