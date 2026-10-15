@@ -1736,10 +1736,12 @@ dialog .dialog-inner,dialog>div{max-height:none}
     // Refresh promptly when returning to the app, and poll more frequently as a fallback
     // when Realtime events are delayed or unavailable.
     const refreshVisibleWishlist=()=>{if(exploreIsVisible()&&!pendingRequests.size)loadRequests()};
-    setInterval(refreshVisibleWishlist,5000);
+    setInterval(refreshVisibleWishlist,10000);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
     window.addEventListener('pageshow',refreshVisibleWishlist);
+    // Do not wait for the first polling tick when Explore is already open at startup.
+    refreshVisibleWishlist();
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
     const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
     list.addEventListener('click',async e=>{
