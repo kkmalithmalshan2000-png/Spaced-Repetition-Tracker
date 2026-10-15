@@ -10,6 +10,22 @@
 
 BEGIN;
 
+-- Fail safely if this script is run against the wrong project/schema or if RLS
+-- has not been enabled. Do not grant authenticated write privileges otherwise.
+DO $
+BEGIN
+  IF to_regclass('public.nexus_syllabus_requests') IS NULL
+     OR to_regclass('public.nexus_syllabus_votes') IS NULL THEN
+    RAISE EXCEPTION 'Nexus community tables are missing; no privilege changes applied.';
+  END IF;
+
+  IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = to_regclass('public.nexus_syllabus_requests'))
+     OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid = to_regclass('public.nexus_syllabus_votes')) THEN
+    RAISE EXCEPTION 'RLS must be enabled on both Nexus community tables before changing grants.';
+  END IF;
+END
+$;
+
 REVOKE ALL PRIVILEGES ON TABLE
   public.nexus_syllabus_requests,
   public.nexus_syllabus_votes
