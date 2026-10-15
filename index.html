@@ -1724,12 +1724,16 @@ dialog .dialog-inner,dialog>div{max-height:none}
     };
     const loadRequests=async()=>{const loadId=++requestLoadId;try{const r=await api('',{});const data=await r.json();if(loadId!==requestLoadId)return;if(!r.ok)throw new Error(data.error||'Wishlist unavailable');const pendingItems=new Map(community.filter(x=>pendingRequests.has(String(x.id))).map(x=>[String(x.id),x]));community=(Array.isArray(data.requests)?data.requests:[]).filter(x=>!deletedRequestIds.has(String(x.id))&&!pendingDeletes.has(String(x.id))).map(x=>pendingItems.get(String(x.id))||x);signedIn=!!data.signedIn;isAdminUser=!!data.isAdmin;if(syncButton)syncButton.hidden=!isAdminUser;render()}catch(e){if(loadId!==requestLoadId)return;list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
     tabs.addEventListener('click',e=>{const b=e.target.closest('[data-community-tab]');if(!b)return;activeTab=b.dataset.communityTab;render();if(activeTab==='requests')loadRequests()});
+    // Refresh community ownership/vote state whenever Explore becomes visible again.
+    const exploreObserver=new MutationObserver(()=>{if(exploreIsVisible()&&!document.hidden&&!pendingRequests.size)loadRequests()});
+    exploreObserver.observe(explore,{attributes:true,attributeFilter:['class','style','hidden']});
     // Refresh ownership/upvote state when the shared app session becomes available or changes.
     window.addEventListener('nexus:community-session',()=>{if(activeTab==='requests')loadRequests()});
-    if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()});
+    const exploreIsVisible=()=>!document.hidden&&explore.getClientRects().length>0;
+    if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(exploreIsVisible()&&!pendingRequests.size)loadRequests()});
     // Refresh promptly when returning to the app, and poll more frequently as a fallback
     // when Realtime events are delayed or unavailable.
-    const refreshVisibleWishlist=()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
+    const refreshVisibleWishlist=()=>{if(exploreIsVisible()&&!pendingRequests.size)loadRequests()};
     setInterval(refreshVisibleWishlist,5000);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
