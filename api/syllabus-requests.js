@@ -20,6 +20,7 @@ const json = (res, status, payload) => {
   res.end(JSON.stringify(payload));
 };
 const clean = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
+const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 async function currentUser(token) {
   if (!token) return null;
   const response = await fetch(SUPABASE_URL + '/auth/v1/user', {
@@ -196,6 +197,9 @@ module.exports = async function handler(req, res) {
     }
     let input;
     try { input = JSON.parse(raw || '{}'); } catch (_) { return json(res, 400, { error: 'Invalid request body.' }); }
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+      return json(res, 400, { error: 'Request body must be a JSON object.' });
+    }
     if (req.method === 'POST' && clean(input.action, 30) === 'sync-github') {
       if (!isAdmin(user)) return json(res, 403, { error: 'Only the Nexus administrator can synchronise requests to GitHub.' });
       const response = await db('nexus_syllabus_requests?select=id,name,category,topics,created_at&order=created_at.desc&limit=200', token);
@@ -205,7 +209,7 @@ module.exports = async function handler(req, res) {
     }
     if (req.method === 'DELETE') {
       const id = clean(String(input.id || ''), 80);
-      if (!id) return json(res, 400, { error: 'Request ID is required.' });
+      if (!isUuid(id)) return json(res, 400, { error: 'A valid request ID is required.' });
       const admin = isAdmin(user);
       let deleted;
       if (admin) deleted = await adminDeleteRequest(id);
@@ -219,7 +223,7 @@ module.exports = async function handler(req, res) {
     const action = clean(input.action, 30);
     if (action === 'upvote' || action === 'remove-upvote') {
       const id = clean(String(input.id || ''), 80);
-      if (!id) return json(res, 400, { error: 'Request ID is required.' });
+      if (!isUuid(id)) return json(res, 400, { error: 'A valid request ID is required.' });
       if (action === 'upvote') {
         const vote = await db('nexus_syllabus_votes', token, { method: 'POST', prefer: 'return=representation,resolution=ignore-duplicates', body: { request_id: id, user_id: user.id } });
         if (!vote.ok) return json(res, 502, { error: 'Could not save your upvote. Please try again.' });
