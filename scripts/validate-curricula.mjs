@@ -48,6 +48,8 @@ assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatin
 assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Number of rating presses'), 'Analytics must render an X/Y graph with an explicit review-count axis.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
+assert(!html.includes("$('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)"), 'Main app script must not reference private Study Hub functions before its initialization completes.');
+assert(html.includes("hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)") && html.includes("hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone)"), 'Analytics and Danger Zone buttons must be bound inside the Study Hub function scope.');
 assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a Study Hub tab.');
 assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
 assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
