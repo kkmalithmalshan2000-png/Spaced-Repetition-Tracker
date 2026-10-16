@@ -45,7 +45,11 @@ assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pac
 assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
 assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
 assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
-assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Number of rating presses'), 'Analytics must render an X/Y graph with an explicit review-count axis.');
+assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Total review presses') && html.includes('data-rating-segment='), 'Analytics must render a stacked vertical rating-count graph with an explicit total-review axis.');
+assert(html.includes('No rating presses for this selection in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
+assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
+assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
+assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&barWidth>=estimatedTextWidth+6'), 'Stacked bar count labels must only render when they fit inside the segment.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
 assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
@@ -155,12 +159,23 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
         assert(binned === expected, testCase.period+' timeline bins for rating '+rating+' should sum to the saved-record total.');
       }
       const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
-      const series = [...svg.matchAll(/data-rating-series="([1-5])"/g)].map(match => match[1]);
-      assert(series.join(',') === '1,2,3,4,5', testCase.period+' graph must contain five independent rating series.');
-      for (const [rating, color] of [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']]) {
-        assert(new RegExp('data-rating-series="'+rating+'"[^>]*stroke="'+color+'"').test(svg), testCase.period+' rating '+rating+' line must use the matching rating-button color.');
+      const barGroups = [...svg.matchAll(/<g class="ra-stack-bar" data-bin-index="(\\d+)" data-total="(\\d+)">/g)];
+      assert(barGroups.length === testCase.bins-testCase.futureBins, testCase.period+' graph must include one visible stack per completed time bin.');
+      const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']];
+      for (const [rating, color] of expectedColors) {
+        if (timeline.totals[rating-1] > 0) {
+          assert(svg.includes('data-rating-segment="'+rating+'"') && svg.includes('fill="'+color+'"'), testCase.period+' rating '+rating+' stack must use the matching rating-button color.');
+        }
       }
-      assert(svg.includes('stroke-dasharray="10 4"') && svg.includes('stroke-dasharray="3 3"') && svg.includes('stroke-dasharray="10 3 2 3"') && svg.includes('stroke-dasharray="2 3"'), testCase.period+' graph must distinguish overlapping series with rating-specific line patterns.');
+      const order = ['data-rating-segment="1"','data-rating-segment="2"','data-rating-segment="3"','data-rating-segment="4"','data-rating-segment="5"'].map(label=>svg.indexOf(label));
+      const presentOrder = order.filter(index=>index>=0);
+      assert(presentOrder.every((index,i)=>i===0||presentOrder[i-1]<index), testCase.period+' stacked ratings must be ordered red (Again) at the bottom through teal (Easy) at the top.');
+      if(testCase.period==='month'){
+        assert(timeline.records.length===5, 'This month must retain current-month review data rather than rendering an empty date range.');
+        assert(svg.includes('class="ra-bar-count"'), 'This month must show in-bar counts wherever the segment has enough space.');
+        assert(barGroups.some(match=>Number(match[2])>0), 'This month must display a visible stack when current-month reviews exist.');
+      }
+      assert(svg.includes('Total review presses') && svg.includes('data-total='), testCase.period+' graph must expose interval totals and a total-review axis.');
       const table = testContext.ratingAnalyticsTimelineTableMarkup(selection, 'topic', 'test-all');
       if (testCase.futureBins) assert(table.includes('—') && table.includes('Future'), testCase.period+' exact-count table must mark future intervals as unavailable rather than zero.');
     }
