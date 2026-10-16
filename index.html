@@ -1843,8 +1843,25 @@ dialog .dialog-inner,dialog>div{max-height:none}
     box-shadow: var(--shadow) !important;
   }
   .tabs {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    /* More opaque surface so the sticky navigation stays legible over content. */
+    background: color-mix(in srgb, var(--surface) 97%, var(--bg)) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+  /* Show the actual transparent Nexus mark, not a colored app-icon tile. */
+  .brandmark {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .brandmark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain !important;
+    border-radius: 0 !important;
   }
   dialog::backdrop {
     backdrop-filter: none !important;
