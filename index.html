@@ -1857,6 +1857,28 @@ dialog .dialog-inner,dialog>div{max-height:none}
     max-height: none !important;
     opacity: 1;
   }
+  /*
+   * On touch screens, nested scroll regions can capture vertical gestures and
+   * make the page feel stuck until the user reaches the edge of the inner list.
+   * Let long collections grow naturally so the document owns vertical scrolling.
+   */
+  @media (max-width: 760px) {
+    .history-list,
+    .due-list,
+    .progress-list,
+    #structureList,
+    .hub-scroll-list,
+    .hub-list,
+    .hub-heatmap,
+    .global-search-results,
+    .topic-grid {
+      max-height: none !important;
+      overflow-y: visible !important;
+      overscroll-behavior-y: auto !important;
+      touch-action: auto !important;
+      scrollbar-gutter: auto !important;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation: none !important;
