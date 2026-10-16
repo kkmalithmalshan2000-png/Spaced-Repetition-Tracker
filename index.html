@@ -1031,11 +1031,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     catch(error){console.warn('Nexus curriculum catalogue could not be refreshed; using the built-in Commerce fallback.',error);}
   }
   function findPackStream(pack){
-    return state.streams.find(stream=>stream.name.trim().toLocaleLowerCase()===pack.streamName.trim().toLocaleLowerCase())||state.streams.find(stream=>pack.streamId&&stream.id===pack.streamId&&stream.name===pack.streamName)||null;
+    // Prefer the stable pack stream ID even if a user has renamed the workspace label.
+    return (pack.streamId?state.streams.find(stream=>stream.id===pack.streamId):null)||state.streams.find(stream=>stream.name.trim().toLocaleLowerCase()===pack.streamName.trim().toLocaleLowerCase())||null;
   }
   function findPackSubject(pack,subject,stream){
     if(!stream)return null;
-    return state.subjects.find(item=>item.streamId===stream.id&&item.name.trim().toLocaleLowerCase()===subject.name.trim().toLocaleLowerCase())||null;
+    // A stable subject ID keeps a user's renamed subject and its review history attached.
+    return (subject.workspaceId?state.subjects.find(item=>item.streamId===stream.id&&item.id===subject.workspaceId):null)||state.subjects.find(item=>item.streamId===stream.id&&item.name.trim().toLocaleLowerCase()===subject.name.trim().toLocaleLowerCase())||null;
   }
   function installedTopicCount(pack,subject){
     const stream=findPackStream(pack);const installedSubject=findPackSubject(pack,subject,stream);
