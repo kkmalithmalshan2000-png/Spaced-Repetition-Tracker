@@ -1849,24 +1849,34 @@ dialog .dialog-inner,dialog>div{max-height:none}
 <script id="nexus-mobile-parent-scroll-gesture">
 (() => {
   'use strict';
-  // On touch devices, one-finger gestures continue to scroll the list itself.
-  // A two-finger vertical drag that starts inside a long list scrolls the page,
-  // avoiding the need to move a finger outside the list to reach the parent.
+  // Two-finger vertical drags started inside a long list scroll the page.
+  // Single-finger gestures retain the browser's normal list-local behavior.
   const listSelector = '.history-list,.due-list,.progress-list,#structureList,.hub-scroll-list,.hub-list,.hub-heatmap,.global-search-results,.topic-grid';
   let active = false;
   let previousY = 0;
 
-  const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+  const isTouchDevice = () =>
+    window.matchMedia('(pointer: coarse)').matches ||
+    (navigator.maxTouchPoints || 0) > 0;
+
   const centerY = touches => {
     let total = 0;
     for (let i = 0; i < touches.length; i++) total += touches[i].clientY;
     return total / touches.length;
   };
 
+  const startsInList = touches => {
+    for (let i = 0; i < touches.length; i++) {
+      const target = touches[i].target;
+      if (target && typeof target.closest === 'function' && target.closest(listSelector)) return true;
+    }
+    return false;
+  };
+
   document.addEventListener('touchstart', event => {
     active = false;
     if (!isTouchDevice() || event.touches.length < 2) return;
-    if (!event.target.closest(listSelector)) return;
+    if (!startsInList(event.touches)) return;
     active = true;
     previousY = centerY(event.touches);
   }, { passive: true });
@@ -1875,7 +1885,8 @@ dialog .dialog-inner,dialog>div{max-height:none}
     if (!active || event.touches.length < 2) return;
     event.preventDefault();
     const nextY = centerY(event.touches);
-    window.scrollBy(0, previousY - nextY);
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    scrollingElement.scrollTop += previousY - nextY;
     previousY = nextY;
   }, { passive: false });
 
