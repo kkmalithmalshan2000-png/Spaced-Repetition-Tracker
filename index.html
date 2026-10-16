@@ -1265,7 +1265,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   function installPwa(){if(!installPrompt){notify('Open your browser menu and choose Install app or Add to Home screen.');return;}$('installDialog').close();installPrompt.prompt();installPrompt.userChoice.finally(()=>{installPrompt=null;$('pwaInstallOption').hidden=false;});}
   // Events are attached once; dynamic content uses delegated handlers.
   document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
-  $('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow);$('analyticsBackBtn').addEventListener('click',closeAnalyticsWindow);$('openDangerZoneBtn').addEventListener('click',openDangerZone);$('dangerBackBtn').addEventListener('click',closeDangerZone);
+  
   $('startReviewBtn').addEventListener('click',()=>{const next=activeTopics().filter(t=>['overdue','due'].includes(status(t))).sort((a,b)=>dueRank(status(a))-dueRank(status(b))||(a.dueDate||'').localeCompare(b.dueDate||''))[0]||activeTopics().find(t=>status(t)==='new');if(next)openReview(next.id);else{switchView('topics');notify('No due or new topics found.');}});
   $('viewDueBtn').addEventListener('click',()=>{switchView('topics');$('topicStatusFilter').value='due-now';renderTopics();});
   $('dueQueue').addEventListener('click',e=>{const b=e.target.closest('[data-action="review"]');if(b)openReview(b.dataset.id);});
@@ -1797,6 +1797,7 @@ Reconstructed: ${recalled||'Not recorded.'}`,fix:gaps||'No specific gap recorded
   resetAll=function(){baseResetAll();};
   // Add Study Hub to navigation and hook controls.
   const hubTabBtn=document.querySelector('[data-view="studyhub"]');if(hubTabBtn)hubTabBtn.addEventListener('click',()=>{hubTab='planner';renderHub();});
+  hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow);hubEl('analyticsBackBtn').addEventListener('click',closeAnalyticsWindow);hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone);hubEl('dangerBackBtn').addEventListener('click',closeDangerZone);
   document.querySelectorAll('[data-hub-tab]').forEach(b=>b.addEventListener('click',()=>hubSwitch(b.dataset.hubTab)));
   hubEl('hubQuickBackup').addEventListener('click',fullBackup);
   hubEl('hubContent').addEventListener('input',e=>{if(e.target.id==='hubGlobalSearch'){e.target.dataset.q=e.target.value;const out=hubEl('hubSearchResults');if(out)out.innerHTML=globalSearchMarkup(e.target.value);}});
