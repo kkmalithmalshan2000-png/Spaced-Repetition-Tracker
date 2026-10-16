@@ -43,20 +43,36 @@ BEGIN
      OR has_table_privilege('anon','public.nexus_syllabus_requests','INSERT')
      OR has_table_privilege('anon','public.nexus_syllabus_requests','UPDATE')
      OR has_table_privilege('anon','public.nexus_syllabus_requests','DELETE')
+     OR has_table_privilege('anon','public.nexus_syllabus_requests','TRUNCATE')
+     OR has_table_privilege('anon','public.nexus_syllabus_requests','MAINTAIN')
+     OR has_table_privilege('anon','public.nexus_syllabus_requests','REFERENCES')
+     OR has_table_privilege('anon','public.nexus_syllabus_requests','TRIGGER')
      OR has_table_privilege('anon','public.nexus_syllabus_votes','SELECT')
      OR has_table_privilege('anon','public.nexus_syllabus_votes','INSERT')
      OR has_table_privilege('anon','public.nexus_syllabus_votes','UPDATE')
-     OR has_table_privilege('anon','public.nexus_syllabus_votes','DELETE') THEN
+     OR has_table_privilege('anon','public.nexus_syllabus_votes','DELETE')
+     OR has_table_privilege('anon','public.nexus_syllabus_votes','TRUNCATE')
+     OR has_table_privilege('anon','public.nexus_syllabus_votes','MAINTAIN')
+     OR has_table_privilege('anon','public.nexus_syllabus_votes','REFERENCES')
+     OR has_table_privilege('anon','public.nexus_syllabus_votes','TRIGGER') THEN
     RAISE EXCEPTION 'Unexpected anon privileges remain; transaction aborted.';
   END IF;
   IF NOT has_table_privilege('authenticated','public.nexus_syllabus_requests','SELECT')
      OR NOT has_table_privilege('authenticated','public.nexus_syllabus_requests','INSERT')
      OR NOT has_table_privilege('authenticated','public.nexus_syllabus_requests','DELETE')
      OR has_table_privilege('authenticated','public.nexus_syllabus_requests','UPDATE')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_requests','TRUNCATE')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_requests','MAINTAIN')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_requests','REFERENCES')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_requests','TRIGGER')
      OR has_table_privilege('authenticated','public.nexus_syllabus_votes','SELECT')
      OR NOT has_table_privilege('authenticated','public.nexus_syllabus_votes','INSERT')
      OR has_table_privilege('authenticated','public.nexus_syllabus_votes','UPDATE')
-     OR NOT has_table_privilege('authenticated','public.nexus_syllabus_votes','DELETE') THEN
+     OR NOT has_table_privilege('authenticated','public.nexus_syllabus_votes','DELETE')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_votes','TRUNCATE')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_votes','MAINTAIN')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_votes','REFERENCES')
+     OR has_table_privilege('authenticated','public.nexus_syllabus_votes','TRIGGER') THEN
     RAISE EXCEPTION 'Unexpected authenticated privileges remain; transaction aborted.';
   END IF;
 END;
