@@ -50,6 +50,10 @@ assert(html.includes('No rating presses for this selection in this timeframe'), 
 assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
 assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
 assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&barWidth>=estimatedTextWidth+6'), 'Stacked bar count labels must only render when they fit inside the segment.');
+assert(html.includes("map.set('ALL',{value:'ALL'") && html.includes("if(String(entityId)==='ALL')return records||[];"), 'Analytics must support an aggregate view across all topics, subjects, and syllabuses.');
+assert(html.includes('function ensureAnalyticsEntityForRange(level)') && html.includes('ensureAnalyticsEntityForRange(level);'), 'Opening Analytics must fall back to combined data when the current entity has no reviews in the selected timeframe.');
+assert(html.includes("const all=options.find(option=>option.value==='ALL')") && html.includes("range.records.length&&best?best:all"), 'Monthly analytics must show the combined view instead of appearing empty when another entity has the reviews.');
+
 assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('getRatingAnalyticsScopedRecords(range.records,level,option.value)'), 'Changing timeframe must choose a matching entity if the current selection has no review records in that range.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
