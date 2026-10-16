@@ -1688,13 +1688,13 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     svg+='<line class="ra-axis" x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+(top+ph)+'"/><line class="ra-axis" x1="'+left+'" y1="'+(top+ph)+'" x2="'+(W-right)+'" y2="'+(top+ph)+'"/>';
     const labelEvery=(selection.range==='week'||selection.range==='month'||selection.range==='year'||(selection.range==='custom'&&bins.length<=31))?1:Math.max(1,Math.ceil(bins.length/10));
     bins.forEach((b,i)=>{if(i%labelEvery!==0&&i!==bins.length-1)return;const xx=x(i);svg+='<line class="ra-gridline" x1="'+xx.toFixed(2)+'" y1="'+(top+ph)+'" x2="'+xx.toFixed(2)+'" y2="'+(top+ph+4)+'"/><text class="ra-tick" x="'+xx.toFixed(2)+'" y="'+(top+ph+22)+'" text-anchor="middle">'+esc(b.label)+'</text>';});
-    const pointMarkup=(r,xx,yy)=>{
-      const c=RATING_ANALYTICS_COLORS[r],common=' fill="'+c+'" stroke="var(--surface)" stroke-width="1.5"';
-      if(r===1)return '<circle class="ra-point" data-rating="'+r+'" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="4.2"'+common+'/>';
-      if(r===2)return '<rect class="ra-point" data-rating="'+r+'" x="'+(xx-3.5).toFixed(2)+'" y="'+(yy-3.5).toFixed(2)+'" width="7" height="7" rx="1"'+common+'/>';
-      if(r===3)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+4.3).toFixed(2)+' '+yy.toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-4.3).toFixed(2)+' '+yy.toFixed(2)+' Z"'+common+'/>';
-      if(r===4)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.5).toFixed(2)+' L '+(xx+4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' L '+(xx-4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' Z"'+common+'/>';
-      return '<path class="ra-point" data-rating="'+r+'" d="M '+(xx-3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' Z"'+common+'/>';
+    const pointMarkup=(r,xx,yy,title)=>{
+      const c=RATING_ANALYTICS_COLORS[r],common=' fill="'+c+'" stroke="var(--surface)" stroke-width="1.5"',tip='<title>'+esc(title)+'</title>';
+      if(r===1)return '<circle class="ra-point" data-rating="'+r+'" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="4.2"'+common+'>'+tip+'</circle>';
+      if(r===2)return '<rect class="ra-point" data-rating="'+r+'" x="'+(xx-3.5).toFixed(2)+'" y="'+(yy-3.5).toFixed(2)+'" width="7" height="7" rx="1"'+common+'>'+tip+'</rect>';
+      if(r===3)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+4.3).toFixed(2)+' '+yy.toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-4.3).toFixed(2)+' '+yy.toFixed(2)+' Z"'+common+'>'+tip+'</path>';
+      if(r===4)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.5).toFixed(2)+' L '+(xx+4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' L '+(xx-4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' Z"'+common+'>'+tip+'</path>';
+      return '<path class="ra-point" data-rating="'+r+'" d="M '+(xx-3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' Z"'+common+'>'+tip+'</path>';
     };
     // Draw all five independent series. Different dash patterns expose coincident lines
     // (especially when several ratings have zero presses) without altering their values.
@@ -1711,7 +1711,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
         const value=b.counts[r-1];
         if(!Number.isFinite(value)||value<=0)return;
         const xx=x(i),yy=y(value);
-        svg+=pointMarkup(r,xx,yy)+'<title>'+esc(b.title)+' · '+r+' '+esc(RATING_LABELS[r])+': '+value+'</title>';
+        svg+=pointMarkup(r,xx,yy,b.title+' · '+r+' '+RATING_LABELS[r]+': '+value);
       });
     }
     if(!bins.some(bin=>!bin.isFuture))svg+='<text class="ra-no-data" x="'+(left+pw/2)+'" y="'+(top+ph/2)+'" text-anchor="middle">No completed intervals in this timeframe yet</text>';
