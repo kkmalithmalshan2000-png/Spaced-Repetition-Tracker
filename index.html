@@ -1849,33 +1849,44 @@ dialog .dialog-inner,dialog>div{max-height:none}
 <script id="nexus-mobile-parent-scroll-gesture">
 (() => {
   'use strict';
-  // On touch devices, one-finger gestures continue to scroll the list itself.
-  // A two-finger vertical drag that starts inside a long list scrolls the page,
-  // avoiding the need to move a finger outside the list to reach the parent.
+  // Preserve one-finger scrolling inside each list. A two-finger vertical drag
+  // that involves a touch which began inside a long list scrolls the page.
   const listSelector = '.history-list,.due-list,.progress-list,#structureList,.hub-scroll-list,.hub-list,.hub-heatmap,.global-search-results,.topic-grid';
   let active = false;
   let previousY = 0;
 
-  const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
   const centerY = touches => {
     let total = 0;
     for (let i = 0; i < touches.length; i++) total += touches[i].clientY;
     return total / touches.length;
   };
 
+  const touchesIncludeList = touches => {
+    for (let i = 0; i < touches.length; i++) {
+      const target = touches[i].target;
+      if (target && typeof target.closest === 'function' && target.closest(listSelector)) return true;
+    }
+    return false;
+  };
+
   document.addEventListener('touchstart', event => {
-    active = false;
-    if (!isTouchDevice() || event.touches.length < 2) return;
-    if (!event.target.closest(listSelector)) return;
-    active = true;
-    previousY = centerY(event.touches);
+    if (event.touches.length < 2) {
+      active = false;
+      return;
+    }
+    // Check each touch's original target, not just event.target (which may be
+    // the element under the second finger and therefore outside the list).
+    active = touchesIncludeList(event.touches);
+    if (active) previousY = centerY(event.touches);
   }, { passive: true });
 
   document.addEventListener('touchmove', event => {
     if (!active || event.touches.length < 2) return;
     event.preventDefault();
     const nextY = centerY(event.touches);
-    window.scrollBy(0, previousY - nextY);
+    const delta = previousY - nextY;
+    const scroller = document.scrollingElement || document.documentElement;
+    scroller.scrollTop += delta;
     previousY = nextY;
   }, { passive: false });
 
