@@ -7,6 +7,10 @@ const VERCEL_ENV = process.env.VERCEL_ENV || 'development';
 const PREVIEW_WRITES_ENABLED = process.env.NEXUS_ALLOW_PREVIEW_WRITES === 'true';
 const PRODUCTION_ORIGIN = 'https://spaced-repetition-tracker-delta.vercel.app';
 const MAX_BODY = 12000;
+const KV_REST_API_URL = (process.env.Nexus_KV_REST_API_URL || '').replace(/\/$/, '');
+const KV_REST_API_TOKEN = process.env.Nexus_KV_REST_API_TOKEN || '';
+const RATE_LIMIT_SCRIPT = "local n = redis.call('INCR', KEYS[1]); if n == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]); end; return {n, redis.call('PTTL', KEYS[1])};";
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const NEXUS_ADMIN_USER_ID = (process.env.NEXUS_ADMIN_USER_ID || '').trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
@@ -21,6 +25,78 @@ const json = (res, status, payload) => {
 };
 const clean = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
 const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+function clientAddress(req) {
+  const direct = req.headers['x-real-ip'];
+  const forwarded = req.headers['x-forwarded-for'];
+  const value = (typeof direct === 'string' && direct.trim()) ||
+    (typeof forwarded === 'string' && forwarded.split(',')[0].trim()) || 'unknown';
+  // Hash the address before storing it as a Redis key.
+  return require('crypto').createHash('sha256').update(value).digest('hex').slice(0, 32);
+}
+async function consumeRateLimit(key, limit, windowMs = RATE_LIMIT_WINDOW_MS) {
+  if (!KV_REST_API_URL || !KV_REST_API_TOKEN) {
+    throw new Error('Rate limiter is not configured. Check the Nexus KV environment variables.');
+  }
+  const response = await fetch(KV_REST_API_URL, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      Authorization: 'Bearer ' + KV_REST_API_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(['EVAL', RATE_LIMIT_SCRIPT, '1', key, String(windowMs)])
+  });
+  if (!response.ok) throw new Error('Rate limiter request failed (' + response.status + ').');
+  const payload = await response.json();
+  if (!Array.isArray(payload.result) || payload.result.length < 1) {
+    throw new Error('Rate limiter returned an unexpected response.');
+  }
+  return Number(payload.result[0]) <= limit;
+}
+async function applyIpRateLimit(req, res) {
+  const method = String(req.method || 'GET').toUpperCase();
+  const routeLimit = method === 'GET' ? 120 : 60;
+  try {
+    const allowed = await consumeRateLimit(
+      'nexus:syllabus-api:ip:' + clientAddress(req) + ':' + method.toLowerCase(),
+      routeLimit
+    );
+    if (!allowed) {
+      res.setHeader('Retry-After', '60');
+      json(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Nexus API IP rate limit unavailable:', error && error.message);
+    // Preserve public read access during a Redis outage, but fail closed for writes.
+    if (method === 'GET') return true;
+    json(res, 503, { error: 'Request protection is temporarily unavailable. Please try again shortly.' });
+    return false;
+  }
+}
+async function applyUserRateLimit(user, req, res, action) {
+  const isSync = action === 'sync-github';
+  const limit = isSync ? 3 : 20;
+  try {
+    const allowed = await consumeRateLimit(
+      'nexus:syllabus-api:user:' + user.id + ':' + (isSync ? 'github-sync' : 'write'),
+      limit
+    );
+    if (!allowed) {
+      res.setHeader('Retry-After', '60');
+      json(res, 429, { error: isSync
+        ? 'GitHub synchronisation is limited to 3 attempts per minute. Please wait and try again.'
+        : 'Too many changes in a short period. Please wait a minute and try again.' });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Nexus API user rate limit unavailable:', error && error.message);
+    json(res, 503, { error: 'Request protection is temporarily unavailable. Please try again shortly.' });
+    return false;
+  }
+}
 async function currentUser(token) {
   if (!token) return null;
   const response = await fetch(SUPABASE_URL + '/auth/v1/user', {
@@ -156,6 +232,10 @@ module.exports = async function handler(req, res) {
     if (origin && !allowedOrigins.has(origin)) return json(res, 403, { error: 'Origin not allowed.' });
     res.statusCode = 204; return res.end();
   }
+  if (req.method !== 'OPTIONS') {
+    const rateLimitPassed = await applyIpRateLimit(req, res);
+    if (!rateLimitPassed) return;
+  }
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return json(res, 503, { error: 'Community API is not configured for this deployment.' });
   }
@@ -200,7 +280,9 @@ module.exports = async function handler(req, res) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
       return json(res, 400, { error: 'Request body must be a JSON object.' });
     }
-    if (req.method === 'POST' && clean(input.action, 30) === 'sync-github') {
+    const requestedAction = req.method === 'POST' ? clean(input.action, 30) : '';
+    if (!(await applyUserRateLimit(user, req, res, requestedAction))) return;
+    if (req.method === 'POST' && requestedAction === 'sync-github') {
       if (!isAdmin(user)) return json(res, 403, { error: 'Only the Nexus administrator can synchronise requests to GitHub.' });
       const response = await db('nexus_syllabus_requests?select=id,name,category,topics,created_at&order=created_at.desc&limit=200', token);
       if (!response.ok) return json(res, 502, { error: 'Could not read the community request list for synchronisation.' });
