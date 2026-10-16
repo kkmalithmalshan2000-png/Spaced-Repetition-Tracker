@@ -15,6 +15,11 @@ BEGIN
      OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid = to_regclass('public.nexus_syllabus_votes')) THEN
     RAISE EXCEPTION 'RLS must be enabled on both Nexus community tables before changing grants.';
   END IF;
+  IF to_regprocedure('public.get_nexus_syllabus_vote_counts()') IS NULL
+     OR to_regprocedure('public.get_my_nexus_syllabus_votes()') IS NULL
+     OR to_regprocedure('public.set_nexus_syllabus_vote(uuid,boolean)') IS NULL THEN
+    RAISE EXCEPTION 'Vote RPC functions are missing; install the private vote RPC migration before hardening table grants.';
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='nexus_syllabus_requests' AND cmd IN ('SELECT','ALL'))
      OR NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='nexus_syllabus_requests' AND cmd IN ('INSERT','ALL'))
      OR NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='nexus_syllabus_requests' AND cmd IN ('DELETE','ALL'))
