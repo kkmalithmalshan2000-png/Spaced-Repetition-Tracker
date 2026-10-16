@@ -1722,15 +1722,17 @@ dialog .dialog-inner,dialog>div{max-height:none}
       if(!filtered.length){list.innerHTML='<div class="community-empty">No community requests yet. Be the first to suggest a curriculum.</div>';return}
       list.innerHTML=filtered.map(x=>'<article class="community-item" data-request-id="'+escapeHTML(x.id)+'"><div class="community-item-main"><h4>'+escapeHTML(x.name)+'</h4><div class="community-meta">'+escapeHTML(x.category||'Uncategorised')+' · '+new Date(x.createdAt||Date.now()).toLocaleDateString()+'</div>'+(x.topics?'<p>'+escapeHTML(x.topics)+'</p>':'')+'</div><div class="community-item-actions"><button type="button" class="btn community-vote" data-action="'+(x.hasUpvoted?'remove-upvote':'upvote')+'" data-id="'+escapeHTML(x.id)+'" aria-pressed="'+String(!!x.hasUpvoted)+'" title="'+(x.hasUpvoted?'Remove your upvote':'Upvote this request')+'" '+(pendingRequests.has(String(x.id))?'disabled':'')+' >'+(x.hasUpvoted?'▲ Upvoted':'▲ Upvote')+' · '+(Number(x.votes)||0)+'</button>'+(isAdminUser?'<button type="button" class="btn btn-danger community-delete" data-action="admin-delete" data-id="'+escapeHTML(x.id)+'" '+(pendingRequests.has(String(x.id))?'disabled':'')+'>Mark fulfilled &amp; remove</button>':(x.isOwner?'<button type="button" class="btn btn-danger community-delete" data-action="delete" data-id="'+escapeHTML(x.id)+'" '+(pendingRequests.has(String(x.id))?'disabled':'')+'>Delete my request</button>':''))+'</div></article>').join('');
     };
-    const loadRequests=async()=>{const loadId=++requestLoadId;try{const r=await api('',{});const data=await r.json();if(loadId!==requestLoadId)return;if(!r.ok)throw new Error(data.error||'Wishlist unavailable');const pendingItems=new Map(community.filter(x=>pendingRequests.has(String(x.id))).map(x=>[String(x.id),x]));community=(Array.isArray(data.requests)?data.requests:[]).filter(x=>!deletedRequestIds.has(String(x.id))&&!pendingDeletes.has(String(x.id))).map(x=>pendingItems.get(String(x.id))||x);signedIn=!!data.signedIn;isAdminUser=!!data.isAdmin;if(syncButton)syncButton.hidden=!isAdminUser;render()}catch(e){if(loadId!==requestLoadId)return;list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
+    const loadRequests=async()=>{const loadId=++requestLoadId;if(!navigator.onLine)return;try{const r=await api('',{});const data=await r.json();if(loadId!==requestLoadId)return;if(!r.ok)throw new Error(data.error||'Wishlist unavailable');const pendingItems=new Map(community.filter(x=>pendingRequests.has(String(x.id))).map(x=>[String(x.id),x]));community=(Array.isArray(data.requests)?data.requests:[]).filter(x=>!deletedRequestIds.has(String(x.id))&&!pendingDeletes.has(String(x.id))).map(x=>pendingItems.get(String(x.id))||x);signedIn=!!data.signedIn;isAdminUser=!!data.isAdmin;if(syncButton)syncButton.hidden=!isAdminUser;render()}catch(e){if(loadId!==requestLoadId)return;list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
     tabs.addEventListener('click',e=>{const b=e.target.closest('[data-community-tab]');if(!b)return;activeTab=b.dataset.communityTab;render();if(activeTab==='requests')loadRequests()});
     // Refresh ownership/upvote state when the shared app session becomes available or changes.
     window.addEventListener('nexus:community-session',()=>{if(activeTab==='requests')loadRequests()});
     if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()});
     // Refresh promptly when returning to the app, and poll more frequently as a fallback
     // when Realtime events are delayed or unavailable.
-    const refreshVisibleWishlist=()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
-    setInterval(refreshVisibleWishlist,5000);
+    const refreshVisibleWishlist=()=>{if(navigator.onLine&&!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
+    // Keep background work lightweight; do not poll while offline or the tab is hidden.
+    setInterval(refreshVisibleWishlist,30000);
+    window.addEventListener('online',refreshVisibleWishlist);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
     window.addEventListener('pageshow',refreshVisibleWishlist);
@@ -1822,5 +1824,46 @@ dialog .dialog-inner,dialog>div{max-height:none}
 .community-delete{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--border))}
 @media(max-width:600px){.community-item{flex-direction:column}.community-item-actions{width:100%;justify-content:flex-start}.community-item-actions .btn{min-height:40px}}
 </style>
+
+<style id="nexus-performance-optimizations">
+  /*
+   * Performance guardrails: avoid animating large surfaces or asking mobile GPUs
+   * to repeatedly composite blurred backgrounds during scroll.
+   */
+  html { scroll-behavior: auto !important; }
+  .app { animation: none !important; }
+  .brandmark { animation: none !important; }
+  .panel, .stat, .topic-card, .queue-item {
+    animation: none !important;
+    transition: box-shadow .14s ease, border-color .14s ease !important;
+  }
+  .panel:hover, .topic-card:hover, .stat:hover {
+    transform: none !important;
+    box-shadow: var(--shadow) !important;
+  }
+  .tabs {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  dialog::backdrop {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .collapsible-body {
+    transition: none !important;
+  }
+  .collapsible.open .collapsible-body {
+    max-height: none !important;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+
 </body>
 </html>
