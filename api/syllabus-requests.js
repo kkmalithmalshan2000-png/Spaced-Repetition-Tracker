@@ -120,15 +120,52 @@ async function db(path, token, options = {}) {
     body: options.body === undefined ? undefined : JSON.stringify(options.body)
   });
 }
-async function countVotes(requestId, token) {
-  const response = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_votes?select=request_id&request_id=eq.' + encodeURIComponent(requestId), {
-    method: 'GET', cache: 'no-store',
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, Accept: 'application/json', Prefer: 'count=exact', Range: '0-0' }
+async function fetchVoteCounts() {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_nexus_syllabus_vote_counts', {
+    method: 'POST', cache: 'no-store',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: '{}'
   });
   if (!response.ok) return null;
-  const range = response.headers.get('content-range') || '';
-  const match = range.match(/\/(\d+)$/);
-  return match ? Number(match[1]) : null;
+  const rows = await response.json();
+  if (!Array.isArray(rows)) return null;
+  return new Map(rows.map(row => [row.request_id, Number(row.vote_count)]));
+}
+async function fetchMyVotes(token) {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_my_nexus_syllabus_votes', {
+    method: 'POST', cache: 'no-store',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: '{}'
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  if (!Array.isArray(rows)) return null;
+  return new Set(rows.map(row => row.request_id));
+}
+async function setVote(requestId, token, upvote) {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/set_nexus_syllabus_vote', {
+    method: 'POST', cache: 'no-store',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ p_request_id: requestId, p_upvote: upvote })
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
 }
 
 const githubHeaders = () => ({
@@ -247,20 +284,22 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const user = await currentUser(token);
-      const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id,nexus_syllabus_votes(count)&order=created_at.desc&limit=200', {
+      const requestsResponse = await fetch(SUPABASE_URL + '/rest/v1/nexus_syllabus_requests?select=id,name,category,topics,created_at,owner_id&order=created_at.desc&limit=200', {
         cache: 'no-store',
         headers: { apikey: SUPABASE_ANON_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}), Accept: 'application/json', 'Cache-Control': 'no-cache, no-store, max-age=0' }
       });
       if (!requestsResponse.ok) return json(res, 503, { error: 'Community wishlist storage is not configured or is temporarily unavailable. Check the Supabase setup guide.' });
       const requests = await requestsResponse.json();
+      const voteCounts = await fetchVoteCounts();
+      if (!voteCounts) return json(res, 503, { error: 'Could not load community vote totals. Please try again shortly.' });
       let myVotes = new Set();
       if (user) {
-        const votesResponse = await db('nexus_syllabus_votes?select=request_id&user_id=eq.' + encodeURIComponent(user.id), token);
-        if (votesResponse.ok) (await votesResponse.json()).forEach(v => myVotes.add(v.request_id));
+        myVotes = await fetchMyVotes(token);
+        if (!myVotes) return json(res, 503, { error: 'Could not load your upvote status. Please try again shortly.' });
       }
       return json(res, 200, { requests: requests.map(x => ({
         id: x.id, name: x.name, category: x.category, topics: x.topics || '',
-        createdAt: x.created_at, votes: Array.isArray(x.nexus_syllabus_votes) && x.nexus_syllabus_votes[0] ? Number(x.nexus_syllabus_votes[0].count || 0) : 0,
+        createdAt: x.created_at, votes: voteCounts.get(x.id) || 0,
         isOwner: !!user && user.id === x.owner_id, hasUpvoted: myVotes.has(x.id), status: 'community'
       })), signedIn: !!user, isAdmin: isAdmin(user) });
     }
@@ -306,18 +345,13 @@ module.exports = async function handler(req, res) {
     if (action === 'upvote' || action === 'remove-upvote') {
       const id = clean(String(input.id || ''), 80);
       if (!isUuid(id)) return json(res, 400, { error: 'A valid request ID is required.' });
-      if (action === 'upvote') {
-        const vote = await db('nexus_syllabus_votes', token, { method: 'POST', prefer: 'return=representation,resolution=ignore-duplicates', body: { request_id: id, user_id: user.id } });
-        if (!vote.ok) return json(res, 502, { error: 'Could not save your upvote. Please try again.' });
-        const voteRows = await vote.json();
-        const votes = await countVotes(id, token);
-        return json(res, 200, { upvoted: true, id, votes, changed: Array.isArray(voteRows) && voteRows.length > 0 });
-      }
-      const removed = await db('nexus_syllabus_votes?request_id=eq.' + encodeURIComponent(id) + '&user_id=eq.' + encodeURIComponent(user.id), token, { method: 'DELETE', prefer: 'return=representation' });
-      if (!removed.ok) return json(res, 502, { error: 'Could not remove your upvote. Please try again.' });
-      const removedRows = await removed.json();
-      const votes = await countVotes(id, token);
-      return json(res, 200, { upvoted: false, id, votes, changed: Array.isArray(removedRows) && removedRows.length > 0 });
+      const result = await setVote(id, token, action === 'upvote');
+      if (!result) return json(res, 502, { error: action === 'upvote' ? 'Could not save your upvote. Please try again.' : 'Could not remove your upvote. Please try again.' });
+      return json(res, 200, {
+        upvoted: action === 'upvote', id,
+        votes: Number(result.vote_count || 0),
+        changed: result.changed === true
+      });
     }
     const name = clean(input.name, 120), category = clean(input.category, 100), topics = clean(input.topics, 3000);
     if (!name || !category) return json(res, 400, { error: 'Subject/course name and category are required.' });
