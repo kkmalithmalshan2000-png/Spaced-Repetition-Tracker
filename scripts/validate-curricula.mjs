@@ -199,12 +199,12 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     testContext.state.history = sampleHistory.concat(Array.from({length:8},()=>({reviewedAt:'2026-10-16',rating:1})));
     const allSelection = testContext.getRatingAnalyticsSelection();
     const allSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
-    assert(allSvg.includes('>10</text>'), 'Monthly chart Y-axis should scale to the full rating total before filtering.');
+    assert(/class="ra-tick" x="53" y="[^"]+" text-anchor="end">10<\/text>/.test(allSvg), 'Monthly chart Y-axis should scale to the full rating total before filtering.');
     testContext.fsState.analyticsVisibleRatings = [4,5];
     const filteredSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
     assert(filteredSvg.includes('data-rating-segment="4"') && filteredSvg.includes('data-rating-segment="5"'), 'Selecting Very good and Easy must show those rating segments.');
     assert(!filteredSvg.includes('data-rating-segment="1"') && !filteredSvg.includes('data-rating-segment="2"') && !filteredSvg.includes('data-rating-segment="3"'), 'Unselected ratings must be completely hidden from the graph.');
-    assert(!filteredSvg.includes('>10</text>'), 'Filtering ratings must recalculate the chart scale using visible presses only.');
+    assert(!/class="ra-tick" x="53" y="[^"]+" text-anchor="end">10<\/text>/.test(filteredSvg), 'Filtering ratings must recalculate the chart scale using visible presses only.');
   } catch (error) {
     errors.push('Analytics timeframe runtime validation failed: '+(error && error.stack ? error.stack : String(error)));
   }
