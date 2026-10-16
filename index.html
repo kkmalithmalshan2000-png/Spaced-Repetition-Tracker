@@ -1925,5 +1925,79 @@ dialog .dialog-inner,dialog>div{max-height:none}
 })();
 </script>
 
+<style id="nexus-fluid-scrolling">
+  /* Prefer native touch scrolling and momentum for independently scrollable areas. */
+  .tabs,
+  .history-list,
+  .due-list,
+  .progress-list,
+  #structureList,
+  .hub-scroll-list,
+  .hub-list,
+  .hub-heatmap,
+  .global-search-results,
+  .topic-grid,
+  .community-list,
+  dialog,
+  dialog .dialog-inner,
+  dialog > div,
+  .syllabus-dialog-inner,
+  .explore-topic-details ol,
+  .account-choice-dialog {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: auto;
+  }
+
+  /* Avoid expensive paint effects on moving surfaces while keeping the visual design. */
+  .tabs {
+    transform: translateZ(0);
+  }
+
+  @media (pointer: coarse) {
+    .tabs,
+    .history-list,
+    .due-list,
+    .progress-list,
+    #structureList,
+    .hub-scroll-list,
+    .hub-list,
+    .hub-heatmap,
+    .global-search-results,
+    .topic-grid,
+    .community-list,
+    dialog,
+    dialog .dialog-inner,
+    dialog > div,
+    .syllabus-dialog-inner,
+    .explore-topic-details ol,
+    .account-choice-dialog {
+      touch-action: pan-y;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tabs,
+    .history-list,
+    .due-list,
+    .progress-list,
+    #structureList,
+    .hub-scroll-list,
+    .hub-list,
+    .hub-heatmap,
+    .global-search-results,
+    .topic-grid,
+    .community-list,
+    dialog,
+    dialog .dialog-inner,
+    dialog > div,
+    .syllabus-dialog-inner,
+    .explore-topic-details ol,
+    .account-choice-dialog {
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+
 </body>
 </html>
