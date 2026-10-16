@@ -90,6 +90,31 @@
           ]
         }
       ]
+    },
+    {
+      "id": "temporary-sample-test",
+      "title": "Temporary Sample Curriculum (TEST ONLY)",
+      "country": "Test",
+      "exam": "Sample exam",
+      "language": "English",
+      "streamName": "Temporary Sample (TEST ONLY)",
+      "streamId": "stream-temporary-sample-test",
+      "description": "Temporary test pack for verifying curriculum discovery and installation. This pack must be removed before merge.",
+      "keywords": [
+        "temporary",
+        "sample",
+        "test"
+      ],
+      "subjects": [
+        {
+          "id": "SAMPLE-SUBJECT",
+          "name": "Sample Subject (TEST ONLY)",
+          "topics": [
+            "Sample Topic 1 — Whole-pack and subject install test",
+            "Sample Topic 2 — Individual-topic install test"
+          ]
+        }
+      ]
     }
   ]
 }
