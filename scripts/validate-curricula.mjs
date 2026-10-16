@@ -61,6 +61,115 @@ assert(html.includes('ra-svg-dense') && html.includes("selection.range==='month'
 assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
 assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
 
+// Execute the real analytics selection, binning, SVG, and table functions against
+// deterministic review records for each supported timeframe.
+function extractFunctionDeclaration(source, name) {
+  const start = source.indexOf('function '+name+'(');
+  if (start < 0) return null;
+  const open = source.indexOf('{', start);
+  if (open < 0) return null;
+  let depth = 0, quote = null, escaped = false, lineComment = false, blockComment = false;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i], next = source[i + 1];
+    if (lineComment) { if (ch === '\n') lineComment = false; continue; }
+    if (blockComment) { if (ch === '*' && next === '/') { blockComment = false; i++; } continue; }
+    if (quote) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '/' && next === '/') { lineComment = true; i++; continue; }
+    if (ch === '/' && next === '*') { blockComment = true; i++; continue; }
+    if (ch === "'" || ch === '"' || ch.charCodeAt(0) === 96) { quote = ch; continue; }
+    if (ch === '{') depth++;
+    if (ch === '}' && --depth === 0) return source.slice(start, i + 1);
+  }
+  return null;
+}
+
+const analyticsFunctionNames = [
+  'getRatingAnalyticsSelection',
+  'getRatingAnalyticsTimeline',
+  'ratingAnalyticsSvgMarkup',
+  'ratingAnalyticsTimelineTableMarkup'
+];
+const analyticsFunctionSources = Object.fromEntries(analyticsFunctionNames.map(name => [name, extractFunctionDeclaration(html, name)]));
+for (const name of analyticsFunctionNames) assert(Boolean(analyticsFunctionSources[name]), 'Analytics runtime validation could not extract '+name+'.');
+
+if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
+  try {
+    const fixedToday = '2026-10-16';
+    const sampleHistory = [
+      {reviewedAt:'2026-10-12',rating:1},{reviewedAt:'2026-10-13',rating:2},
+      {reviewedAt:'2026-10-14',rating:3},{reviewedAt:'2026-10-15',rating:4},
+      {reviewedAt:'2026-10-16',rating:5},{reviewedAt:'2026-08-01',rating:1},
+      {reviewedAt:'2026-06-10',rating:2},{reviewedAt:'2026-03-09',rating:5},
+      {reviewedAt:'2025-12-15',rating:3},{reviewedAt:'2025-10-02',rating:4},
+      {reviewedAt:'2025-01-30',rating:4}
+    ];
+    const validCalendarDate = value => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+      const parts = value.split('-').map(Number);
+      const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      return date.getUTCFullYear() === parts[0] && date.getUTCMonth() === parts[1] - 1 && date.getUTCDate() === parts[2];
+    };
+    const testContext = {
+      fsState:{analyticsPeriod:'week',analyticsCustomStart:'2026-10-10',analyticsCustomEnd:fixedToday},
+      state:{history:sampleHistory},
+      today:() => fixedToday,
+      safeDate:validCalendarDate,
+      dateShift:(date,days) => { const d = new Date(date+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); },
+      dayDiff:(later,earlier) => Math.round((Date.parse(later+'T12:00:00Z')-Date.parse(earlier+'T12:00:00Z'))/86400000),
+      fmtDate:date => date,
+      esc:value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
+      RATING_LABELS:{1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'},
+      RATING_ANALYTICS_COLORS:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#10b981'},
+      getRatingAnalyticsScopedRecords:records => records || []
+    };
+    vm.createContext(testContext);
+    for (const name of analyticsFunctionNames) vm.runInContext(analyticsFunctionSources[name], testContext, {filename:'index.html:'+name});
+    const timeframeCases = [
+      {period:'week',start:'2026-10-12',end:'2026-10-18',bins:7,futureBins:2},
+      {period:'month',start:'2026-10-01',end:'2026-10-31',bins:31,futureBins:15},
+      {period:'year',start:'2026-01-01',end:'2026-12-31',bins:12,futureBins:2},
+      {period:'custom',customStart:'2026-10-10',customEnd:'2026-10-16',bins:7,futureBins:0},
+      {period:'custom',customStart:'2026-07-19',customEnd:'2026-10-16',bins:13,futureBins:0},
+      {period:'custom',customStart:'2025-09-01',customEnd:'2026-10-16',bins:14,futureBins:0}
+    ];
+    for (const testCase of timeframeCases) {
+      testContext.fsState.analyticsPeriod = testCase.period;
+      if (testCase.customStart) testContext.fsState.analyticsCustomStart = testCase.customStart;
+      if (testCase.customEnd) testContext.fsState.analyticsCustomEnd = testCase.customEnd;
+      const selection = testContext.getRatingAnalyticsSelection();
+      assert(selection.valid !== false, testCase.period+' analytics selection should be valid.');
+      assert(selection.from === testCase.start || !testCase.start, testCase.period+' analytics start date should be correct.');
+      assert(selection.to === testCase.end || !testCase.end, testCase.period+' analytics end date should be correct.');
+      const timeline = testContext.getRatingAnalyticsTimeline(selection, 'topic', 'test-all');
+      assert(timeline.bins.length === testCase.bins, testCase.period+' analytics should render '+testCase.bins+' time bins; received '+timeline.bins.length+'.');
+      assert(timeline.bins.filter(bin => bin.isFuture).length === testCase.futureBins, testCase.period+' analytics should identify all future bins without plotting them as zero.');
+      for (let rating = 1; rating <= 5; rating++) {
+        const expected = selection.records.filter(record => Number(record.rating) === rating).length;
+        const binned = timeline.bins.reduce((total, bin) => total + (Number.isFinite(bin.counts[rating - 1]) ? bin.counts[rating - 1] : 0), 0);
+        assert(timeline.totals[rating - 1] === expected, testCase.period+' legend total for rating '+rating+' should match saved records.');
+        assert(binned === expected, testCase.period+' timeline bins for rating '+rating+' should sum to the saved-record total.');
+      }
+      const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
+      const series = [...svg.matchAll(/data-rating-series="([1-5])"/g)].map(match => match[1]);
+      assert(series.join(',') === '1,2,3,4,5', testCase.period+' graph must contain five independent rating series.');
+      for (const [rating, color] of [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']]) {
+        assert(new RegExp('data-rating-series="'+rating+'"[^>]*stroke="'+color+'"').test(svg), testCase.period+' rating '+rating+' line must use the matching rating-button color.');
+      }
+      assert(svg.includes('stroke-dasharray="10 4"') && svg.includes('stroke-dasharray="3 3"') && svg.includes('stroke-dasharray="10 3 2 3"') && svg.includes('stroke-dasharray="2 3"'), testCase.period+' graph must distinguish overlapping series with rating-specific line patterns.');
+      const table = testContext.ratingAnalyticsTimelineTableMarkup(selection, 'topic', 'test-all');
+      if (testCase.futureBins) assert(table.includes('—') && table.includes('Future'), testCase.period+' exact-count table must mark future intervals as unavailable rather than zero.');
+    }
+  } catch (error) {
+    errors.push('Analytics timeframe runtime validation failed: '+(error && error.stack ? error.stack : String(error)));
+  }
+}
+
+
 // Parse each inline JavaScript block without executing browser-dependent app code.
 let checkedScripts = 0;
 for (const [index, match] of [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)].entries()) {
