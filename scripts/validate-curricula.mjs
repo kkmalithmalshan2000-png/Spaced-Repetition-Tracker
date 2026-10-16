@@ -159,7 +159,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
         assert(binned === expected, testCase.period+' timeline bins for rating '+rating+' should sum to the saved-record total.');
       }
       const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
-      const barGroups = [...svg.matchAll(/<g class="ra-stack-bar" data-bin-index="(\\d+)" data-total="(\\d+)">/g)];
+      const barGroups = [...svg.matchAll(/<g class="ra-stack-bar" data-bin-index="(\d+)" data-total="(\d+)">/g)];
       assert(barGroups.length === testCase.bins-testCase.futureBins, testCase.period+' graph must include one visible stack per completed time bin.');
       const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']];
       for (const [rating, color] of expectedColors) {
