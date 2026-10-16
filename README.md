@@ -37,6 +37,29 @@ You can also deploy from GitHub by pushing these files to a repository and conne
 - The app includes the FSRS-6 scheduler in fsrs-bundle.js; this update leaves the scheduler bundle and its integration unchanged.
 - The syllabus coverage percentage reflects topics you have entered, or your optional expected topic count; it cannot independently know the complete official syllabus.
 
+## Adding new curriculum packs (data-only workflow)
+
+All available syllabi are defined in `curricula/catalog.json`. The Explore page and installation logic are generic: adding a new syllabus normally requires editing this JSON file only, not `index.html`, the installer, the database schema, or the service worker.
+
+Each entry in `packs` describes one installable collection:
+
+- `id`: permanent, unique, lowercase slug such as `lk-al-biology-si`.
+- `title`, `country`, `exam`, `language`, `streamName`: catalogue and workspace labels.
+- `description` and `keywords`: searchable catalogue text.
+- `subjects`: an array of subjects. Each subject has a unique `id`, a `name`, and a `topics` array containing plain text strings.
+- Optional `streamId` and `workspaceId` retain stable workspace IDs. Optional `legacyIdPrefix` is only for maintaining the original IDs of migrated starter topics; omit it for new packs.
+
+Use this workflow for a community request:
+
+1. Confirm the syllabus and source/edition, then arrange its official sections into subjects and ordered topic names.
+2. Add a new pack object to `curricula/catalog.json`; keep existing pack IDs and subject IDs stable. Do not duplicate topic names within one subject.
+3. Run `node scripts/validate-curricula.mjs`. The GitHub Actions check also validates pull requests, including the syntax of inline scripts in `index.html`.
+4. Review the Vercel preview on desktop and mobile before merging. Test installing a whole pack, one subject, one topic, and repeating each action.
+
+Users can install a whole pack, an individual subject, or a single topic. Matching topics already in the selected stream/subject are skipped, including archived matches, so a repeat install will not duplicate them. Existing topic IDs, due dates, review intervals, FSRS-related fields, notes, and history are not reset. Renaming an installed topic is treated as a new topic, so retain official topic names where possible.
+
+The catalogue JSON is included in the PWA cache. When online, the service worker checks the network for catalogue updates and refreshes its cached copy; when offline, the last cached catalogue remains available. The app also has the existing Commerce data as a fallback if the catalogue file cannot be read.
+
 ## Updating an existing deployment
 
 Deploy the entire bundle, not only `index.html`. Keep the same Netlify site/domain when possible so the browser origin and its locally stored data remain the same. Before changing domains or replacing devices, download a full JSON backup and restore it on the new site/device.

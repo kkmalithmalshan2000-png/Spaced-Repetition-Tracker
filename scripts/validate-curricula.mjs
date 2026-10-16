@@ -1,0 +1,233 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const cataloguePath = new URL('../curricula/catalog.json', import.meta.url);
+const htmlPath = new URL('../index.html', import.meta.url);
+const catalog = JSON.parse(fs.readFileSync(cataloguePath, 'utf8'));
+const html = fs.readFileSync(htmlPath, 'utf8');
+const errors = [];
+const assert = (condition, message) => { if (!condition) errors.push(message); };
+
+assert(catalog && catalog.version === 1, 'curricula/catalog.json must declare version: 1.');
+assert(Array.isArray(catalog.packs) && catalog.packs.length > 0, 'The catalogue must contain at least one pack.');
+const packIds = new Set();
+let totalTopics = 0;
+for (const [packIndex, pack] of (catalog.packs || []).entries()) {
+  const prefix = 'Pack '+(packIndex + 1)+' ('+(pack?.id || 'unnamed')+')';
+  assert(pack && /^[a-z0-9][a-z0-9-]{1,79}$/.test(pack.id || ''), prefix+': id must be a unique lowercase slug.');
+  assert(!packIds.has(pack?.id), prefix+': duplicate pack id.');
+  if (pack?.id) packIds.add(pack.id);
+  for (const field of ['title','country','exam','language','streamName']) assert(typeof pack?.[field] === 'string' && pack[field].trim(), prefix+': missing '+field+'.');
+  assert(Array.isArray(pack?.subjects) && pack.subjects.length > 0, prefix+': subjects must be a non-empty array.');
+  const subjectIds = new Set();
+  for (const [subjectIndex, subject] of (pack?.subjects || []).entries()) {
+    const sp = prefix+', subject '+(subjectIndex + 1)+' ('+(subject?.id || 'unnamed')+')';
+    assert(subject && /^[a-zA-Z0-9][a-zA-Z0-9-]{0,79}$/.test(subject.id || ''), sp+': invalid subject id.');
+    assert(!subjectIds.has(subject?.id), sp+': duplicate subject id in the same pack.');
+    if (subject?.id) subjectIds.add(subject.id);
+    assert(typeof subject?.name === 'string' && subject.name.trim(), sp+': missing subject name.');
+    assert(Array.isArray(subject?.topics) && subject.topics.length > 0, sp+': topics must be a non-empty array.');
+    const topicNames = new Set();
+    for (const topic of subject?.topics || []) {
+      assert(typeof topic === 'string' && topic.trim().length > 0 && topic.trim().length <= 240, sp+': each topic must be a non-empty string of at most 240 characters.');
+      if (typeof topic === 'string') {
+        const key = topic.trim().toLocaleLowerCase();
+        assert(!topicNames.has(key), sp+': duplicate topic name '+JSON.stringify(topic)+'.');
+        topicNames.add(key);
+        totalTopics++;
+      }
+    }
+  }
+}
+assert(packIds.has('sl-al-commerce-si'), 'The existing Commerce starter pack must remain available.');
+assert(!(catalog.packs || []).some(pack => /^temporary(?:-|$)/i.test(pack?.id || '')), 'Temporary test curricula must not remain in the catalogue.');
+assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pack must be removed from the app version.');
+assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
+assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
+assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
+assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Total review presses') && html.includes('data-rating-segment='), 'Analytics must render a stacked vertical rating-count graph with an explicit total-review axis.');
+assert(html.includes('No presses for the selected ratings in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
+assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
+assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
+assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&barWidth>=estimatedTextWidth+6'), 'Stacked bar count labels must only render when they fit inside the segment.');
+assert(html.includes('data-hub-action="analytics-toggle-rating"') && html.includes("if(a==='analytics-toggle-rating')"), 'Every rating legend item must toggle its series in the graph.');
+assert(html.includes("fsState.analyticsVisibleRatings=current.filter(r=>r!==rating)") && html.includes("fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y)"), 'Rating filters must support hiding and restoring multiple ratings.');
+assert(html.includes('const visibleCount=bin=>visibleRatings.reduce') && html.includes("bins.map(b=>b.isFuture?0:visibleCount(b))"), 'The graph height scale and total bars must be recalculated from selected ratings only.');
+assert(html.includes("data-rating-segment=\"'+rating+'\""), 'The stacked graph must retain individually addressable rating segments.');
+assert(html.includes('class="hub-premium-heading panel"') && html.includes('.hub-premium-heading{'), 'Study Hub must use the premium purple title card.');
+assert(html.includes('<p class="subtitle">v4.0</p>') && html.includes('How to use: tap “? How to use” in the header.'), 'Main screen branding should retain only app version and the How to use reference.');
+assert(html.includes('id="appMode" hidden'), 'The hidden legacy app-mode node must remain available to existing runtime code without displaying verbose status copy.');
+assert(html.includes("new URL('icon-192.png',window.location.href)") && html.includes('class="cover-brand"') && html.includes('class="cover-logo"') && html.includes('<strong>NEXUS</strong>') && html.includes('SPACED REPETITION TRACKER'), 'The Analytics PDF cover must show the Nexus logo and app name in a premium branded header.');
+
+assert(html.includes("map.set('ALL',{value:'ALL'") && html.includes("if(String(entityId)==='ALL')return records||[];"), 'Analytics must support an aggregate view across all topics, subjects, and syllabuses.');
+assert(html.includes('function ensureAnalyticsEntityForRange(level)') && html.includes('ensureAnalyticsEntityForRange(level);'), 'Opening Analytics must fall back to combined data when the current entity has no reviews in the selected timeframe.');
+assert(html.includes("const all=options.find(option=>option.value==='ALL')") && html.includes("const next=all?.value||best?.value||options[0]?.value||'';"), 'Monthly analytics must default to the combined view when the current entity has no reviews in the selected timeframe.');
+
+assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('ensureAnalyticsEntityForRange(level);'), 'Changing timeframe must use the safe entity fallback when the selected entity has no reviews in that range.');
+assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
+assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
+assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
+assert(!html.includes("options.map(x=>({value:x.value,label:x.label+' — '+x.subtitle}))"), 'Analytics must not pass non-iterable objects to the tuple-based selectOptions helper.');
+assert(html.includes('position:fixed;z-index:30001}'), 'The persistent Undo toast must appear above standalone overlays such as Danger Zone.');
+assert(!html.includes("$('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)"), 'Main app script must not reference private Study Hub functions before its initialization completes.');
+assert(html.includes("hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)") && html.includes("hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone)"), 'Analytics and Danger Zone buttons must be bound inside the Study Hub function scope.');
+assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a Study Hub tab.');
+assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
+assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
+assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
+assert(html.includes('ra-svg-dense') && html.includes("selection.range==='month'") && html.includes("selection.range==='year'"), 'Month/year graphs must retain their day/month axis labels.');
+assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
+assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
+
+// Execute the real analytics selection, binning, SVG, and table functions against
+// deterministic review records for each supported timeframe.
+function extractFunctionDeclaration(source, name) {
+  const start = source.indexOf('function '+name+'(');
+  if (start < 0) return null;
+  const open = source.indexOf('{', start);
+  if (open < 0) return null;
+  let depth = 0, quote = null, escaped = false, lineComment = false, blockComment = false;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i], next = source[i + 1];
+    if (lineComment) { if (ch === '\n') lineComment = false; continue; }
+    if (blockComment) { if (ch === '*' && next === '/') { blockComment = false; i++; } continue; }
+    if (quote) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '/' && next === '/') { lineComment = true; i++; continue; }
+    if (ch === '/' && next === '*') { blockComment = true; i++; continue; }
+    if (ch === "'" || ch === '"' || ch.charCodeAt(0) === 96) { quote = ch; continue; }
+    if (ch === '{') depth++;
+    if (ch === '}' && --depth === 0) return source.slice(start, i + 1);
+  }
+  return null;
+}
+
+const analyticsFunctionNames = [
+  'getRatingAnalyticsSelection',
+  'getRatingAnalyticsTimeline',
+  'getVisibleAnalyticsRatings',
+  'ratingAnalyticsSvgMarkup',
+  'ratingAnalyticsTimelineTableMarkup'
+];
+const analyticsFunctionSources = Object.fromEntries(analyticsFunctionNames.map(name => [name, extractFunctionDeclaration(html, name)]));
+for (const name of analyticsFunctionNames) assert(Boolean(analyticsFunctionSources[name]), 'Analytics runtime validation could not extract '+name+'.');
+
+if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
+  try {
+    const fixedToday = '2026-10-16';
+    const sampleHistory = [
+      {reviewedAt:'2026-10-12',rating:1},{reviewedAt:'2026-10-13',rating:2},
+      {reviewedAt:'2026-10-14',rating:3},{reviewedAt:'2026-10-15',rating:4},
+      {reviewedAt:'2026-10-16',rating:5},{reviewedAt:'2026-08-01',rating:1},
+      {reviewedAt:'2026-06-10',rating:2},{reviewedAt:'2026-03-09',rating:5},
+      {reviewedAt:'2025-12-15',rating:3},{reviewedAt:'2025-10-02',rating:4},
+      {reviewedAt:'2025-01-30',rating:4}
+    ];
+    const validCalendarDate = value => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+      const parts = value.split('-').map(Number);
+      const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      return date.getUTCFullYear() === parts[0] && date.getUTCMonth() === parts[1] - 1 && date.getUTCDate() === parts[2];
+    };
+    const testContext = {
+      fsState:{analyticsPeriod:'week',analyticsCustomStart:'2026-10-10',analyticsCustomEnd:fixedToday},
+      state:{history:sampleHistory},
+      today:() => fixedToday,
+      safeDate:validCalendarDate,
+      dateShift:(date,days) => { const d = new Date(date+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); },
+      dayDiff:(from,to) => Math.round((Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000),
+      fmtDate:date => date,
+      esc:value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
+      RATING_LABELS:{1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'},
+      RATING_ANALYTICS_COLORS:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#10b981'},
+      getRatingAnalyticsScopedRecords:records => records || []
+    };
+    vm.createContext(testContext);
+    for (const name of analyticsFunctionNames) vm.runInContext(analyticsFunctionSources[name], testContext, {filename:'index.html:'+name});
+    const timeframeCases = [
+      {period:'week',start:'2026-10-12',end:'2026-10-18',bins:7,futureBins:2},
+      {period:'month',start:'2026-10-01',end:'2026-10-31',bins:31,futureBins:15},
+      {period:'year',start:'2026-01-01',end:'2026-12-31',bins:12,futureBins:2},
+      {period:'custom',customStart:'2026-10-10',customEnd:'2026-10-16',bins:7,futureBins:0},
+      {period:'custom',customStart:'2026-07-19',customEnd:'2026-10-16',bins:13,futureBins:0},
+      {period:'custom',customStart:'2025-09-01',customEnd:'2026-10-16',bins:14,futureBins:0}
+    ];
+    for (const testCase of timeframeCases) {
+      testContext.fsState.analyticsPeriod = testCase.period;
+      if (testCase.customStart) testContext.fsState.analyticsCustomStart = testCase.customStart;
+      if (testCase.customEnd) testContext.fsState.analyticsCustomEnd = testCase.customEnd;
+      const selection = testContext.getRatingAnalyticsSelection();
+      assert(selection.valid !== false, testCase.period+' analytics selection should be valid.');
+      assert(selection.from === testCase.start || !testCase.start, testCase.period+' analytics start date should be correct.');
+      assert(selection.to === testCase.end || !testCase.end, testCase.period+' analytics end date should be correct.');
+      const timeline = testContext.getRatingAnalyticsTimeline(selection, 'topic', 'test-all');
+      assert(timeline.bins.length === testCase.bins, testCase.period+' analytics should render '+testCase.bins+' time bins; received '+timeline.bins.length+'.');
+      assert(timeline.bins.filter(bin => bin.isFuture).length === testCase.futureBins, testCase.period+' analytics should identify all future bins without plotting them as zero.');
+      for (let rating = 1; rating <= 5; rating++) {
+        const expected = selection.records.filter(record => Number(record.rating) === rating).length;
+        const binned = timeline.bins.reduce((total, bin) => total + (Number.isFinite(bin.counts[rating - 1]) ? bin.counts[rating - 1] : 0), 0);
+        assert(timeline.totals[rating - 1] === expected, testCase.period+' legend total for rating '+rating+' should match saved records.');
+        assert(binned === expected, testCase.period+' timeline bins for rating '+rating+' should sum to the saved-record total.');
+      }
+      const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
+      const barGroups = [...svg.matchAll(/<g class="ra-stack-bar" data-bin-index="(\d+)" data-total="(\d+)">/g)];
+      assert(barGroups.length === testCase.bins-testCase.futureBins, testCase.period+' graph must include one visible stack per completed time bin.');
+      const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']];
+      for (const [rating, color] of expectedColors) {
+        if (timeline.totals[rating-1] > 0) {
+          assert(svg.includes('data-rating-segment="'+rating+'"') && svg.includes('fill="'+color+'"'), testCase.period+' rating '+rating+' stack must use the matching rating-button color.');
+        }
+      }
+      assert(html.includes('for(let rating=1;rating<=5;rating++)') && html.includes('yBottom-=segmentHeight;'), testCase.period+' stack must build upward from Again (red) through Easy (teal).');
+      if(testCase.period==='month'){
+        assert(timeline.records.length===5, 'This month must retain current-month review data rather than rendering an empty date range.');
+        assert(svg.includes('class="ra-bar-count"'), 'This month must show in-bar counts wherever the segment has enough space.');
+        assert(barGroups.some(match=>Number(match[2])>0), 'This month must display a visible stack when current-month reviews exist.');
+      }
+      assert(svg.includes('Total review presses') && svg.includes('data-total='), testCase.period+' graph must expose interval totals and a total-review axis.');
+      const table = testContext.ratingAnalyticsTimelineTableMarkup(selection, 'topic', 'test-all');
+      if (testCase.futureBins) assert(table.includes('—') && table.includes('Future'), testCase.period+' exact-count table must mark future intervals as unavailable rather than zero.');
+    }
+
+    // Filter to only Very good and Easy, then confirm the SVG contains only those
+    // rating segments and rescales each stack to the visible data rather than old totals.
+    testContext.fsState.analyticsPeriod = 'month';
+    testContext.fsState.analyticsVisibleRatings = [1,2,3,4,5];
+    testContext.state.history = sampleHistory.concat(Array.from({length:8},()=>({reviewedAt:'2026-10-16',rating:1})));
+    const allSelection = testContext.getRatingAnalyticsSelection();
+    const allSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
+    assert(/class="ra-tick" x="53" y="[^"]+" text-anchor="end">10<\/text>/.test(allSvg), 'Monthly chart Y-axis should scale to the full rating total before filtering.');
+    testContext.fsState.analyticsVisibleRatings = [4,5];
+    const filteredSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
+    assert(filteredSvg.includes('data-rating-segment="4"') && filteredSvg.includes('data-rating-segment="5"'), 'Selecting Very good and Easy must show those rating segments.');
+    assert(!filteredSvg.includes('data-rating-segment="1"') && !filteredSvg.includes('data-rating-segment="2"') && !filteredSvg.includes('data-rating-segment="3"'), 'Unselected ratings must be completely hidden from the graph.');
+    assert(!/class="ra-tick" x="53" y="[^"]+" text-anchor="end">10<\/text>/.test(filteredSvg), 'Filtering ratings must recalculate the chart scale using visible presses only.');
+  } catch (error) {
+    errors.push('Analytics timeframe runtime validation failed: '+(error && error.stack ? error.stack : String(error)));
+  }
+}
+
+
+// Parse each inline JavaScript block without executing browser-dependent app code.
+let checkedScripts = 0;
+for (const [index, match] of [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)].entries()) {
+  const attrs = match[1] || '';
+  if (/\btype\s*=\s*["'](?:application\/(?:json|ld\+json)|importmap)["']/i.test(attrs)) continue;
+  const source = match[2] || '';
+  if (!source.trim()) continue;
+  try { new vm.Script(source, {filename:'index.html:inline-script-'+(index + 1)}); checkedScripts++; }
+  catch (error) { errors.push('Inline script '+(index + 1)+' has a syntax error: '+error.message); }
+}
+assert(checkedScripts > 0, 'No inline JavaScript blocks were checked.');
+
+if (errors.length) {
+  console.error('Curriculum validation failed:');
+  for (const error of errors) console.error(' - '+error);
+  process.exitCode = 1;
+} else {
+  console.log('Curriculum validation passed: '+catalog.packs.length+' pack(s), '+totalTopics+' topic(s), '+checkedScripts+' inline JavaScript block(s) syntax-checked.');
+}
