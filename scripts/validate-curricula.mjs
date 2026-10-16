@@ -48,6 +48,9 @@ assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatin
 assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Number of rating presses'), 'Analytics must render an X/Y graph with an explicit review-count axis.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
+assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
+assert(!html.includes("options.map(x=>({value:x.value,label:x.label+' — '+x.subtitle}))"), 'Analytics must not pass non-iterable objects to the tuple-based selectOptions helper.');
+assert(html.includes('position:fixed;z-index:30001}'), 'The persistent Undo toast must appear above standalone overlays such as Danger Zone.');
 assert(!html.includes("$('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)"), 'Main app script must not reference private Study Hub functions before its initialization completes.');
 assert(html.includes("hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)") && html.includes("hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone)"), 'Analytics and Danger Zone buttons must be bound inside the Study Hub function scope.');
 assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a Study Hub tab.');
