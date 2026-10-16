@@ -1631,7 +1631,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
   function ratingAnalyticsSvgMarkup(selection,level,entityId){
     const result=getRatingAnalyticsTimeline(selection,level,entityId),bins=result.bins,W=900,H=370,left=65,right=22,top=24,bottom=67,pw=W-left-right,ph=H-top-bottom;
-    const peak=Math.max(0,...bins.flatMap(b=>b.counts)),magnitude=peak>0?Math.pow(10,Math.floor(Math.log10(peak))):1,norm=peak/magnitude||0,mult=norm<=1?1:norm<=2?2:norm<=5?5:10,yMax=mult*magnitude;
+    const peak=Math.max(0,...bins.flatMap(b=>b.counts)),magnitude=peak>0?Math.pow(10,Math.floor(Math.log10(peak))):1,norm=peak/magnitude||0,mult=norm<=1?1:norm<=2?2:norm<=5?5:10,yMax=peak<=5?5:mult*magnitude;
     const x=i=>bins.length<=1?left+pw/2:left+i*pw/(bins.length-1),y=v=>top+ph-(v/yMax)*ph,colors={1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#10b981'};
     let svg='<svg class="ra-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="X/Y line graph of review rating counts over '+esc(selection.label)+'">';
     for(let i=0;i<=5;i++){const value=i*yMax/5,yy=y(value);svg+='<line class="ra-gridline" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="ra-tick" x="'+(left-12)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+Math.round(value)+'</text>';}
