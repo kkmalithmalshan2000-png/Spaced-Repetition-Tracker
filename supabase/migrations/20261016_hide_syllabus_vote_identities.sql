@@ -1,7 +1,6 @@
--- Nexus Community Wishlist: hide individual voter identities.
--- Apply this migration in the Supabase SQL Editor after reviewing it.
--- Vote totals remain publicly readable through a restricted aggregate function;
--- authenticated users can retrieve only their own vote IDs and mutate their own votes.
+-- Nexus Community Wishlist: add restricted vote RPCs before removing direct vote-table reads.
+-- Safe to apply before deploying the API change: existing direct table permissions remain unchanged.
+-- This staged migration lets the Preview API be tested while the current Production API continues working.
 
 BEGIN;
 
@@ -18,12 +17,6 @@ BEGIN
 END;
 $nexus$;
 
-DROP POLICY IF EXISTS "Anyone can read syllabus votes" ON public.nexus_syllabus_votes;
-REVOKE ALL PRIVILEGES ON TABLE public.nexus_syllabus_votes FROM PUBLIC, anon, authenticated;
-GRANT INSERT, DELETE ON TABLE public.nexus_syllabus_votes TO authenticated;
-
--- Vote identities are private. Public clients receive only aggregate totals;
--- signed-in clients can retrieve only their own vote IDs.
 CREATE OR REPLACE FUNCTION public.get_nexus_syllabus_vote_counts()
 RETURNS TABLE (request_id uuid, vote_count bigint)
 LANGUAGE sql
