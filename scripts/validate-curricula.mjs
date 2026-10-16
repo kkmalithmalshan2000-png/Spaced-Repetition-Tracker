@@ -52,6 +52,9 @@ assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a 
 assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
 assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
 assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
+assert(html.includes('ra-svg-dense') && html.includes("selection.range==='month'") && html.includes("selection.range==='year'"), 'Month/year graphs must retain their day/month axis labels.');
+assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
+assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
 
 // Parse each inline JavaScript block without executing browser-dependent app code.
 let checkedScripts = 0;
