@@ -43,7 +43,14 @@ assert(packIds.has('sl-al-commerce-si'), 'The existing Commerce starter pack mus
 assert(!(catalog.packs || []).some(pack => /^temporary(?:-|$)/i.test(pack?.id || '')), 'Temporary test curricula must not remain in the catalogue.');
 assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pack must be removed from the app version.');
 assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
-assert(html.includes('id="hubRatingRange"'), 'Analytics must expose week, month, year, and all-time ranges.');
+assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
+assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
+assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Number of rating presses'), 'Analytics must render an X/Y graph with an explicit review-count axis.');
+assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
+assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
+assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a Study Hub tab.');
+assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
+assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
 assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
 
 // Parse each inline JavaScript block without executing browser-dependent app code.
