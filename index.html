@@ -664,7 +664,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 .ra-svg-wrap{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:8px 5px 0}.ra-svg{display:block;width:100%;height:auto;min-height:210px;overflow:visible}.ra-svg-dense{min-width:820px;max-width:none}.ra-svg-dense .ra-tick{font-size:10px}
 .ra-svg .ra-gridline{stroke:var(--border);stroke-width:1}.ra-svg .ra-axis{stroke:var(--muted);stroke-width:1.3}.ra-svg .ra-tick{fill:var(--muted);font-size:12px}.ra-svg .ra-axis-title{fill:var(--text);font-size:13px;font-weight:700}.ra-svg .ra-line{fill:none;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}.ra-svg .ra-point{stroke:var(--surface);stroke-width:1.8}
 .ra-chart-summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}.ra-chart-summary strong{font-size:13px}.ra-chart-summary small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
-.ra-legend-item{padding:4px 8px;border-radius:999px;background:var(--surface2);border:1px solid var(--border)}.ra-legend-item strong{color:var(--text);font-weight:800}.ra-legend-item .ra-swatch{width:10px;height:10px;border-radius:50%}.ra-controls{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ra-legend-item{padding:4px 8px;border-radius:999px;background:var(--surface2);border:1px solid var(--border)}.ra-legend-item strong{color:var(--text);font-weight:800}.ra-legend-item .ra-swatch{width:18px;height:0;border-radius:0;background:none!important;border-top:3px solid #ef4444}.ra-legend-item .ra-swatch[data-rating="2"]{border-top-color:#f97316;border-top-style:dashed}.ra-legend-item .ra-swatch[data-rating="3"]{border-top-color:#eab308;border-top-style:dotted}.ra-legend-item .ra-swatch[data-rating="4"]{border-top-color:#22c55e;border-top-style:dashed}.ra-legend-item .ra-swatch[data-rating="5"]{border-top-color:#10b981;border-top-style:dotted}.ra-svg .ra-no-data{fill:var(--muted);font-size:13px;font-weight:650}.ra-count-table .ra-future-row td{color:var(--muted);font-style:italic}.ra-controls{grid-template-columns:repeat(3,minmax(0,1fr))}
 .ra-custom-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface2)}.ra-custom-dates[hidden]{display:none!important}.ra-custom-dates .btn{grid-column:1/-1;justify-self:start}.ra-period-caption{font-size:11px;color:var(--muted);margin:8px 0 12px}
 .home-analytics-launch{display:grid;grid-template-columns:78px minmax(0,1fr) auto;align-items:center;gap:15px;padding:16px;margin:15px 0;background:linear-gradient(115deg,color-mix(in srgb,#8375f3 12%,var(--surface)),color-mix(in srgb,#36cfc7 7%,var(--surface)));border-color:color-mix(in srgb,#8375f3 28%,var(--border))}
 .home-analytics-art{display:grid;place-items:center;min-height:70px;border-radius:15px;background:color-mix(in srgb,#8375f3 12%,var(--surface));border:1px solid color-mix(in srgb,#8375f3 20%,var(--border));color:var(--text)}.home-analytics-art svg{width:74px;max-width:100%;height:auto}.home-analytics-copy{min-width:0}.home-analytics-eyebrow{font-size:9px;font-weight:850;letter-spacing:1.2px;color:var(--accent)}.home-analytics-copy h3{font-size:16px;margin:4px 0}.home-analytics-copy p{font-size:11px;color:var(--muted);margin:0;line-height:1.5}.home-analytics-open{white-space:nowrap}
@@ -1629,33 +1629,98 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
 
   function getRatingAnalyticsTimeline(selection,level,entityId){
-    const period=selection.range,from=selection.from,to=selection.to,bins=[];
+    const period=selection.range,from=selection.from,to=selection.to,bins=[],now=today();
+    const empty={bins,records:[],totals:[0,0,0,0,0]};
+    if(!safeDate(from)||!safeDate(to)||from>to)return empty;
     const pushDay=date=>bins.push({start:date,end:date,label:period==='week'?new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}):date.slice(8),title:fmtDate(date)});
-    if(period==='week'){for(let i=0;i<7;i++)pushDay(dateShift(from,i));}
-    else if(period==='month'){const n=dayDiff(to,from)+1;for(let i=0;i<n;i++)pushDay(dateShift(from,i));bins.forEach(b=>{b.label=String(Number(b.start.slice(8)));b.title=fmtDate(b.start);});}
-    else if(period==='year'){const year=Number(from.slice(0,4));for(let m=1;m<=12;m++){const start=year+'-'+String(m).padStart(2,'0')+'-01',end=year+'-'+String(m).padStart(2,'0')+'-'+String(new Date(year,m,0).getDate()).padStart(2,'0');bins.push({start,end,label:new Date(year,m-1,1).toLocaleDateString(undefined,{month:'short'}),title:new Date(year,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})});}}
-    else{const n=dayDiff(to,from)+1;if(n<=31){for(let i=0;i<n;i++)pushDay(dateShift(from,i));bins.forEach(b=>{b.label=new Date(b.start+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'});});}else if(n<=186){for(let cursor=from;cursor<=to;){const end=dateShift(cursor,Math.min(6,dayDiff(to,cursor)));bins.push({start:cursor,end,label:new Date(cursor+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'}),title:fmtDate(cursor)+' – '+fmtDate(end)});cursor=dateShift(end,1);}}else{let cursor=from;while(cursor<=to){const d=new Date(cursor+'T12:00:00'),y=d.getFullYear(),m=d.getMonth()+1,last=y+'-'+String(m).padStart(2,'0')+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0'),end=last<to?last:to;bins.push({start:cursor,end,label:d.toLocaleDateString(undefined,{month:'short',year:'2-digit'}),title:fmtDate(cursor)+' – '+fmtDate(end)});cursor=dateShift(end,1);}}}
-    const scoped=getRatingAnalyticsScopedRecords(selection.records,level,entityId);
-    bins.forEach(bin=>{bin.counts=[1,2,3,4,5].map(r=>scoped.filter(h=>Number(h.rating)===r&&h.reviewedAt>=bin.start&&h.reviewedAt<=bin.end).length);bin.total=bin.counts.reduce((a,b)=>a+b,0);});
+    if(period==='week'){
+      for(let i=0;i<7;i++)pushDay(dateShift(from,i));
+    }else if(period==='month'){
+      const n=dayDiff(to,from)+1;
+      for(let i=0;i<n;i++)pushDay(dateShift(from,i));
+      bins.forEach(b=>{b.label=String(Number(b.start.slice(8)));b.title=fmtDate(b.start);});
+    }else if(period==='year'){
+      // Use calendar-month bins and honour both endpoints, including partial custom years.
+      let cursor=from;
+      while(cursor<=to){
+        const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1;
+        const last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
+        const end=last<to?last:to;
+        bins.push({start:cursor,end,label:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'short'}),title:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})});
+        cursor=dateShift(end,1);
+      }
+    }else{
+      const n=dayDiff(to,from)+1;
+      if(n<=31){
+        for(let i=0;i<n;i++)pushDay(dateShift(from,i));
+        bins.forEach(b=>{b.label=new Date(b.start+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'});});
+      }else if(n<=186){
+        for(let cursor=from;cursor<=to;){
+          const end=dateShift(cursor,Math.min(6,dayDiff(to,cursor)));
+          bins.push({start:cursor,end,label:new Date(cursor+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'}),title:fmtDate(cursor)+' – '+fmtDate(end)});
+          cursor=dateShift(end,1);
+        }
+      }else{
+        for(let cursor=from;cursor<=to;){
+          const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1;
+          const last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
+          const end=last<to?last:to;
+          bins.push({start:cursor,end,label:d.toLocaleDateString(undefined,{month:'short',year:'2-digit'}),title:fmtDate(cursor)+' – '+fmtDate(end)});
+          cursor=dateShift(end,1);
+        }
+      }
+    }
+    const scoped=getRatingAnalyticsScopedRecords(selection.records||[],level,entityId);
+    bins.forEach(bin=>{
+      // Don't plot future dates/intervals as zero: those observations have not happened yet.
+      bin.isFuture=bin.start>now;
+      bin.counts=bin.isFuture?[null,null,null,null,null]:[1,2,3,4,5].map(r=>scoped.filter(h=>Number(h.rating)===r&&h.reviewedAt>=bin.start&&h.reviewedAt<=bin.end).length);
+      bin.total=bin.isFuture?null:bin.counts.reduce((a,b)=>a+b,0);
+    });
     return {bins,records:scoped,totals:[1,2,3,4,5].map(r=>scoped.filter(h=>Number(h.rating)===r).length)};
   }
   function ratingAnalyticsSvgMarkup(selection,level,entityId){
     const result=getRatingAnalyticsTimeline(selection,level,entityId),bins=result.bins,W=900,H=370,left=65,right=22,top=24,bottom=67,pw=W-left-right,ph=H-top-bottom;
-    const peak=Math.max(0,...bins.flatMap(b=>b.counts)),magnitude=peak>0?Math.pow(10,Math.floor(Math.log10(peak))):1,norm=peak/magnitude||0,mult=norm<=1?1:norm<=2?2:norm<=5?5:10,yMax=peak<=5?5:mult*magnitude;
-    const x=i=>bins.length<=1?left+pw/2:left+i*pw/(bins.length-1),y=v=>top+ph-(v/yMax)*ph,colors={1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#10b981'};
-    let svg='<svg class="ra-svg'+((selection.range==='month'||selection.range==='year'||(selection.range==='custom'&&bins.length<=31))?' ra-svg-dense':'')+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="X/Y line graph of review rating counts over '+esc(selection.label)+'">';
+    const peak=Math.max(0,...bins.flatMap(b=>b.counts.filter(Number.isFinite))),magnitude=peak>0?Math.pow(10,Math.floor(Math.log10(peak))):1,norm=peak/magnitude||0,mult=norm<=1?1:norm<=2?2:norm<=5?5:10,yMax=peak<=5?5:mult*magnitude;
+    const x=i=>bins.length<=1?left+pw/2:left+i*pw/(bins.length-1),y=v=>top+ph-(v/yMax)*ph,dashes={1:'',2:'10 4',3:'3 3',4:'10 3 2 3',5:'2 3'};
+    let svg='<svg class="ra-svg'+((selection.range==='month'||selection.range==='year'||(selection.range==='custom'&&bins.length<=31))?' ra-svg-dense':'')+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Five color-coded lines showing Again, Hard, Good, Very good, and Easy rating counts over '+esc(selection.label)+'">';
     for(let i=0;i<=5;i++){const value=i*yMax/5,yy=y(value);svg+='<line class="ra-gridline" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="ra-tick" x="'+(left-12)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+Math.round(value)+'</text>';}
     svg+='<line class="ra-axis" x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+(top+ph)+'"/><line class="ra-axis" x1="'+left+'" y1="'+(top+ph)+'" x2="'+(W-right)+'" y2="'+(top+ph)+'"/>';
     const labelEvery=(selection.range==='week'||selection.range==='month'||selection.range==='year'||(selection.range==='custom'&&bins.length<=31))?1:Math.max(1,Math.ceil(bins.length/10));
     bins.forEach((b,i)=>{if(i%labelEvery!==0&&i!==bins.length-1)return;const xx=x(i);svg+='<line class="ra-gridline" x1="'+xx.toFixed(2)+'" y1="'+(top+ph)+'" x2="'+xx.toFixed(2)+'" y2="'+(top+ph+4)+'"/><text class="ra-tick" x="'+xx.toFixed(2)+'" y="'+(top+ph+22)+'" text-anchor="middle">'+esc(b.label)+'</text>';});
-    for(let r=1;r<=5;r++){const d=bins.map((b,i)=>(i?'L':'M')+x(i).toFixed(2)+' '+y(b.counts[r-1]).toFixed(2)).join(' ');svg+='<path class="ra-line" d="'+d+'" stroke="'+colors[r]+'"/>';bins.forEach((b,i)=>{const xx=x(i),yy=y(b.counts[r-1]);svg+='<circle class="ra-point" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="3.5" fill="'+colors[r]+'"><title>'+esc(b.title)+' · '+r+' '+esc(RATING_LABELS[r])+': '+b.counts[r-1]+'</title></circle>';});}
+    const pointMarkup=(r,xx,yy)=>{
+      const c=RATING_ANALYTICS_COLORS[r],common=' fill="'+c+'" stroke="var(--surface)" stroke-width="1.5"';
+      if(r===1)return '<circle class="ra-point" data-rating="'+r+'" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="4.2"'+common+'/>';
+      if(r===2)return '<rect class="ra-point" data-rating="'+r+'" x="'+(xx-3.5).toFixed(2)+'" y="'+(yy-3.5).toFixed(2)+'" width="7" height="7" rx="1"'+common+'/>';
+      if(r===3)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+4.3).toFixed(2)+' '+yy.toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-4.3).toFixed(2)+' '+yy.toFixed(2)+' Z"'+common+'/>';
+      if(r===4)return '<path class="ra-point" data-rating="'+r+'" d="M '+xx.toFixed(2)+' '+(yy-4.5).toFixed(2)+' L '+(xx+4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' L '+(xx-4.2).toFixed(2)+' '+(yy+3.5).toFixed(2)+' Z"'+common+'/>';
+      return '<path class="ra-point" data-rating="'+r+'" d="M '+(xx-3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy-4.3).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy-2.2).toFixed(2)+' L '+(xx+3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' L '+xx.toFixed(2)+' '+(yy+4.3).toFixed(2)+' L '+(xx-3.7).toFixed(2)+' '+(yy+2.2).toFixed(2)+' Z"'+common+'/>';
+    };
+    // Draw all five independent series. Different dash patterns expose coincident lines
+    // (especially when several ratings have zero presses) without altering their values.
+    for(let r=1;r<=5;r++){
+      let d='',drawing=false;
+      bins.forEach((b,i)=>{
+        const value=b.counts[r-1];
+        if(!Number.isFinite(value)){drawing=false;return;}
+        d+=(d?' ':'')+(drawing?'L':'M')+x(i).toFixed(2)+' '+y(value).toFixed(2);
+        drawing=true;
+      });
+      svg+='<path class="ra-line" data-rating-series="'+r+'" aria-label="'+r+' '+esc(RATING_LABELS[r])+'" d="'+d+'" stroke="'+RATING_ANALYTICS_COLORS[r]+'"'+(dashes[r]?' stroke-dasharray="'+dashes[r]+'"':'')+'/>';
+      bins.forEach((b,i)=>{
+        const value=b.counts[r-1];
+        if(!Number.isFinite(value)||value<=0)return;
+        const xx=x(i),yy=y(value);
+        svg+=pointMarkup(r,xx,yy)+'<title>'+esc(b.title)+' · '+r+' '+esc(RATING_LABELS[r])+': '+value+'</title>';
+      });
+    }
+    if(!bins.some(bin=>!bin.isFuture))svg+='<text class="ra-no-data" x="'+(left+pw/2)+'" y="'+(top+ph/2)+'" text-anchor="middle">No completed intervals in this timeframe yet</text>';
     svg+='<text class="ra-axis-title" x="'+(left+pw/2)+'" y="'+(H-11)+'" text-anchor="middle">Selected timeframe</text><text class="ra-axis-title" transform="translate(18 '+(top+ph/2)+') rotate(-90)" text-anchor="middle">Number of rating presses</text></svg>';
     return svg;
   }
-
   function ratingAnalyticsTimelineTableMarkup(selection,level,entityId){
     const bins=getRatingAnalyticsTimeline(selection,level,entityId).bins;
-    const rows=bins.map(bin=>'<tr><td>'+esc(bin.title)+'</td>'+bin.counts.map((count,i)=>'<td class="num"><span class="ra-table-rating" data-rating="'+(i+1)+'">'+count+'</span></td>').join('')+'<td class="num"><strong>'+bin.total+'</strong></td></tr>').join('');
+    const rows=bins.map(bin=>'<tr'+(bin.isFuture?' class="ra-future-row"':'')+'><td>'+esc(bin.title)+(bin.isFuture?' · Future':'')+'</td>'+bin.counts.map((count,i)=>'<td class="num">'+(count===null?'—':'<span class="ra-table-rating" data-rating="'+(i+1)+'">'+count+'</span>')+'</td>').join('')+'<td class="num"><strong>'+(bin.total===null?'—':bin.total)+'</strong></td></tr>').join('');
     return '<div class="ra-count-table-wrap"><table class="ra-count-table"><thead><tr><th>Date / interval</th><th class="num">1 Again</th><th class="num">2 Hard</th><th class="num">3 Good</th><th class="num">4 Very good</th><th class="num">5 Easy</th><th class="num">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
   function ratingAnalyticsLegendMarkup(){
@@ -1670,7 +1735,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     const choices=options.length?selectOptions(options.map(x=>[x.value,x.label+' — '+x.subtitle]),entityId):'<option value="">No '+esc(level)+' records available</option>';
     const controls='<div class="ra-controls"><div class="ra-field"><label for="hubRatingGrouping">Analyse by</label><select class="hub-input" id="hubRatingGrouping">'+selectOptions([['topic','Individual topic'],['subject','Subject'],['syllabus','Syllabus / stream']],level)+'</select></div><div class="ra-field"><label for="hubRatingEntity">Choose '+esc(groupingLabel)+'</label><select class="hub-input" id="hubRatingEntity">'+choices+'</select></div><div class="ra-field"><label for="hubRatingPeriod">Timeframe</label><select class="hub-input" id="hubRatingPeriod">'+selectOptions([['week','This week'],['month','This month'],['year','This year'],['custom','Choose date range']],selection.range)+'</select></div></div>'+customDates;
     const summary='<div class="ra-chart-summary"><div><strong>'+esc(scopeLabel)+'</strong><small>'+esc(subtitle)+' · '+esc(selection.label)+' · '+esc(fmtDate(selection.from))+' – '+esc(fmtDate(selection.to))+'</small></div><div><strong>'+timeline.records.length+' review presses</strong><small>Each line is one rating from 1 to 5.</small></div></div>';
-    return controls+summary+'<div class="ra-legend">'+legend+'</div><div class="ra-svg-wrap">'+ratingAnalyticsSvgMarkup(selection,level,entityId)+'</div><details class="ra-count-details"><summary>View exact counts by date / interval</summary>'+ratingAnalyticsTimelineTableMarkup(selection,level,entityId)+'</details><div class="ra-foot">Y-axis: how many times each rating button was pressed. X-axis: '+(selection.range==='year'?'12 months':selection.range==='month'?'each day of this month':selection.range==='week'?'seven days of this week':(dayDiff(selection.to,selection.from)+1)+'-day custom range, grouped into readable time intervals')+'. Each point shows an exact count on hover or tap.</div>';
+    return controls+summary+'<div class="ra-legend">'+legend+'</div><div class="ra-svg-wrap">'+ratingAnalyticsSvgMarkup(selection,level,entityId)+'</div><details class="ra-count-details"><summary>View exact counts by date / interval</summary>'+ratingAnalyticsTimelineTableMarkup(selection,level,entityId)+'</details><div class="ra-foot">Y-axis: how many times each rating button was pressed. X-axis: '+(selection.range==='year'?'12 months':selection.range==='month'?'each day of this month':selection.range==='week'?'seven days of this week':(dayDiff(selection.to,selection.from)+1)+'-day custom range, grouped into readable time intervals')+'. Each point shows an exact count on hover or tap. Future intervals remain blank until they pass; the count table marks them with — rather than implying zero presses.</div>';
   }
   function analyticsReportStackedRows(groups,limit){
     const visible=groups.slice(0,limit||20),max=Math.max(1,...groups.map(g=>g.total));
