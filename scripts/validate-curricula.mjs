@@ -46,10 +46,18 @@ assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, su
 assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
 assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
 assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('Total review presses') && html.includes('data-rating-segment='), 'Analytics must render a stacked vertical rating-count graph with an explicit total-review axis.');
-assert(html.includes('No rating presses for this selection in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
+assert(html.includes('No presses for the selected ratings in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
 assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
 assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
 assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&barWidth>=estimatedTextWidth+6'), 'Stacked bar count labels must only render when they fit inside the segment.');
+assert(html.includes('data-hub-action="analytics-toggle-rating"') && html.includes("if(a==='analytics-toggle-rating')"), 'Every rating legend item must toggle its series in the graph.');
+assert(html.includes("fsState.analyticsVisibleRatings=current.filter(r=>r!==rating)") && html.includes("fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y)"), 'Rating filters must support hiding and restoring multiple ratings.');
+assert(html.includes('const visibleCount=bin=>visibleRatings.reduce') && html.includes("bins.map(b=>b.isFuture?0:visibleCount(b))"), 'The graph height scale and total bars must be recalculated from selected ratings only.');
+assert(html.includes('data-rating-segment="'+ "'"+ '"+rating+'+"'"+ '"'), 'The stacked graph must retain individually addressable rating segments.');
+assert(html.includes('class="hub-premium-heading panel"') && html.includes('.hub-premium-heading{'), 'Study Hub must use the premium purple title card.');
+assert(html.includes('<p class="subtitle">v4.0</p>') && html.includes('How to use: tap “? How to use” in the header.'), 'Main screen branding should retain only app version and the How to use reference.');
+assert(html.includes('id="appMode" hidden'), 'The hidden legacy app-mode node must remain available to existing runtime code without displaying verbose status copy.');
+
 assert(html.includes("map.set('ALL',{value:'ALL'") && html.includes("if(String(entityId)==='ALL')return records||[];"), 'Analytics must support an aggregate view across all topics, subjects, and syllabuses.');
 assert(html.includes('function ensureAnalyticsEntityForRange(level)') && html.includes('ensureAnalyticsEntityForRange(level);'), 'Opening Analytics must fall back to combined data when the current entity has no reviews in the selected timeframe.');
 assert(html.includes("const all=options.find(option=>option.value==='ALL')") && html.includes("range.records.length&&best?best:all"), 'Monthly analytics must show the combined view instead of appearing empty when another entity has the reviews.');
@@ -100,6 +108,7 @@ function extractFunctionDeclaration(source, name) {
 const analyticsFunctionNames = [
   'getRatingAnalyticsSelection',
   'getRatingAnalyticsTimeline',
+  'getVisibleAnalyticsRatings',
   'ratingAnalyticsSvgMarkup',
   'ratingAnalyticsTimelineTableMarkup'
 ];
@@ -129,7 +138,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       today:() => fixedToday,
       safeDate:validCalendarDate,
       dateShift:(date,days) => { const d = new Date(date+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); },
-      dayDiff:(later,earlier) => Math.round((Date.parse(later+'T12:00:00Z')-Date.parse(earlier+'T12:00:00Z'))/86400000),
+      dayDiff:(from,to) => Math.round((Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000),
       fmtDate:date => date,
       esc:value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
       RATING_LABELS:{1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'},
@@ -182,6 +191,20 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       const table = testContext.ratingAnalyticsTimelineTableMarkup(selection, 'topic', 'test-all');
       if (testCase.futureBins) assert(table.includes('—') && table.includes('Future'), testCase.period+' exact-count table must mark future intervals as unavailable rather than zero.');
     }
+
+    // Filter to only Very good and Easy, then confirm the SVG contains only those
+    // rating segments and rescales each stack to the visible data rather than old totals.
+    testContext.fsState.analyticsPeriod = 'month';
+    testContext.fsState.analyticsVisibleRatings = [1,2,3,4,5];
+    testContext.state.history = sampleHistory.concat(Array.from({length:8},()=>({reviewedAt:'2026-10-16',rating:1})));
+    const allSelection = testContext.getRatingAnalyticsSelection();
+    const allSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
+    assert(allSvg.includes('>10</text>'), 'Monthly chart Y-axis should scale to the full rating total before filtering.');
+    testContext.fsState.analyticsVisibleRatings = [4,5];
+    const filteredSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
+    assert(filteredSvg.includes('data-rating-segment="4"') && filteredSvg.includes('data-rating-segment="5"'), 'Selecting Very good and Easy must show those rating segments.');
+    assert(!filteredSvg.includes('data-rating-segment="1"') && !filteredSvg.includes('data-rating-segment="2"') && !filteredSvg.includes('data-rating-segment="3"'), 'Unselected ratings must be completely hidden from the graph.');
+    assert(!filteredSvg.includes('>10</text>'), 'Filtering ratings must recalculate the chart scale using visible presses only.');
   } catch (error) {
     errors.push('Analytics timeframe runtime validation failed: '+(error && error.stack ? error.stack : String(error)));
   }
