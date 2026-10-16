@@ -40,6 +40,11 @@ for (const [packIndex, pack] of (catalog.packs || []).entries()) {
   }
 }
 assert(packIds.has('sl-al-commerce-si'), 'The existing Commerce starter pack must remain available.');
+assert(!(catalog.packs || []).some(pack => /^temporary(?:-|$)/i.test(pack?.id || '')), 'Temporary test curricula must not remain in the catalogue.');
+assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pack must be removed from the app version.');
+assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
+assert(html.includes('id="hubRatingRange"'), 'Analytics must expose week, month, year, and all-time ranges.');
+assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
 
 // Parse each inline JavaScript block without executing browser-dependent app code.
 let checkedScripts = 0;
