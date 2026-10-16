@@ -92,26 +92,27 @@
       ]
     },
     {
-      "id": "temporary-sample-test",
-      "title": "Temporary Sample Curriculum (TEST ONLY)",
-      "country": "Test",
-      "exam": "Sample exam",
+      "id": "temporary-biology-test",
+      "title": "Sample Biology Curriculum (TEST ONLY)",
+      "country": "Sri Lanka",
+      "exam": "GCE Advanced Level",
       "language": "English",
-      "streamName": "Temporary Sample (TEST ONLY)",
-      "streamId": "stream-temporary-sample-test",
-      "description": "Temporary test pack for verifying curriculum discovery and installation. This pack must be removed before merge.",
+      "streamName": "Biology (TEST ONLY)",
+      "description": "Temporary sample pack to test Nexus curriculum discovery and installation. Not an official or complete syllabus; remove before merging.",
       "keywords": [
-        "temporary",
+        "biology",
         "sample",
-        "test"
+        "test",
+        "GCE Advanced Level",
+        "Sri Lanka"
       ],
       "subjects": [
         {
-          "id": "SAMPLE-SUBJECT",
-          "name": "Sample Subject (TEST ONLY)",
+          "id": "BIOLOGY",
+          "name": "Biology (TEST ONLY)",
           "topics": [
-            "Sample Topic 1 — Whole-pack and subject install test",
-            "Sample Topic 2 — Individual-topic install test"
+            "Sample Topic 1 — Cell Biology",
+            "Sample Topic 2 — Enzymes and Biological Molecules"
           ]
         }
       ]
