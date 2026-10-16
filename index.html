@@ -1704,6 +1704,8 @@ dialog .dialog-inner,dialog>div{max-height:none}
     // Read only the current Supabase session token from the app's existing browser session.
     const accessToken=async()=>{try{if(window.NexusCommunitySessionReady)await window.NexusCommunitySessionReady();const live=window.NexusCommunitySession&&window.NexusCommunitySession();return live&&live.access_token?live.access_token:'';}catch(_){const live=window.NexusCommunitySession&&window.NexusCommunitySession();return live&&live.access_token?live.access_token:''}};
     const api=async(path,options={})=>{const headers={Accept:'application/json',...(options.headers||{})};const token=await accessToken();if(token)headers.Authorization='Bearer '+token;return fetch('/api/syllabus-requests'+(path||''),{...options,headers,cache:'no-store'});};
+    // Upvote and remove-upvote are idempotent server operations, so retry one transient failure safely.
+    const voteApi=async(id,action)=>{const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id})};for(let attempt=0;attempt<2;attempt++){try{const response=await api('',options);if(attempt===0&&[502,503,504].includes(response.status)){await new Promise(resolve=>setTimeout(resolve,350));continue}return response}catch(error){if(attempt===1)throw error;await new Promise(resolve=>setTimeout(resolve,350))}}throw new Error('Could not complete the vote. Please try again.')};
     const render=()=>{
       const search=(document.querySelector('#exploreSearch')?.value||'').trim().toLocaleLowerCase();
       const requestButton=document.querySelector('#openSyllabusRequest');
@@ -1724,16 +1726,22 @@ dialog .dialog-inner,dialog>div{max-height:none}
     };
     const loadRequests=async()=>{const loadId=++requestLoadId;try{const r=await api('',{});const data=await r.json();if(loadId!==requestLoadId)return;if(!r.ok)throw new Error(data.error||'Wishlist unavailable');const pendingItems=new Map(community.filter(x=>pendingRequests.has(String(x.id))).map(x=>[String(x.id),x]));community=(Array.isArray(data.requests)?data.requests:[]).filter(x=>!deletedRequestIds.has(String(x.id))&&!pendingDeletes.has(String(x.id))).map(x=>pendingItems.get(String(x.id))||x);signedIn=!!data.signedIn;isAdminUser=!!data.isAdmin;if(syncButton)syncButton.hidden=!isAdminUser;render()}catch(e){if(loadId!==requestLoadId)return;list.innerHTML='<div class="community-empty">'+escapeHTML(e.message||'Community wishlist is temporarily unavailable.')+'</div>'}};
     tabs.addEventListener('click',e=>{const b=e.target.closest('[data-community-tab]');if(!b)return;activeTab=b.dataset.communityTab;render();if(activeTab==='requests')loadRequests()});
+    // Refresh community ownership/vote state whenever Explore becomes visible again.
+    const exploreObserver=new MutationObserver(()=>{if(exploreIsVisible()&&!document.hidden&&!pendingRequests.size)loadRequests()});
+    exploreObserver.observe(explore,{attributes:true,attributeFilter:['class','style','hidden']});
     // Refresh ownership/upvote state when the shared app session becomes available or changes.
     window.addEventListener('nexus:community-session',()=>{if(activeTab==='requests')loadRequests()});
-    if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()});
+    const exploreIsVisible=()=>!document.hidden&&explore.getClientRects().length>0;
+    if(window.NexusCommunitySubscribe)window.NexusCommunitySubscribe(()=>{if(exploreIsVisible()&&!pendingRequests.size)loadRequests()});
     // Refresh promptly when returning to the app, and poll more frequently as a fallback
     // when Realtime events are delayed or unavailable.
-    const refreshVisibleWishlist=()=>{if(!document.hidden&&activeTab==='requests'&&!pendingRequests.size)loadRequests()};
-    setInterval(refreshVisibleWishlist,5000);
+    const refreshVisibleWishlist=()=>{if(exploreIsVisible()&&!pendingRequests.size)loadRequests()};
+    setInterval(refreshVisibleWishlist,10000);
     document.addEventListener('visibilitychange',refreshVisibleWishlist);
     window.addEventListener('focus',refreshVisibleWishlist);
     window.addEventListener('pageshow',refreshVisibleWishlist);
+    // Do not wait for the first polling tick when Explore is already open at startup.
+    refreshVisibleWishlist();
     document.querySelector('#openSyllabusRequest').addEventListener('click',()=>{status.textContent='';form.reset();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});
     const close=()=>dialog.close?dialog.close():dialog.removeAttribute('open');dialog.querySelector('#closeSyllabusRequest').addEventListener('click',close);dialog.querySelector('#cancelSyllabusRequest').addEventListener('click',close);dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
     list.addEventListener('click',async e=>{
@@ -1750,7 +1758,7 @@ dialog .dialog-inner,dialog>div{max-height:none}
       try{
         const response=(action==='delete'||action==='admin-delete')
           ?await api('',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})})
-          :await api('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id})});
+          :await voteApi(id,action);
         const result=await response.json();if(!response.ok)throw new Error(result.error||'Action failed');
         if(action==='delete'||action==='admin-delete'){
           deletedRequestIds.add(key);pendingDeletes.delete(key);community=community.filter(x=>String(x.id)!==key);
