@@ -39,6 +39,15 @@ test('long lists retain independent scrolling containers', () => {
   assert.doesNotMatch(performanceStyles, /max-height:\s*none\s*!important[\s\S]*?overflow-y:\s*visible\s*!important/);
 });
 
+
+test('mobile parent-page scrolling can start inside long lists with a two-finger drag', () => {
+  assert.match(html, /id="nexus-mobile-parent-scroll-gesture"/);
+  assert.match(html, /event\.touches\.length\s*<\s*2/);
+  assert.match(html, /event\.target\.closest\(listSelector\)/);
+  assert.match(html, /event\.preventDefault\(\);\s*const nextY = centerY\(event\.touches\);\s*window\.scrollBy\(0, previousY - nextY\)/);
+  assert.match(html, /document\.addEventListener\('touchmove',[\s\S]*?\{ passive: false \}\)/);
+});
+
 test('reduced-motion preference remains supported', () => {
   assert.match(performanceStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(performanceStyles, /animation:\s*none\s*!important/);
