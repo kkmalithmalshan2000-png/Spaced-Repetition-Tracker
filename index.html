@@ -1849,15 +1849,17 @@ dialog .dialog-inner,dialog>div{max-height:none}
 <script id="nexus-mobile-parent-scroll-gesture">
 (() => {
   'use strict';
-  // Two-finger vertical drags started inside a long list scroll the page.
-  // Single-finger gestures retain the browser's normal list-local behavior.
-  const listSelector = '.history-list,.due-list,.progress-list,#structureList,.hub-scroll-list,.hub-list,.hub-heatmap,.global-search-results,.topic-grid';
+
+  // Detect the real scroll container instead of relying on a list of class names.
+  // A two-finger gesture beginning in an inner scroller should move the document;
+  // a one-finger gesture remains under the browser's native scroll handling.
   let active = false;
   let previousY = 0;
+  const pageScrollClass = 'nexus-touch-page-scroll';
 
-  const isTouchDevice = () =>
-    window.matchMedia('(pointer: coarse)').matches ||
-    (navigator.maxTouchPoints || 0) > 0;
+  const style = document.createElement('style');
+  style.textContent = 'html.nexus-touch-page-scroll{scroll-behavior:auto!important}';
+  document.head.appendChild(style);
 
   const centerY = touches => {
     let total = 0;
@@ -1865,36 +1867,58 @@ dialog .dialog-inner,dialog>div{max-height:none}
     return total / touches.length;
   };
 
-  const startsInList = touches => {
+  const scrollableAncestor = target => {
+    for (let el = target && target.nodeType === 3 ? target.parentElement : target;
+         el && el !== document.body && el !== document.documentElement;
+         el = el.parentElement) {
+      const overflowY = window.getComputedStyle(el).overflowY;
+      if (/^(auto|scroll|overlay)$/.test(overflowY) && el.scrollHeight > el.clientHeight + 1) {
+        return el;
+      }
+    }
+    return null;
+  };
+
+  const touchesScrollableBox = touches => {
     for (let i = 0; i < touches.length; i++) {
-      const target = touches[i].target;
-      if (target && typeof target.closest === 'function' && target.closest(listSelector)) return true;
+      if (scrollableAncestor(touches[i].target)) return true;
     }
     return false;
   };
 
   document.addEventListener('touchstart', event => {
     active = false;
-    if (!isTouchDevice() || event.touches.length < 2) return;
-    if (!startsInList(event.touches)) return;
+    if (event.touches.length < 2 || !touchesScrollableBox(event.touches)) {
+      document.documentElement.classList.remove(pageScrollClass);
+      return;
+    }
+
     active = true;
     previousY = centerY(event.touches);
-  }, { passive: true });
+    document.documentElement.classList.add(pageScrollClass);
+
+    // Cancel the inner scroller's native gesture before it takes ownership.
+    if (event.cancelable) event.preventDefault();
+  }, { capture: true, passive: false });
 
   document.addEventListener('touchmove', event => {
     if (!active || event.touches.length < 2) return;
-    event.preventDefault();
+    if (event.cancelable) event.preventDefault();
+
     const nextY = centerY(event.touches);
     const scrollingElement = document.scrollingElement || document.documentElement;
     scrollingElement.scrollTop += previousY - nextY;
     previousY = nextY;
-  }, { passive: false });
+  }, { capture: true, passive: false });
 
   const reset = event => {
-    if (!event.touches || event.touches.length < 2) active = false;
+    if (!event.touches || event.touches.length < 2) {
+      active = false;
+      document.documentElement.classList.remove(pageScrollClass);
+    }
   };
-  document.addEventListener('touchend', reset, { passive: true });
-  document.addEventListener('touchcancel', reset, { passive: true });
+  document.addEventListener('touchend', reset, { capture: true, passive: true });
+  document.addEventListener('touchcancel', reset, { capture: true, passive: true });
 })();
 </script>
 </body>
