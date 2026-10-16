@@ -53,16 +53,16 @@ assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&
 assert(html.includes('data-hub-action="analytics-toggle-rating"') && html.includes("if(a==='analytics-toggle-rating')"), 'Every rating legend item must toggle its series in the graph.');
 assert(html.includes("fsState.analyticsVisibleRatings=current.filter(r=>r!==rating)") && html.includes("fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y)"), 'Rating filters must support hiding and restoring multiple ratings.');
 assert(html.includes('const visibleCount=bin=>visibleRatings.reduce') && html.includes("bins.map(b=>b.isFuture?0:visibleCount(b))"), 'The graph height scale and total bars must be recalculated from selected ratings only.');
-assert(html.includes('data-rating-segment="'+ "'"+ '"+rating+'+"'"+ '"'), 'The stacked graph must retain individually addressable rating segments.');
+assert(html.includes("data-rating-segment=\"'+rating+'\""), 'The stacked graph must retain individually addressable rating segments.');
 assert(html.includes('class="hub-premium-heading panel"') && html.includes('.hub-premium-heading{'), 'Study Hub must use the premium purple title card.');
 assert(html.includes('<p class="subtitle">v4.0</p>') && html.includes('How to use: tap “? How to use” in the header.'), 'Main screen branding should retain only app version and the How to use reference.');
 assert(html.includes('id="appMode" hidden'), 'The hidden legacy app-mode node must remain available to existing runtime code without displaying verbose status copy.');
 
 assert(html.includes("map.set('ALL',{value:'ALL'") && html.includes("if(String(entityId)==='ALL')return records||[];"), 'Analytics must support an aggregate view across all topics, subjects, and syllabuses.');
 assert(html.includes('function ensureAnalyticsEntityForRange(level)') && html.includes('ensureAnalyticsEntityForRange(level);'), 'Opening Analytics must fall back to combined data when the current entity has no reviews in the selected timeframe.');
-assert(html.includes("const all=options.find(option=>option.value==='ALL')") && html.includes("range.records.length&&best?best:all"), 'Monthly analytics must show the combined view instead of appearing empty when another entity has the reviews.');
+assert(html.includes("const all=options.find(option=>option.value==='ALL')") && html.includes("const next=all?.value||best?.value||options[0]?.value||'';"), 'Monthly analytics must default to the combined view when the current entity has no reviews in the selected timeframe.');
 
-assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('getRatingAnalyticsScopedRecords(range.records,level,option.value)'), 'Changing timeframe must choose a matching entity if the current selection has no review records in that range.');
+assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('ensureAnalyticsEntityForRange(level);'), 'Changing timeframe must use the safe entity fallback when the selected entity has no reviews in that range.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
 assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
