@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.spaced_repetition_tracker_delta.twa",
+      "sha256_cert_fingerprints": [
+        "E7:90:FA:20:19:9E:F7:D5:72:83:E0:0C:2F:3B:C0:9E:68:CA:93:A3:21:BF:B8:82:D0:C0:47:52:AB:BA:71:AE"
+      ]
+    }
+  }
+]
