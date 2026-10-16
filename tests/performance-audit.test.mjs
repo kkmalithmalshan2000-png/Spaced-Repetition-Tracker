@@ -33,6 +33,10 @@ test('review buttons are delegated centrally for all dynamically rendered queues
   assert.match(html, /\$\('topicGrid'\)\.addEventListener\('click',e=>\{const b=e\.target\.closest\('button\[data-action\]'\);if\(!b\)return;const \{action,id\}=b\.dataset;if\(action==='edit-topic'\)openTopic\(id\);if\(action==='delete-topic'\)deleteTopic\(id\);\}\);/);
 });
 
+test('mobile long lists use page scrolling instead of trapping vertical touch gestures', () => {
+  assert.match(performanceStyles, /@media\s*\(max-width:\s*760px\)\s*\{[\s\S]*?\.history-list,[\s\S]*?#structureList,[\s\S]*?\.topic-grid\s*\{[\s\S]*?max-height:\s*none\s*!important[\s\S]*?overflow-y:\s*visible\s*!important[\s\S]*?overscroll-behavior-y:\s*auto\s*!important[\s\S]*?touch-action:\s*auto\s*!important/i);
+});
+
 test('reduced-motion preference remains supported', () => {
   assert.match(performanceStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(performanceStyles, /animation:\s*none\s*!important/);
