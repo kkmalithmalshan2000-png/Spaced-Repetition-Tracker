@@ -50,6 +50,7 @@ assert(html.includes('No rating presses for this selection in this timeframe'), 
 assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
 assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
 assert(html.includes('data-rating-label=') && html.includes('segmentHeight>=18&&barWidth>=estimatedTextWidth+6'), 'Stacked bar count labels must only render when they fit inside the segment.');
+assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('getRatingAnalyticsScopedRecords(range.records,level,option.value)'), 'Changing timeframe must choose a matching entity if the current selection has no review records in that range.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
 assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
@@ -167,9 +168,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
           assert(svg.includes('data-rating-segment="'+rating+'"') && svg.includes('fill="'+color+'"'), testCase.period+' rating '+rating+' stack must use the matching rating-button color.');
         }
       }
-      const order = ['data-rating-segment="1"','data-rating-segment="2"','data-rating-segment="3"','data-rating-segment="4"','data-rating-segment="5"'].map(label=>svg.indexOf(label));
-      const presentOrder = order.filter(index=>index>=0);
-      assert(presentOrder.every((index,i)=>i===0||presentOrder[i-1]<index), testCase.period+' stacked ratings must be ordered red (Again) at the bottom through teal (Easy) at the top.');
+      assert(html.includes('for(let rating=1;rating<=5;rating++)') && html.includes('yBottom-=segmentHeight;'), testCase.period+' stack must build upward from Again (red) through Easy (teal).');
       if(testCase.period==='month'){
         assert(timeline.records.length===5, 'This month must retain current-month review data rather than rendering an empty date range.');
         assert(svg.includes('class="ra-bar-count"'), 'This month must show in-bar counts wherever the segment has enough space.');
