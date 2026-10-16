@@ -90,32 +90,6 @@
           ]
         }
       ]
-    },
-    {
-      "id": "temporary-biology-test",
-      "title": "Sample Biology Curriculum (TEST ONLY)",
-      "country": "Sri Lanka",
-      "exam": "GCE Advanced Level",
-      "language": "English",
-      "streamName": "Biology (TEST ONLY)",
-      "description": "Temporary sample pack to test Nexus curriculum discovery and installation. Not an official or complete syllabus; remove before merging.",
-      "keywords": [
-        "biology",
-        "sample",
-        "test",
-        "GCE Advanced Level",
-        "Sri Lanka"
-      ],
-      "subjects": [
-        {
-          "id": "BIOLOGY",
-          "name": "Biology (TEST ONLY)",
-          "topics": [
-            "Sample Topic 1 — Cell Biology",
-            "Sample Topic 2 — Enzymes and Biological Molecules"
-          ]
-        }
-      ]
     }
   ]
 }
