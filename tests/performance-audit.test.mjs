@@ -26,6 +26,13 @@ test('community wishlist polling is throttled and does not run offline', () => {
   assert.match(html, /window\.addEventListener\('online',refreshVisibleWishlist\)/);
 });
 
+
+test('review buttons are delegated centrally for all dynamically rendered queues', () => {
+  assert.match(html, /document\.addEventListener\('click',e=>\{const b=e\.target\.closest\('button\[data-action="review"\]'\);if\(!b\)return;openReview\(b\.dataset\.id\);\}\);/);
+  assert.doesNotMatch(html, /\$\('dueQueue'\)\.addEventListener\('click'/);
+  assert.match(html, /\$\('topicGrid'\)\.addEventListener\('click',e=>\{const b=e\.target\.closest\('button\[data-action\]'\);if\(!b\)return;const \{action,id\}=b\.dataset;if\(action==='edit-topic'\)openTopic\(id\);if\(action==='delete-topic'\)deleteTopic\(id\);\}\);/);
+});
+
 test('reduced-motion preference remains supported', () => {
   assert.match(performanceStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(performanceStyles, /animation:\s*none\s*!important/);
