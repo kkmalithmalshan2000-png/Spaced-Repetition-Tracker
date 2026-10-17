@@ -1984,7 +1984,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
         const subject=state.subjects.find(x=>x.id===j.subjectId)?.name||'General',topic=getTopic(j.topicId);
         add('Mistake journal record',j.date,'',subject,topic?.name||j.category||'Other',j.solved?'Status: resolved':'Status: open',j.severity??'','severity',[j.issue,j.fix].filter(Boolean).join(' · '));
       });
-      const csv='\uFEFF'+rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join('\r\n'));
+      const csv='\uFEFF'+rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
       downloadBlob('nexus-analytics-'+from+'-to-'+to+'.csv',csv,'text/csv;charset=utf-8');
       notify('Analytics CSV exported for '+from+' to '+to+'.');
     }catch(error){console.error('Nexus analytics CSV export failed',error);notify('Could not export analytics CSV. Please try again.');}
