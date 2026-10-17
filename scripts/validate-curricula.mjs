@@ -71,7 +71,7 @@ assert(html.includes("const all=options.find(option=>option.value==='ALL')") && 
 assert(html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')") && html.includes('ensureAnalyticsEntityForRange(level);'), 'Changing timeframe must use the safe entity fallback when the selected entity has no reviews in that range.');
 assert(html.includes('id="hubRatingEntity"'), 'Analytics must let users select the topic, subject, or syllabus being analysed.');
 assert(html.includes('id="homeOpenAnalytics"') && html.includes('id="analyticsStandalone"'), 'Analytics must have a dedicated full-screen screen launched from Home.');
-assert(html.includes("options.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
+assert(html.includes("ratingOptions.map(x=>[x.value,x.label+' — '+x.subtitle])"), 'Analytics selector options must be passed as [value, label] pairs to the shared selectOptions helper.');
 assert(!html.includes("options.map(x=>({value:x.value,label:x.label+' — '+x.subtitle}))"), 'Analytics must not pass non-iterable objects to the tuple-based selectOptions helper.');
 assert(html.includes('position:fixed;z-index:30001}'), 'The persistent Undo toast must appear above standalone overlays such as Danger Zone.');
 assert(!html.includes("$('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)"), 'Main app script must not reference private Study Hub functions before its initialization completes.');
@@ -83,7 +83,7 @@ assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub
 assert(html.includes('buildActivityBuckets(selection.from,activityEnd,reviewCountByDate)') && html.includes('buildActivityBuckets(selection.from,activityEnd,studyMinutesByDate)') && html.includes('activityChartTitle') && html.includes('studyTimeChartTitle') && html.includes('class="activity-line-svg"') && html.includes('activity-area'), 'PDF export must use full-range smooth gradient line charts for review counts and study time.');
 assert(html.includes('paperScoreTrendsMarkup(paperGraphPapers)') && html.includes('Paper &amp; practice score trends') && html.includes('pdf-paper-trends'), 'PDF export must include the subject-separated smooth paper/practice score graphs.');
 assert(html.includes('.activity-line-svg{display:block;width:100%') && html.includes('.paper-trend-svg{display:block;width:100%!important'), 'PDF export must include print styles for the SVG activity and paper score charts.');
-assert(html.includes('ra-svg-dense') && html.includes("selection.range==='month'") && html.includes("selection.range==='year'"), 'Month/year graphs must retain their day/month axis labels.');
+assert(html.includes('ra-svg-dense') && html.includes("period==='month'") && html.includes("period==='year'"), 'Month/year graphs must retain their day/month axis labels.');
 assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
 assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
 
