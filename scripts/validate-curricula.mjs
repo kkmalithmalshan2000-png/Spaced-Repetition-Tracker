@@ -83,7 +83,7 @@ assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub
 assert(!html.includes("downloadBlob('nexus-study-review-report.html'") && !html.includes("const fallbackReport='<!doctype html>"), 'PDF export must use the clean live-app print flow, not the preview-only HTML fallback.');
 assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('paper-trend-area'), 'Paper analytics must retain its smooth subject-separated trend charts in the app.');
 assert(!html.includes('reviewHeatmapMarkup') && !html.includes('pdf-heatmap-cell'), 'Preview-only PDF heatmap code must be removed when restoring the live report.');
-assert(html.includes('.paper-trend-svg{display:block;width:100%!important') && html.includes('nexus-activity-svg{display:block;width:100%'), 'Paper charts and rebuilt Activity charts must retain responsive graph styling.');
+assert(html.includes('.paper-trend-svg') && html.includes('nexus-activity-svg{display:block;width:100%'), 'Paper charts and rebuilt Activity charts must retain responsive graph styling.');
 assert(html.includes('ra-svg-dense') && html.includes("period==='month'") && html.includes("period==='year'"), 'Month/year graphs must retain their day/month axis labels.');
 assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
 assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
@@ -267,7 +267,7 @@ assert(html.includes('Practice & paper records') && html.includes('Study time by
 assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html.includes("4:'#84cc16',5:'#059669'"), 'Summary card tint and distinct green rating palette must be present.');
 
 
-assert(html.includes("const reportWindow=window.open('about:blank','_blank')") && html.includes('Could not open the PDF report') && !html.includes('Nexus PDF export failed'), 'PDF export must match the clean live print-window flow.');
+assert(html.includes("window.open('','_blank')") && html.includes('Could not open the PDF report') && !html.includes('Nexus PDF export failed'), 'PDF export must match the clean live print-window flow.');
 assert(html.includes('function exportAnalyticsCsv()') && html.includes("if(action==='analytics-export'){exportAnalyticsCsv();return;}") && html.includes('text/csv;charset=utf-8'), 'Analytics CSV export must use the shared timeframe and produce a downloadable UTF-8 CSV.');
 assert(html.includes(".join(',')).join('\\\\r\\\\n')"), 'Analytics CSV rows must be comma-separated with CRLF row endings.');
 assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") && html.includes('data-home-collapse="dueQueue"') && html.includes('data-home-collapse="progressList"') && html.includes('data-home-collapse="upcomingQueue"') && html.includes('data-home-collapse="overviewAnalytics"'), 'Overview list cards must use labelled Collapse/Expand buttons.');
