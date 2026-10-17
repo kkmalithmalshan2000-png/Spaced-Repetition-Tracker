@@ -45,17 +45,20 @@ assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pac
 assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
 assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
 assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
-assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('Each rating has an independent scale'), 'Analytics must render separated line lanes with an independent scale for each rating.');
+assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('One line chart of all selected review rating-button presses') && html.includes('same count scale'), 'Analytics must render a shared-scale multi-line chart for the selected rating difficulties.');
 assert(html.includes('No presses for the selected ratings in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
-assert(html.includes('function lineActivityMarkup') && html.includes('class="activity-line-svg"'), 'Home and Analytics activity must use a line chart.');
-assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('Each subject has its own percentage trend line'), 'Paper marks must use separate subject-level line charts on a common percentage scale.');
+assert(html.includes('class="hub-nav analytics-nav"') && html.includes("data-analytics-section=") && html.includes("if(a==='analytics-section')"), 'Analytics must expose the four-section top navigation.');
+assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Mistake journal"') && html.includes('touch-action:pan-y'), 'Growing practice and mistake histories must use scrollable touch-friendly inboxes.');
+assert(html.includes("new Map()") && html.includes("dateToBin=new Map()"), 'Analytics review history must be aggregated instead of repeatedly filtering every record for every day.');
+assert(html.includes('function lineActivityMarkup') && html.includes('class="activity-line-svg"') && html.includes('function smoothCurvePath') && html.includes('class="activity-area"'), 'Home and Analytics activity must use a smooth line chart with a fading area gradient.');
+assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('paper-trend-area') && html.includes('all records remain below'), 'Paper marks must use smooth gradient trend charts while preserving the full attempt log.');
 assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
 assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
 assert(html.includes('data-rating-point=') && html.includes('class="ra-line"') && html.includes('class="activity-line"'), 'Line charts must provide discrete, tooltipped points and a visible trend path.');
 assert(html.includes('data-hub-action="analytics-toggle-rating"') && html.includes("if(a==='analytics-toggle-rating')"), 'Every rating legend item must toggle its series in the graph.');
 assert(html.includes("fsState.analyticsVisibleRatings=current.filter(r=>r!==rating)") && html.includes("fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y)"), 'Rating filters must support hiding and restoring multiple ratings.');
-assert(html.includes('getVisibleAnalyticsRatings()') && html.includes('data-rating-line=') && html.includes('data-scale-max='), 'Rating toggles must select independent lines with per-rating scales.');
-assert(html.includes("data-rating-line=\"'+rating+'\""), 'Each rating trend must remain individually addressable for visibility filters.');
+assert(html.includes('getVisibleAnalyticsRatings()') && html.includes('data-rating-line=') && html.includes('data-scale-max=') && html.includes('same count scale'), 'Difficulty toggles must filter lines that share the same count axis.');
+assert(html.includes("data-rating-line=\"'+rating+'\""), 'Each rating curve must remain individually addressable for visibility filters.');
 assert(html.includes('class="hub-premium-heading panel"') && html.includes('.hub-premium-heading{'), 'Study Hub must use the premium purple title card.');
 assert(html.includes('<p class="subtitle">v4.0</p>') && html.includes('How to use: tap “? How to use” in the header.'), 'Main screen branding should retain only app version and the How to use reference.');
 assert(html.includes('id="appMode" hidden'), 'The hidden legacy app-mode node must remain available to existing runtime code without displaying verbose status copy.');
@@ -114,6 +117,8 @@ const analyticsFunctionNames = [
   'getVisibleAnalyticsRatings',
   'ratingAnalyticsSvgMarkup',
   'ratingAnalyticsTimelineTableMarkup',
+  'nextChartGradientId',
+  'smoothCurvePath',
   'lineActivityMarkup',
   'paperScoreTrendsMarkup'
 ];
@@ -139,6 +144,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     };
     const testContext = {
       fsState:{analyticsPeriod:'week',analyticsCustomStart:'2026-10-10',analyticsCustomEnd:fixedToday},
+      chartGradientCounter:0,
       state:{history:sampleHistory,subjects:[{id:'science-bio',name:'Biology'},{id:'science-chem',name:'Chemistry'}]},
       today:() => fixedToday,
       safeDate:validCalendarDate,
@@ -181,14 +187,14 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
       const lineGroups = [...svg.matchAll(/<g class="ra-line-series" data-rating-line="(\d+)" data-scale-max="(\d+)">/g)];
       const expectedRatings = [1,2,3,4,5].filter(rating => timeline.totals[rating-1] > 0);
-      assert(lineGroups.length === expectedRatings.length, testCase.period+' graph must render one isolated lane for each rating with saved presses.');
+      assert(lineGroups.length === expectedRatings.length, testCase.period+' graph must render one curve for each selected rating with saved presses.');
       const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']];
       for (const [rating,color] of expectedColors) {
         if (timeline.totals[rating-1] > 0) {
           assert(svg.includes('data-rating-line="'+rating+'"') && svg.includes('stroke="'+color+'"'), testCase.period+' rating '+rating+' line must use the matching rating-button color.');
         }
       }
-      assert(svg.includes('Each rating has an independent scale') && svg.includes('Selected timeframe') && svg.includes('data-scale-max='), testCase.period+' graph must clarify its per-rating scales and time axis.');
+      assert(svg.includes('same count scale') || html.includes('same count scale'), testCase.period+' graph must use a shared count scale and a clear time axis.');
       if(testCase.period==='month'){
         assert(timeline.records.length===5, 'This month must retain current-month review data rather than rendering an empty date range.');
         assert(svg.includes('data-rating-point=') && lineGroups.length>0, 'This month must show discrete line points where review records exist.');
@@ -204,7 +210,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     testContext.state.history = sampleHistory.concat(Array.from({length:8},()=>({reviewedAt:'2026-10-16',rating:1})));
     const allSelection = testContext.getRatingAnalyticsSelection();
     const allSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
-    assert(allSvg.includes('data-rating-line="1"') && allSvg.includes('data-scale-max="8"'), 'Each rating lane must keep its own local scale.');
+    assert(allSvg.includes('data-rating-line="1"') && allSvg.includes('data-scale-max="10"'), 'All selected rating curves must share a count axis scaled to the visible maximum.');
     testContext.fsState.analyticsVisibleRatings = [4,5];
     const filteredSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
     assert(filteredSvg.includes('data-rating-line="4"') && filteredSvg.includes('data-rating-line="5"'), 'Selecting Very good and Easy must show their line series.');
@@ -215,7 +221,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       {date:'2026-10-15',label:'15',short:'2026-10-15',count:0},
       {date:'2026-10-16',label:'16',short:'2026-10-16',count:5}
     ], 'Daily saved review activity');
-    assert(activitySvg.includes('polyline class="activity-line"') && (activitySvg.match(/class="activity-point"/g)||[]).length===3, 'Activity trend must draw a line and one interactive point per day.');
+    assert(activitySvg.includes('path class="activity-line"') && activitySvg.includes('activity-area') && activitySvg.includes(' C ') && (activitySvg.match(/class="activity-point"/g)||[]).length===3, 'Activity trend must draw a smooth curve, fading area, and one point per day.');
     assert(activitySvg.includes('Daily saved review activity') && activitySvg.includes('2026-10-16'), 'Activity chart must retain accessible labelling and exact-date point details.');
 
     const paperTrend = testContext.paperScoreTrendsMarkup([
