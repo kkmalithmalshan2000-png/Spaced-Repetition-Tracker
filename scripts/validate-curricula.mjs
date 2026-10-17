@@ -274,6 +274,27 @@ assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") &&
 assert(html.includes('function openAnalyticsWindow()') && html.includes('Nexus Analytics failed to open') && html.includes('analyticsDefaultParent'), 'Analytics opening must recover stale overlay/reparenting state instead of silently ignoring taps.');
 assert(html.includes("document.addEventListener('change',e=>{") && html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')"), 'Analytics filter changes must be handled at a stable document-level listener.');
 
+
+assert(!html.includes("arrow.textContent='⌃'") && !html.includes('function makeCollapsible(panelSelector'), 'Overview must not inject the legacy arrow-only collapse controls; use labelled Collapse/Expand buttons.');
+assert(html.includes("const safeDate=d=>{if(!/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/.test(String(d||'')))return false;") && html.includes('activityKpis+chartGrid'), 'Activity date validation must be self-contained and the Activity view must render summary metrics with both trend charts.');
+assert(html.includes('const activityReviews=activityRangeValid?state.history.filter') && html.includes('fsState.studyLogs.filter(l=>safeDate(l.date)') && html.includes("lineActivityMarkup(reviewSeries,reviewChartTitle,'Reviews'") && html.includes("lineActivityMarkup(minuteSeries,studyChartTitle,'Minutes'"), 'Activity charts must read saved review history and saved study-time logs.');
+assert(html.includes("return hero+nav+sharedTimeframeFilter+'<div class=\\\"analytics-section-content\\\"") && html.includes("id=\\\"hubRatingPeriod\\\""), 'The shared timeframe filter must be positioned after Analytics navigation and reused by all Analytics sections.');
+
+const safeDateSourceMatch = html.match(/const safeDate=(d=>[\\s\\S]*?);\\n\\s*const localEsc=/);
+assert(Boolean(safeDateSourceMatch), 'A self-contained safeDate helper must be present for the Study Hub runtime.');
+if (safeDateSourceMatch) {
+  try {
+    const safeDateContext = {};
+    vm.createContext(safeDateContext);
+    vm.runInContext('globalThis.safeDateTest = '+safeDateSourceMatch[1], safeDateContext, {filename:'index.html:safeDate'});
+    assert(safeDateContext.safeDateTest('2026-10-17'), 'safeDate must accept a real calendar date without an external validDate binding.');
+    assert(!safeDateContext.safeDateTest('2026-02-30'), 'safeDate must reject impossible calendar dates.');
+    assert(!safeDateContext.safeDateTest('17-10-2026'), 'safeDate must reject dates outside YYYY-MM-DD format.');
+  } catch (error) {
+    errors.push('safeDate isolated runtime validation failed: '+(error && error.stack ? error.stack : String(error)));
+  }
+}
+
 if (errors.length) {
   console.error('Curriculum validation failed:');
   for (const error of errors) console.error(' - '+error);
