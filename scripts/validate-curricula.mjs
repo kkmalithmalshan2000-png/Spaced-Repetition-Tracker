@@ -45,7 +45,7 @@ assert(!html.includes('temporary-biology-test'), 'The temporary Biology test pac
 assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, subject, and syllabus grouping.');
 assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
 assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
-assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('One line chart of all selected review rating-button presses') && html.includes('same count scale'), 'Analytics must render a shared-scale multi-line chart for the selected rating difficulties.');
+assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('Line chart of review difficulty ratings over time') && html.includes('same count scale'), 'Analytics must render a shared-scale multi-line chart for the selected rating difficulties.');
 assert(html.includes('No presses for the selected ratings in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
 assert(html.includes('class="hub-nav analytics-nav"') && html.includes("data-analytics-section=") && html.includes("if(a==='analytics-section')"), 'Analytics must expose the four-section top navigation.');
 assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Mistake journal"') && html.includes('touch-action:pan-y'), 'Growing practice and mistake histories must use scrollable touch-friendly inboxes.');
@@ -80,7 +80,7 @@ assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a 
 assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
 assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
 assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
-assert(html.includes("lineActivityMarkup(activity,'Daily review activity'") && html.includes("lineActivityMarkup(studyTimeSeries,'Daily recorded study time'") && html.includes('class="activity-line-svg"') && html.includes('activity-area'), 'PDF export must use the same smooth gradient line charts for review activity and daily study time.');
+assert(html.includes('buildActivityBuckets(selection.from,activityEnd,reviewCountByDate)') && html.includes('buildActivityBuckets(selection.from,activityEnd,studyMinutesByDate)') && html.includes('activityChartTitle') && html.includes('studyTimeChartTitle') && html.includes('class="activity-line-svg"') && html.includes('activity-area'), 'PDF export must use full-range smooth gradient line charts for review counts and study time.');
 assert(html.includes('paperScoreTrendsMarkup(paperGraphPapers)') && html.includes('Paper &amp; practice score trends') && html.includes('pdf-paper-trends'), 'PDF export must include the subject-separated smooth paper/practice score graphs.');
 assert(html.includes('.activity-line-svg{display:block;width:100%') && html.includes('.paper-trend-svg{display:block;width:100%!important'), 'PDF export must include print styles for the SVG activity and paper score charts.');
 assert(html.includes('ra-svg-dense') && html.includes("selection.range==='month'") && html.includes("selection.range==='year'"), 'Month/year graphs must retain their day/month axis labels.');
@@ -123,6 +123,7 @@ const analyticsFunctionNames = [
   'nextChartGradientId',
   'smoothCurvePath',
   'lineActivityMarkup',
+  'buildActivityBuckets',
   'paperScoreTrendsMarkup'
 ];
 const analyticsFunctionSources = Object.fromEntries(analyticsFunctionNames.map(name => [name, extractFunctionDeclaration(html, name)]));
@@ -157,7 +158,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       esc:value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
       localEsc:value => String(value ?? ''),
       RATING_LABELS:{1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'},
-      RATING_ANALYTICS_COLORS:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#10b981'},
+      RATING_ANALYTICS_COLORS:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#84cc16',5:'#059669'},
       getRatingAnalyticsScopedRecords:records => records || []
     };
     vm.createContext(testContext);
@@ -191,7 +192,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       const lineGroups = [...svg.matchAll(/<g class="ra-line-series" data-rating-line="(\d+)" data-scale-max="(\d+)">/g)];
       const expectedRatings = [1,2,3,4,5].filter(rating => timeline.totals[rating-1] > 0);
       assert(lineGroups.length === expectedRatings.length, testCase.period+' graph must render one curve for each selected rating with saved presses.');
-      const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#22c55e'],[5,'#10b981']];
+      const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#84cc16'],[5,'#059669']];
       for (const [rating,color] of expectedColors) {
         if (timeline.totals[rating-1] > 0) {
           assert(svg.includes('data-rating-line="'+rating+'"') && svg.includes('stroke="'+color+'"'), testCase.period+' rating '+rating+' line must use the matching rating-button color.');
@@ -226,6 +227,9 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     ], 'Daily saved review activity');
     assert(activitySvg.includes('path class="activity-line"') && activitySvg.includes('activity-area') && activitySvg.includes(' C ') && (activitySvg.match(/class="activity-point"/g)||[]).length===3, 'Activity trend must draw a smooth curve, fading area, and one point per day.');
     assert(activitySvg.includes('Daily saved review activity') && activitySvg.includes('2026-10-16'), 'Activity chart must retain accessible labelling and exact-date point details.');
+    const bucketValues = new Map([['2026-01-01',2],['2026-03-31',5]]);
+    const longBuckets = testContext.buildActivityBuckets('2026-01-01','2026-03-31',bucketValues);
+    assert(longBuckets.length<20 && longBuckets[0].date==='2026-01-01' && longBuckets[longBuckets.length-1].endDate==='2026-03-31' && longBuckets.reduce((total,bucket)=>total+bucket.count,0)===7, 'Long activity buckets must cover the selected span and preserve daily totals.');
 
     const paperTrend = testContext.paperScoreTrendsMarkup([
       {id:'bio-1',subjectId:'science-bio',name:'Biology practice 1',date:'2026-10-01',score:30,maxScore:50},
@@ -251,6 +255,15 @@ for (const [index, match] of [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/sc
   catch (error) { errors.push('Inline script '+(index + 1)+' has a syntax error: '+error.message); }
 }
 assert(checkedScripts > 0, 'No inline JavaScript blocks were checked.');
+
+
+assert(html.includes("return hero+nav+sharedTimeframeFilter+'<div class=\"analytics-section-content\"") && html.includes('id="hubRatingPeriod"'), 'A shared timeframe filter must appear below the Analytics navigation.');
+assert(html.includes('function buildActivityBuckets(start,end,valuesByDate,maxPoints=80)') && html.includes("longActivityRange?'Total review count':'Daily review count'") && html.includes("longActivityRange?'Total study time':'Daily study time'"), 'Long activity graph ranges must show totals for the selected period.');
+assert(html.includes('homeConsistencySummary') && html.includes('homeHeatmapPeriod') && !html.includes("['consistency','Heatmap & streaks']"), 'Heatmap and streak summary must be located on Overview.');
+assert(!html.includes('id="startReviewBtn"') && !html.includes("startReviewBtn').addEventListener"), 'Overview must not expose a Start review action.');
+assert(!/inbox/i.test(html), 'Analytics wording must use records rather than inbox terminology.');
+assert(html.includes('Practice & paper records') && html.includes('Mistake journal records') && html.includes('analytics-card-toggle'), 'Practice and journal records cards must support collapsing.');
+assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html.includes("4:'#84cc16',5:'#059669'"), 'Summary card tint and distinct green rating palette must be present.');
 
 if (errors.length) {
   console.error('Curriculum validation failed:');
