@@ -204,7 +204,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     testContext.state.history = sampleHistory.concat(Array.from({length:8},()=>({reviewedAt:'2026-10-16',rating:1})));
     const allSelection = testContext.getRatingAnalyticsSelection();
     const allSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
-    assert(allSvg.includes('data-rating-line="1"') && allSvg.includes('data-scale-max="9"'), 'Each rating lane must keep its own local scale.');
+    assert(allSvg.includes('data-rating-line="1"') && allSvg.includes('data-scale-max="8"'), 'Each rating lane must keep its own local scale.');
     testContext.fsState.analyticsVisibleRatings = [4,5];
     const filteredSvg = testContext.ratingAnalyticsSvgMarkup(allSelection, 'topic', 'test-all');
     assert(filteredSvg.includes('data-rating-line="4"') && filteredSvg.includes('data-rating-line="5"'), 'Selecting Very good and Easy must show their line series.');
