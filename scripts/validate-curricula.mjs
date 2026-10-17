@@ -276,11 +276,11 @@ assert(html.includes("document.addEventListener('change',e=>{") && html.includes
 
 
 assert(!html.includes("arrow.textContent='⌃'") && !html.includes('function makeCollapsible(panelSelector'), 'Overview must not inject the legacy arrow-only collapse controls; use labelled Collapse/Expand buttons.');
-assert(html.includes("const safeDate=d=>{if(!/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/.test(String(d||'')))return false;") && html.includes('activityKpis+chartGrid'), 'Activity date validation must be self-contained and the Activity view must render summary metrics with both trend charts.');
+assert(html.includes("const safeDate=d=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||'')))return false;") && html.includes('activityKpis+chartGrid'), 'Activity date validation must be self-contained and the Activity view must render summary metrics with both trend charts.');
 assert(html.includes('const activityReviews=activityRangeValid?state.history.filter') && html.includes('fsState.studyLogs.filter(l=>safeDate(l.date)') && html.includes("lineActivityMarkup(reviewSeries,reviewChartTitle,'Reviews'") && html.includes("lineActivityMarkup(minuteSeries,studyChartTitle,'Minutes'"), 'Activity charts must read saved review history and saved study-time logs.');
 assert(html.includes("return hero+nav+sharedTimeframeFilter+'<div class=\\\"analytics-section-content\\\"") && html.includes("id=\\\"hubRatingPeriod\\\""), 'The shared timeframe filter must be positioned after Analytics navigation and reused by all Analytics sections.');
 
-const safeDateSourceMatch = html.match(/const safeDate=(d=>[\\s\\S]*?);\\n\\s*const localEsc=/);
+const safeDateSourceMatch = html.match(/const safeDate=(d=>[\s\S]*?);\n\s*const localEsc=/);
 assert(Boolean(safeDateSourceMatch), 'A self-contained safeDate helper must be present for the Study Hub runtime.');
 if (safeDateSourceMatch) {
   try {
