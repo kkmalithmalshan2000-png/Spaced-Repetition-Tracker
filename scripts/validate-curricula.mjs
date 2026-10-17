@@ -75,7 +75,7 @@ assert(html.includes("ratingOptions.map(x=>[x.value,x.label+' — '+x.subtitle])
 assert(!html.includes("options.map(x=>({value:x.value,label:x.label+' — '+x.subtitle}))"), 'Analytics must not pass non-iterable objects to the tuple-based selectOptions helper.');
 assert(html.includes('position:fixed;z-index:30001}'), 'The persistent Undo toast must appear above standalone overlays such as Danger Zone.');
 assert(!html.includes("$('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)"), 'Main app script must not reference private Study Hub functions before its initialization completes.');
-assert(html.includes("hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow)") && html.includes("hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone)"), 'Analytics and Danger Zone buttons must be bound inside the Study Hub function scope.');
+assert(html.includes("document.addEventListener('click',e=>{\n    const openButton=e.target.closest('#homeOpenAnalytics');") && html.includes("hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone)"), 'Open Analytics must use stable document delegation while Danger Zone remains wired in the Study Hub scope.');
 assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a Study Hub tab.');
 assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
 assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
@@ -265,6 +265,13 @@ assert(!html.includes('id="startReviewBtn"') && !html.includes("startReviewBtn')
 assert(!/inbox/i.test(html), 'Analytics wording must use records rather than inbox terminology.');
 assert(html.includes('Practice & paper records') && html.includes('Mistake journal records') && html.includes('analytics-card-toggle'), 'Practice and journal records cards must support collapsing.');
 assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html.includes("4:'#84cc16',5:'#059669'"), 'Summary card tint and distinct green rating palette must be present.');
+
+
+assert(html.includes("const reportWindow=window.open('about:blank','_blank')") && html.includes('Nexus PDF export failed'), 'PDF export must open its print window synchronously and surface generation failures.');
+assert(html.includes('function exportAnalyticsCsv()') && html.includes("if(action==='analytics-export'){exportAnalyticsCsv();return;}") && html.includes('text/csv;charset=utf-8'), 'Analytics CSV export must use the shared timeframe and produce a downloadable UTF-8 CSV.');
+assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") && html.includes('data-home-collapse="dueQueue"') && html.includes('data-home-collapse="progressList"') && html.includes('data-home-collapse="upcomingQueue"') && html.includes('data-home-collapse="overviewAnalytics"'), 'Overview list cards must use labelled Collapse/Expand buttons.');
+assert(html.includes('function openAnalyticsWindow()') && html.includes('Nexus Analytics failed to open') && html.includes('analyticsDefaultParent'), 'Analytics opening must recover stale overlay/reparenting state instead of silently ignoring taps.');
+assert(html.includes("document.addEventListener('change',e=>{") && html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')"), 'Analytics filter changes must be handled at a stable document-level listener.');
 
 if (errors.length) {
   console.error('Curriculum validation failed:');
