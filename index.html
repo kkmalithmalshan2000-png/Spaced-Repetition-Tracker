@@ -604,6 +604,46 @@ dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-b
 .hub-premium-action:hover{filter:brightness(1.06);box-shadow:0 10px 24px rgba(108,99,223,.36);transform:translateY(-2px)}
 @media(max-width:700px){.hub-premium-heading{grid-template-columns:52px minmax(0,1fr);gap:11px;padding:12px}.hub-premium-art{min-height:52px}.hub-premium-art svg{width:48px}.hub-premium-copy h2{font-size:17px}.hub-premium-action{grid-column:1/-1;width:100%;justify-content:center}}
 
+
+/* Optional community support — intentionally not tied to account status or app features. */
+.support-nexus-trigger{
+  gap:7px;
+  padding:9px 12px;
+  color:#fff;
+  border-color:transparent;
+  background:linear-gradient(135deg,#8978f8,#6c63df);
+  box-shadow:0 5px 16px rgba(108,99,223,.24);
+}
+.support-nexus-trigger svg{width:17px;height:17px;flex:none;color:currentColor}
+.support-nexus-trigger:hover{color:#fff;border-color:transparent;filter:brightness(1.06);box-shadow:0 8px 20px rgba(108,99,223,.32)}
+.support-nexus-trigger:focus-visible,.support-nexus-cta:focus-visible{outline:3px solid color-mix(in srgb,#8978f8 55%,white);outline-offset:3px}
+.support-nexus-dialog{width:min(440px,calc(100% - 24px));max-height:min(88dvh,720px)}
+.support-nexus-hero{padding:23px 22px 18px;text-align:center;background:linear-gradient(145deg,color-mix(in srgb,#8978f8 13%,var(--surface)),color-mix(in srgb,#c27aff 10%,var(--surface)));border-bottom:1px solid var(--border)}
+.support-nexus-hero-icon{width:58px;height:58px;margin:0 auto 13px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#8978f8,#6c63df);color:#fff;box-shadow:0 8px 22px rgba(108,99,223,.27)}
+.support-nexus-hero-icon svg{width:31px;height:31px}
+.support-nexus-hero h2{margin:0;font-size:21px;letter-spacing:-.035em}
+.support-nexus-hero p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.support-nexus-body{padding:19px 21px 21px}
+.support-nexus-intro{margin:0 0 16px;font-size:13px;line-height:1.65;color:var(--text)}
+.support-nexus-info{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid color-mix(in srgb,#8978f8 35%,var(--border));border-radius:14px;background:color-mix(in srgb,#8978f8 6%,var(--surface))}
+.support-nexus-info-icon{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,#8978f8 15%,var(--surface));color:#8978f8}
+.support-nexus-info-icon svg{width:20px;height:20px}
+.support-nexus-info-copy{min-width:0}
+.support-nexus-info-copy strong{display:block;font-size:13px;line-height:1.4}
+.support-nexus-info-copy p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.support-nexus-optional{margin:14px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+.support-nexus-optional strong{color:var(--text)}
+.support-nexus-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:44px;margin-top:19px;text-decoration:none}
+.support-nexus-cta svg{width:17px;height:17px;flex:none}
+.support-nexus-disclaimer{margin:11px 0 0;text-align:center;color:var(--muted);font-size:11px;line-height:1.5}
+.support-nexus-close{display:flex;justify-content:center;margin-top:13px}
+@media(max-width:540px){
+  .support-nexus-trigger{padding:8px 9px;font-size:12px;gap:6px}
+  .support-nexus-trigger svg{width:16px;height:16px}
+  .support-nexus-hero{padding:20px 16px 16px}
+  .support-nexus-body{padding:16px}
+}
+
 </style>
 
   <!-- Vercel Web Analytics -->
@@ -723,6 +763,10 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
         <span class="statusline" id="saveStatus" role="status">Saved on this device</span>
         <button class="btn btn-icon" id="themeBtn" aria-label="Change theme" title="Change theme">◐</button>
         <button class="btn" id="installBtn" type="button" title="Install Nexus on this device">⇩ Install</button>
+        <button class="btn support-nexus-trigger" id="supportNexusBtn" type="button" aria-haspopup="dialog" aria-controls="supportNexusDialog" title="Optionally support Nexus">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762"/></svg>
+          <span>Support Nexus</span>
+        </button>
         <button class="btn" id="helpBtn" type="button">? How to use</button>
         <div class="more-menu" id="moreMenu"><button type="button" class="btn btn-icon" aria-label="More options" title="More options">⋯</button><div class="menu-pop"><button type="button" id="menuBackup">↓ Download backup</button><button type="button" id="menuRestore">↑ Import backup</button><button type="button" id="menuHistoryCsv">⇩ Export history CSV</button><button type="button" id="menuTopicsCsv">⇩ Export topics CSV</button><button type="button" id="menuSettings">⚙ Settings & setup</button></div></div>
         <input type="file" id="importFile" accept=".json,application/json" hidden>
@@ -838,6 +882,35 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   <dialog id="examDialog"><form id="examForm"><div class="dialog-head"><h2 id="examDialogTitle">Add exam or deadline</h2><p>Use this for any examination, test, assessment, or deadline.</p></div><div class="dialog-body"><div class="form-grid"><div class="form-group full"><label class="form-label" for="examNameInput">Name</label><input class="control" id="examNameInput" maxlength="150" required placeholder="e.g. Semester exam, A/L, professional exam"></div><div class="form-group"><label class="form-label" for="examDateInput">Date</label><input class="control" id="examDateInput" type="date" required></div><div class="form-group"><label class="form-label" for="examTypeInput">Type</label><select class="control" id="examTypeInput"><option>Academic exam</option><option>Test</option><option>Professional exam</option><option>Assignment deadline</option><option>Other</option></select></div><div class="form-group full"><label class="form-label" for="examNotesInput">Notes (optional)</label><textarea class="control" id="examNotesInput" maxlength="500" placeholder="Optional details"></textarea></div></div><div class="dialog-actions"><button class="btn" type="button" data-close="examDialog">Cancel</button><button class="btn btn-primary" type="submit">Save exam</button></div></div></form></dialog>
 
   <dialog id="installDialog" aria-labelledby="installDialogTitle"><div class="dialog-head"><h2 id="installDialogTitle">Install Nexus</h2><p>Choose how you want to install the app on this device.</p></div><div class="dialog-body"><div class="install-options"><button class="install-option" id="pwaInstallOption" type="button"><span class="install-option-icon" aria-hidden="true">＋</span><span class="install-option-text"><strong>Install as web app</strong><span>Adds Nexus to your home screen or desktop through your browser.</span></span></button></div><p class="install-note" id="installNote">If no install prompt appears, open your browser menu and choose “Install app” or “Add to Home screen” where available. Your study data remains on this device unless you enable cloud sync.</p><div class="dialog-actions"><button class="btn" type="button" data-close="installDialog">Close</button></div></div></dialog>
+  <dialog id="supportNexusDialog" class="support-nexus-dialog" aria-labelledby="supportNexusTitle" aria-describedby="supportNexusDescription">
+    <div class="support-nexus-hero">
+      <div class="support-nexus-hero-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762"/></svg>
+      </div>
+      <h2 id="supportNexusTitle">Support Nexus</h2>
+      <p>A free tool, made with care for students.</p>
+    </div>
+    <div class="support-nexus-body">
+      <p class="support-nexus-intro" id="supportNexusDescription">Enjoying Nexus? If it has helped you organise your studies and keep up with revisions, you can optionally support its continued development.</p>
+      <div class="support-nexus-info">
+        <div class="support-nexus-info-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="support-nexus-info-copy">
+          <strong>Support independent development</strong>
+          <p>Your contribution helps with hosting, maintenance, and future improvements.</p>
+        </div>
+      </div>
+      <p class="support-nexus-optional"><strong>Entirely optional.</strong> Nexus remains free, and donating does not unlock features or change your access.</p>
+      <a class="btn btn-primary support-nexus-cta" href="https://github.com/sponsors/kkmalithmalshan2000-png" target="_blank" rel="noopener noreferrer">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>Support Nexus</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+      </a>
+      <p class="support-nexus-disclaimer">No subscriptions. No locked features. No pressure.</p>
+      <div class="support-nexus-close"><button class="btn" type="button" data-close="supportNexusDialog">Maybe later</button></div>
+    </div>
+  </dialog>
   <dialog id="helpDialog"><div class="dialog-head"><h2>How to use Nexus</h2><p>A complete guide to planning, reviewing, tracking progress, and protecting your data.</p></div><div class="dialog-body help-content">
     <h3>1. Home and your daily overview</h3>
     <p>The Home screen brings your study workload together. Check your active topics, topics due today, overdue topics, reviews completed today, and progress by subject. Use <strong>Start Review</strong> to begin working through the review queue. Due and overdue topics are prioritised ahead of new topics where applicable. Check the upcoming-seven-days view and calendar to plan around future reviews, exams, and deadlines. Use your progress and activity indicators to keep track of consistency; they describe recorded activity, not a guarantee of mastery.</p>
@@ -1322,7 +1395,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   $('reviewCustomDue').addEventListener('change',renderReviewPreview);
   document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).close()));
   $('reviewNote').addEventListener('input',()=>{});
-  $('themeBtn').addEventListener('click',cycleTheme);$('themeSelect').addEventListener('change',()=>{state.settings.theme=$('themeSelect').value;save();applyTheme();notify('Theme preference saved.');});$('helpBtn').addEventListener('click',openHelp);$('installBtn').addEventListener('click',install);$('pwaInstallOption').addEventListener('click',installPwa);
+  $('themeBtn').addEventListener('click',cycleTheme);$('themeSelect').addEventListener('change',()=>{state.settings.theme=$('themeSelect').value;save();applyTheme();notify('Theme preference saved.');});$('helpBtn').addEventListener('click',openHelp);$('installBtn').addEventListener('click',install);$('supportNexusBtn').addEventListener('click',()=>$('supportNexusDialog').showModal());$('pwaInstallOption').addEventListener('click',installPwa);
   $('backupBtn').addEventListener('click',exportBackup);$('menuBackup').addEventListener('click',()=>{$('moreMenu').open=false;exportBackup();});$('restoreBtn').addEventListener('click',()=>$('importFile').click());$('menuRestore').addEventListener('click',()=>{$('moreMenu').open=false;$('importFile').click();});$('importFile').addEventListener('change',e=>importBackup(e.target.files?.[0]));
   $('historyCsvBtn').addEventListener('click',exportHistory);$('setupHistoryCsvBtn').addEventListener('click',exportHistory);$('menuHistoryCsv').addEventListener('click',()=>{exportHistory();$('moreMenu').open=false;});$('setupTopicsCsvBtn').addEventListener('click',exportTopics);$('menuTopicsCsv').addEventListener('click',()=>{exportTopics();$('moreMenu').open=false;});$('clearHistoryBtn').addEventListener('click',clearHistory);$('resetBtn').addEventListener('click',resetAll);$('undoBtn').addEventListener('click',undo);$('menuSettings').addEventListener('click',()=>{switchView('setup');$('moreMenu').open=false;});
   $('topicDialog').addEventListener('close',()=>{editTopicId=null;});$('streamDialog').addEventListener('close',()=>{editStreamId=null;});$('subjectDialog').addEventListener('close',()=>{editSubjectId=null;});$('examDialog').addEventListener('close',()=>{editExamId=null;});$('reviewDialog').addEventListener('close',()=>{reviewTopicId=null;});
