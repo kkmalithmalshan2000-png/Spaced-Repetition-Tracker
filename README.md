@@ -94,7 +94,7 @@ If a cloud backup already exists at sign-in, Nexus asks you to type RESTORE or U
 The database and client connection are configured. To allow authentication redirects for the GitHub Pages deployment:
 
 1. Open the [Nexus Supabase Auth URL Configuration](https://supabase.com/dashboard/project/txugbdavblpettcnhcxl/auth/url-configuration).
-2. Set **Site URL** to `https://kkmalithmalshan2000-png.github.io/Spaced-Repetition-Tracker/`.
+2. Set **Site URL** to `https://NexusOrg01.github.io/Spaced-Repetition-Tracker/`.
 3. Add that same URL to **Redirect URLs** and save.
 4. Email magic-link sign-in can then be used. For Google sign-in, open [Auth Providers](https://supabase.com/dashboard/project/txugbdavblpettcnhcxl/auth/providers), enable Google, and enter the OAuth Client ID and Client Secret from a Google Cloud OAuth web application. Add the Supabase callback URL shown on that provider page to the Google OAuth client's authorized redirect URIs.
 
@@ -107,7 +107,7 @@ The Explore Curriculum view includes a request form and community wishlist. The 
 To persist submissions and populate the shared wishlist, configure the following in **Vercel → Project → Settings → Environment Variables**, then redeploy:
 
 - `GITHUB_TOKEN` — a fine-grained GitHub token with **Issues: Read and write** permission for this repository. The API creates one issue per request and lists those issues in the wishlist.
-- `GITHUB_REPOSITORY` — optional; defaults to `kkmalithmalshan2000-png/Spaced-Repetition-Tracker`.
+- `GITHUB_REPOSITORY` — optional; defaults to `NexusOrg01/Spaced-Repetition-Tracker`.
 - `SYLLABUS_REQUEST_WEBHOOK_URL` — optional private HTTPS webhook for notifications. If configured, it receives the submitted fields including the optional email address. Email addresses are deliberately excluded from public GitHub issues.
 
 Without `GITHUB_TOKEN` or `SYLLABUS_REQUEST_WEBHOOK_URL`, the API returns a clear unavailable response; the app keeps an offline request draft in that user's browser, but it is not shared with other users until successfully submitted. Configure secrets only in Vercel environment variables, never in client-side code.
@@ -145,14 +145,14 @@ Redeploy the preview after adding environment variables. No service-role key is 
 
 ## Public request tracker and administrator controls
 
-Nexus mirrors community curriculum requests to the public GitHub Issues tracker at https://github.com/kkmalithmalshan2000-png/Spaced-Repetition-Tracker/issues. New submissions are saved to the shared Supabase wishlist and mirrored to GitHub. Existing wishlist items can be synchronised in batches using the administrator-only **Sync existing requests to GitHub** button in Explore Curriculum. Each mirrored issue contains a stable Nexus request ID so it can be found and closed later.
+Nexus mirrors community curriculum requests to the public GitHub Issues tracker at https://github.com/NexusOrg01/Spaced-Repetition-Tracker/issues. New submissions are saved to the shared Supabase wishlist and mirrored to GitHub. Existing wishlist items can be synchronised in batches using the administrator-only **Sync existing requests to GitHub** button in Explore Curriculum. Each mirrored issue contains a stable Nexus request ID so it can be found and closed later.
 
 ### Vercel environment variables for the public request tracker
 
 Set these in Vercel Project → Settings → Environment Variables for Preview and Production, then redeploy the matching deployment:
 
 - `GITHUB_TOKEN`: a fine-grained GitHub token with **Issues: Read and write** access to this repository.
-- `GITHUB_REPOSITORY`: optional; defaults to `kkmalithmalshan2000-png/Spaced-Repetition-Tracker`.
+- `GITHUB_REPOSITORY`: optional; defaults to `NexusOrg01/Spaced-Repetition-Tracker`.
 - `NEXUS_ADMIN_USER_ID`: the UUID of the owner's Nexus Supabase Auth user. Find it in Supabase Dashboard → Authentication → Users. Only this authenticated account receives administrator controls and can remove any community request.
 - `SUPABASE_SERVICE_ROLE_KEY`: the Supabase service-role key for this project. It is used only inside the Vercel serverless function for administrator deletion. **Never add this key to browser code, GitHub, or any public file.**
 
