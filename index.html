@@ -1687,64 +1687,9 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
       if(bar.style.display!=='none'){ bar.style.animation='slideDown .35s ease'; }
     });
     
-    // Make overview panels collapsible to reduce clutter
-    function makeCollapsible(panelSelector, storageKey, defaultOpen){
-      const panel = document.querySelector(panelSelector);
-      if(!panel) return;
-      const head = panel.querySelector('.panel-head');
-      if(!head) return;
-      // Add arrow
-      if(!head.querySelector('.collapsible-arrow')){
-        const arrow = document.createElement('div');
-        arrow.className='collapsible-arrow';
-        arrow.textContent='⌃';
-        arrow.style.cssText='width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:var(--surface2);border:1px solid var(--border);transition:transform .3s cubic-bezier(.16,1,.3,1)';
-        head.appendChild(arrow);
-        head.style.cursor='pointer';
-        head.addEventListener('click', ()=>{
-          const isOpen = panel.classList.toggle('open');
-          // Find body
-          const body = panel.querySelector('.due-list, .progress-list, .panel-body');
-          if(body){
-            // For simplicity toggle max-height via wrapper
-          }
-          // Store
-          localStorage.setItem(storageKey, isOpen?'1':'0');
-          // Animate body
-          const bodyEl = panel.querySelector('.due-list, .progress-list');
-          if(bodyEl){
-            if(isOpen){
-              bodyEl.style.display='';
-              bodyEl.style.animation='slideDown .35s ease';
-            } else {
-              bodyEl.style.display='none';
-            }
-          }
-          arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-        });
-        // Init
-        const saved = localStorage.getItem(storageKey);
-        const shouldOpen = saved ? saved==='1' : defaultOpen;
-        if(!shouldOpen){
-          panel.classList.remove('open');
-          const bodyEl = panel.querySelector('.due-list, .progress-list');
-          if(bodyEl) bodyEl.style.display='none';
-          arrow.style.transform='rotate(0deg)';
-        } else {
-          panel.classList.add('open');
-          arrow.style.transform='rotate(180deg)';
-        }
-      }
-    }
-    // Apply to overview panels after render
-    setTimeout(()=>{
-      const overviewPanels = document.querySelectorAll('#view-overview .panel');
-      overviewPanels.forEach((p,i)=>{
-        const key = 'collap-overview-'+i;
-        makeCollapsible('#view-overview .panel:nth-child('+(i+1)+')', key, i===0);
-      });
-    }, 500);
-    
+    // Overview collapse/expand is handled by explicit labelled buttons in the markup.
+    // Do not re-add legacy arrow-only controls or click handlers to panel headers.
+
   })();
 
   state=loadState();save();renderAll();
@@ -1762,7 +1707,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   let fsState=loadFeatureState();let hubTab='planner';let focusTimer=null;let focusStart=fsState.focusStartedAt?new Date(fsState.focusStartedAt).getTime():null;let focusPausedAt=fsState.focusPausedAt?new Date(fsState.focusPausedAt).getTime():null;let focusTopicId=fsState.focusTopicId||'';let focusSubjectId=fsState.focusSubjectId||'';
   const fid=()=>`hub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
   const dateShift=(d,n)=>{const x=new Date((d||today())+'T12:00:00');x.setDate(x.getDate()+n);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;};
-  const safeDate=d=>/^\d{4}-\d{2}-\d{2}$/.test(String(d||''))&&validDate(d);
+  const safeDate=d=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(d||'')))return false;const [y,m,day]=String(d).split('-').map(Number);const x=new Date(y,m-1,day);return x.getFullYear()===y&&x.getMonth()===m-1&&x.getDate()===day;};
   const localEsc=x=>esc(String(x??''));
   const fNum=x=>Number.isFinite(Number(x))?Number(x):0;
   function saveFs(){try{localStorage.setItem(FEATURE_KEY,JSON.stringify(fsState));if(window.NexusCloudSync)window.NexusCloudSync.schedule();return true;}catch(e){console.error(e);try{notify('Study Hub data could not be saved. Export a backup now.');}catch(_){}return false;}}
@@ -2123,15 +2068,41 @@ function paperScoreTrendsMarkup(papers){
       }).join('');
       content=hubCard('Paper score trends','Each subject has its own smooth percentage trend with a soft gradient beneath the curve. The scale is always 0–100%.',chart||'<div class="hub-empty">Add scored papers or practice records in this date range to see your trends.</div>',true)+hubCard('Paper performance summary','Only recorded scores are used for the average. Unscored practice logs are still shown in the records below.',kpis,true)+hubCard('Practice & paper records','Scroll through saved papers and practice attempts. All entries remain in your records and full backups.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Practice and paper log" tabindex="0">'+(rows||'<div class="hub-empty">No practice or paper records in this timeframe.</div>')+'</div>',true);
     }else if(analyticsSection==='activity'){
+      // Activity is intentionally independent of the Review difficulty entity/grouping filter.
+      // Both trend lines read the saved records directly and share the selected timeframe above.
+      const activityEnd=to>today()?today():to;
+      const activityRangeValid=valid&&safeDate(from)&&safeDate(activityEnd)&&from<=activityEnd;
+      const activityReviews=activityRangeValid?state.history.filter(h=>safeDate(h.reviewedAt)&&h.reviewedAt>=from&&h.reviewedAt<=activityEnd):[];
       const reviewByDate=new Map(),reviewBySubject=new Map();
-      recent.forEach(h=>{reviewByDate.set(h.reviewedAt,(reviewByDate.get(h.reviewedAt)||0)+1);const sid=String(h.subjectId||'');reviewBySubject.set(sid,(reviewBySubject.get(sid)||0)+1);});
-      const activityTo=to>today()?today():to,activityFrom=from,activitySpan=Math.max(1,dayDiff(activityFrom,activityTo)+1),longActivityRange=activitySpan>35;
-      const reviewSeries=valid?buildActivityBuckets(activityFrom,activityTo,reviewByDate):[];
-      const logs=fsState.studyLogs.filter(l=>safeDate(l.date)&&valid&&l.date>=from&&l.date<=to),minutesByDate=new Map(),minutesBySubject=new Map(),minutesByTopic=new Map();let totalMinutes=0;
-      logs.forEach(log=>{const mins=Math.max(0,fNum(log.minutes));totalMinutes+=mins;minutesByDate.set(log.date,(minutesByDate.get(log.date)||0)+mins);const sid=String(log.subjectId||'');minutesBySubject.set(sid,(minutesBySubject.get(sid)||0)+mins);if(log.topicId){const tid=String(log.topicId);minutesByTopic.set(tid,(minutesByTopic.get(tid)||0)+mins);}});
-      const minuteSeries=valid?buildActivityBuckets(activityFrom,activityTo,minutesByDate):[];
-      const reviewChartTitle=longActivityRange?'Total review count':'Daily review count',studyChartTitle=longActivityRange?'Total study time':'Daily study time',bucketText=longActivityRange?'Weekly totals across the complete selected timeframe.':'Daily totals in the selected timeframe.';
-      const chartGrid='<div class="hub-grid analytics-chart-grid">'+hubCard(reviewChartTitle,bucketText,lineActivityMarkup(reviewSeries,reviewChartTitle,'Reviews','#8978f8'))+hubCard(studyChartTitle,bucketText+' Only saved study-log minutes are counted.',lineActivityMarkup(minuteSeries,studyChartTitle,'Minutes','#32bfc0'))+'</div>';
+      activityReviews.forEach(h=>{
+        reviewByDate.set(h.reviewedAt,(reviewByDate.get(h.reviewedAt)||0)+1);
+        const sid=String(h.subjectId||'');reviewBySubject.set(sid,(reviewBySubject.get(sid)||0)+1);
+      });
+      const activitySpan=activityRangeValid?Math.max(1,dayDiff(from,activityEnd)+1):0,longActivityRange=activitySpan>35;
+      const reviewSeries=activityRangeValid?buildActivityBuckets(from,activityEnd,reviewByDate):[];
+      const logs=fsState.studyLogs.filter(l=>safeDate(l.date)&&valid&&l.date>=from&&l.date<=to);
+      const minutesByDate=new Map(),minutesBySubject=new Map(),minutesByTopic=new Map();let totalMinutes=0;
+      logs.forEach(log=>{
+        const mins=Math.max(0,fNum(log.minutes));totalMinutes+=mins;
+        if(activityRangeValid&&log.date>=from&&log.date<=activityEnd)minutesByDate.set(log.date,(minutesByDate.get(log.date)||0)+mins);
+        const sid=String(log.subjectId||'');minutesBySubject.set(sid,(minutesBySubject.get(sid)||0)+mins);
+        if(log.topicId){const tid=String(log.topicId);minutesByTopic.set(tid,(minutesByTopic.get(tid)||0)+mins);}
+      });
+      const minuteSeries=activityRangeValid?buildActivityBuckets(from,activityEnd,minutesByDate):[];
+      const reviewChartTitle=longActivityRange?'Total review count':'Daily review count',studyChartTitle=longActivityRange?'Total study time':'Daily study time';
+      const bucketText=longActivityRange?'Weekly totals from the selected range through today.':'Daily totals from the selected range through today.';
+      const reviewGraph=lineActivityMarkup(reviewSeries,reviewChartTitle,'Reviews','#8978f8');
+      const studyGraph=lineActivityMarkup(minuteSeries,studyChartTitle,'Minutes','#32bfc0');
+      const hasReviewActivity=activityReviews.length>0,hasStudyTime=logs.some(log=>Math.max(0,fNum(log.minutes))>0);
+      const reviewEmpty=hasReviewActivity?'':'<p class="hub-muted small">No saved reviews in this timeframe yet. The graph will populate as you complete reviews.</p>';
+      const studyEmpty=hasStudyTime?'':'<p class="hub-muted small">No study-session minutes are logged in this timeframe. Start and finish a focus timer to record study time.</p>';
+      const chartGrid='<div class="hub-grid analytics-chart-grid">'+
+        hubCard(reviewChartTitle,bucketText,reviewGraph+reviewEmpty)+
+        hubCard(studyChartTitle,bucketText+' Only saved study-log minutes are counted.',studyGraph+studyEmpty)+
+        '</div>';
+      const focusSessionCount=logs.filter(log=>Math.max(0,fNum(log.minutes))>0).length;
+      const activityDays=new Set([...Array.from(reviewByDate.entries()).filter(([,n])=>n>0).map(([d])=>d),...Array.from(minutesByDate.entries()).filter(([,n])=>n>0).map(([d])=>d)]).size;
+      const activityKpis='<div class="hub-kpis"><div class="hub-kpi"><strong>'+activityReviews.length+'</strong><span>Reviews in range</span></div><div class="hub-kpi"><strong>'+totalMinutes+' min</strong><span>Logged study time</span></div><div class="hub-kpi"><strong>'+focusSessionCount+'</strong><span>Study sessions logged</span></div><div class="hub-kpi"><strong>'+activityDays+'</strong><span>Days with activity</span></div></div>';
       const maxSubject=Math.max(1,...state.subjects.map(sub=>reviewBySubject.get(String(sub.id))||0));
       const subjectRows=state.subjects.slice().sort((a,b)=>(reviewBySubject.get(String(b.id))||0)-(reviewBySubject.get(String(a.id))||0)||a.name.localeCompare(b.name)).map(sub=>{const n=reviewBySubject.get(String(sub.id))||0;return '<div class="analytics-subject-row"><div class="hub-inline" style="justify-content:space-between"><strong>'+localEsc(sub.name)+'</strong><span>'+n+' review(s)</span></div><div class="progress-track"><span style="width:'+Math.round(n/maxSubject*100)+'%"></span></div></div>';}).join('');
       const subjectTime=state.subjects.map(sub=>({name:sub.name,mins:minutesBySubject.get(String(sub.id))||0})).sort((a,b)=>b.mins-a.mins||a.name.localeCompare(b.name)).map(x=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(x.name)+'</div><div class="hub-row-meta">Logged focus sessions</div></div><strong>'+x.mins+' min</strong></div>').join('');
@@ -2143,7 +2114,7 @@ function paperScoreTrendsMarkup(papers){
       const journalRows=mistakes.map(j=>{const subject=state.subjects.find(s=>s.id===j.subjectId)?.name||'General',topic=getTopic(j.topicId);return '<article class="hub-row analytics-log-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(j.category||'Other')+' <span class="hub-badge '+(j.solved?'good':Number(j.severity)>=3?'warn':'')+'">'+(j.solved?'Resolved':'Open')+' · Severity '+localEsc(j.severity||'—')+'</span></div><div class="hub-row-meta">'+localEsc(fmtDate(j.date))+' · '+localEsc(subject)+(topic?' · '+localEsc(topic.name):'')+'</div><details class="analytics-log-details"><summary>View mistake and correction</summary><div><p><strong>What went wrong:</strong> '+localEsc(j.issue||'—')+'</p>'+(j.fix?'<p><strong>Correction / next action:</strong> '+localEsc(j.fix)+'</p>':'')+'</div></details></div></article>';}).join('');
       const active=activeTopics(),weakest=active.filter(t=>t.reviewCount>0).sort((a,b)=>featureMeta(a).avg-featureMeta(b).avg||topicPriority(b)-topicPriority(a)).slice(0,8);
       const weakRows=weakest.map(t=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(t.name)+'</div><div class="hub-row-meta">'+localEsc(subjectFor(t)?.name||'')+' · recent rating '+featureMeta(t).avg.toFixed(1)+'/5</div></div><button class="btn btn-sm" data-hub-action="edit-topic" data-id="'+localEsc(t.id)+'">Open</button></div>').join('');
-      content=chartGrid+'<div class="hub-grid analytics-card-grid">'+hubCard('Subject review activity','Saved review records per subject in the selected range.','<div class="analytics-subject-rows">'+(subjectRows||'<div class="hub-empty">No subjects yet.</div>')+'</div>')+hubCard('Study time breakdown','Group saved focus time by subject or topic.',timeContent)+hubCard('Recurring mistake types','Review the most common mistake and concept-gap categories.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Mistake categories" tabindex="0">'+(categoryRows||'<div class="hub-empty">No journal entries in this date range.</div>')+'</div>')+hubCard('Topics needing attention','Lowest-rated active topics based on their saved review history.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Topics needing attention" tabindex="0">'+(weakRows||'<div class="hub-empty">Rate topics to unlock this view.</div>')+'</div>')+'</div>'+hubCard('Mistake journal records','Scroll through saved mistakes and corrections in this timeframe. All entries remain in your records and full backups.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Mistake journal" tabindex="0">'+(journalRows||'<div class="hub-empty">No mistakes or concept gaps in this date range.</div>')+'</div>',true);
+      content=activityKpis+chartGrid+'<div class="hub-grid analytics-card-grid">'+hubCard('Subject review activity','Saved review records per subject in the selected range.','<div class="analytics-subject-rows">'+(subjectRows||'<div class="hub-empty">No subjects yet.</div>')+'</div>')+hubCard('Study time breakdown','Group saved focus time by subject or topic.',timeContent)+hubCard('Recurring mistake types','Review the most common mistake and concept-gap categories.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Mistake categories" tabindex="0">'+(categoryRows||'<div class="hub-empty">No journal entries in this date range.</div>')+'</div>')+hubCard('Topics needing attention','Lowest-rated active topics based on their saved review history.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Topics needing attention" tabindex="0">'+(weakRows||'<div class="hub-empty">Rate topics to unlock this view.</div>')+'</div>')+'</div>'+hubCard('Mistake journal records','Scroll through saved mistakes and corrections in this timeframe. All entries remain in your records and full backups.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Mistake journal" tabindex="0">'+(journalRows||'<div class="hub-empty">No mistakes or concept gaps in this date range.</div>')+'</div>',true);
     }
     return hero+nav+sharedTimeframeFilter+'<div class="analytics-section-content" data-analytics-section="'+analyticsSection+'">'+content+'</div>';
   }
