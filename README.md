@@ -124,6 +124,8 @@ The community wishlist uses the app's existing Supabase authentication. Users mu
 3. Open `supabase/syllabus-community.sql` in this repository, copy its full contents into the SQL Editor, and run it.
 4. Confirm that the `nexus_syllabus_requests` and `nexus_syllabus_votes` tables were created.
 
+**For an existing live installation:** do not rerun the entire setup SQL to apply the voter-privacy fix. It removes direct vote-table read access and would break an older Production API until the API update is deployed. Use the staged migrations in order: first apply `supabase/migrations/20261016_hide_syllabus_vote_identities.sql` (additive; safe before the API deploy), test the Preview deployment, merge and wait for Production to update, then apply `supabase/migrations/20261017_revoke_public_syllabus_vote_reads.sql`. Do not run the second migration before Production is using the updated API.
+
 ### Vercel environment variables
 
 The API uses the same public Supabase project as Nexus. In the Vercel project settings, add these variables for **Preview** and **Production** if they are not already present:
