@@ -14,7 +14,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const NEXUS_ADMIN_USER_ID = (process.env.NEXUS_ADMIN_USER_ID || '').trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
-const GITHUB_REPOSITORY = (process.env.GITHUB_REPOSITORY || 'kkmalithmalshan2000-png/Spaced-Repetition-Tracker').trim();
+const GITHUB_REPOSITORY = (process.env.GITHUB_REPOSITORY || 'NexusOrg01/Spaced-Repetition-Tracker').trim();
 const SYNC_BATCH_SIZE = 20;
 const isAdmin = user => !!(user && NEXUS_ADMIN_USER_ID && user.id === NEXUS_ADMIN_USER_ID);
 const json = (res, status, payload) => {
