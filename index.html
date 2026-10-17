@@ -2096,11 +2096,12 @@ function paperScoreTrendsMarkup(papers){
       const count=reviewsBySubject.get(String(subject.id))||0;
       return {name:String(subject.name||'Unnamed subject'),count};
     }).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+    const unassignedReviews=reviewsBySubject.get('unassigned')||0;
+    if(unassignedReviews)subjectReviewRows.push({name:'Unassigned subject',count:unassignedReviews});
     const maxReviews=Math.max(1,...subjectReviewRows.map(row=>row.count));
     const subjectReviewMarkup=subjectReviewRows.length?subjectReviewRows.map(row=>'<div class="analytics-subject-row"><div class="hub-inline" style="justify-content:space-between"><strong>'+localEsc(row.name)+'</strong><span>'+row.count+' review(s)</span></div><div class="progress-track"><span style="width:'+Math.round(row.count/maxReviews*100)+'%"></span></div></div>').join(''):'<div class="hub-empty">Add a subject to see the breakdown.</div>';
     const subjectTimeRows=subjects.map(subject=>({name:String(subject.name||'Unnamed subject'),minutes:minutesBySubject.get(String(subject.id))||0})).sort((a,b)=>b.minutes-a.minutes||a.name.localeCompare(b.name));
-    const unassignedReviews=reviewsBySubject.get('unassigned')||0,unassignedMinutes=minutesBySubject.get('unassigned')||0;
-    if(unassignedReviews)subjectReviewRows.push({name:'Unassigned subject',count:unassignedReviews});
+    const unassignedMinutes=minutesBySubject.get('unassigned')||0;
     if(unassignedMinutes)subjectTimeRows.push({name:'Unassigned subject',minutes:unassignedMinutes});
     const subjectTimeMarkup=subjectTimeRows.some(row=>row.minutes>0)?subjectTimeRows.filter(row=>row.minutes>0).map(row=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(row.name)+'</div><div class="hub-row-meta">Saved focus-session time</div></div><strong>'+Math.round(row.minutes)+' min</strong></div>').join(''):'<div class="hub-empty">No saved focus-session time in this timeframe.</div>';
     return kpis+charts+'<div class="hub-grid analytics-card-grid">'+
