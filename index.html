@@ -2007,7 +2007,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   function renderActivityAnalytics(selection){
     // This renderer owns every date, aggregation, and SVG helper it needs.
     // It must not depend on private helpers from the main application's separate IIFE.
-    const escapeActivityHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const escapeActivityHtml=value=>String(value??'').replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])).replaceAll('"','&quot;').replaceAll(String.fromCharCode(39),'&#39;');
     const activityDate=value=>{
       const date=String(value??'').slice(0,10);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return '';
