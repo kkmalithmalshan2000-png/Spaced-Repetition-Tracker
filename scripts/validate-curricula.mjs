@@ -46,7 +46,7 @@ assert(html.includes('id="hubRatingGrouping"'), 'Analytics must expose topic, su
 assert(html.includes('id="hubRatingPeriod"') && html.includes("['week','This week']") && html.includes("['month','This month']") && html.includes("['year','This year']"), 'Analytics must expose this-week, this-month, and this-year periods.');
 assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatingCustomEnd"'), 'Analytics must support a custom calendar date range.');
 assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('Line chart of review difficulty ratings over time') && html.includes('same count scale'), 'Analytics must render a shared-scale multi-line chart for the selected rating difficulties.');
-assert(html.includes('No presses for the selected ratings in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
+assert(html.includes('No reviews for the selected difficulties in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
 assert(html.includes('class="hub-nav analytics-nav"') && html.includes("data-analytics-section=") && html.includes("if(a==='analytics-section')"), 'Analytics must expose the four-section top navigation.');
 assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Mistake journal"') && html.includes('touch-action:pan-y'), 'Growing practice and mistake histories must use scrollable touch-friendly inboxes.');
 assert(html.includes("new Map()") && html.includes("dateToBin=new Map()"), 'Analytics review history must be aggregated instead of repeatedly filtering every record for every day.');
@@ -192,7 +192,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       const svg = testContext.ratingAnalyticsSvgMarkup(selection, 'topic', 'test-all');
       const lineGroups = [...svg.matchAll(/<g class="ra-line-series" data-rating-line="(\d+)" data-scale-max="(\d+)">/g)];
       const expectedRatings = [1,2,3,4,5].filter(rating => timeline.totals[rating-1] > 0);
-      assert(lineGroups.length === expectedRatings.length, testCase.period+' graph must render one curve for each selected rating with saved presses.');
+      assert(lineGroups.length === expectedRatings.length, testCase.period+' graph must render one curve for each selected rating with saved reviews.');
       const expectedColors = [[1,'#ef4444'],[2,'#f97316'],[3,'#eab308'],[4,'#84cc16'],[5,'#059669']];
       for (const [rating,color] of expectedColors) {
         if (timeline.totals[rating-1] > 0) {
