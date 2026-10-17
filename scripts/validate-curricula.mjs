@@ -269,6 +269,7 @@ assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html
 
 assert(html.includes("const reportWindow=window.open('about:blank','_blank')") && html.includes('Nexus PDF export failed'), 'PDF export must open its print window synchronously and surface generation failures.');
 assert(html.includes('function exportAnalyticsCsv()') && html.includes("if(action==='analytics-export'){exportAnalyticsCsv();return;}") && html.includes('text/csv;charset=utf-8'), 'Analytics CSV export must use the shared timeframe and produce a downloadable UTF-8 CSV.');
+assert(html.includes(".join(',')).join('\\\\r\\\\n')"), 'Analytics CSV rows must be comma-separated with CRLF row endings.');
 assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") && html.includes('data-home-collapse="dueQueue"') && html.includes('data-home-collapse="progressList"') && html.includes('data-home-collapse="upcomingQueue"') && html.includes('data-home-collapse="overviewAnalytics"'), 'Overview list cards must use labelled Collapse/Expand buttons.');
 assert(html.includes('function openAnalyticsWindow()') && html.includes('Nexus Analytics failed to open') && html.includes('analyticsDefaultParent'), 'Analytics opening must recover stale overlay/reparenting state instead of silently ignoring taps.');
 assert(html.includes("document.addEventListener('change',e=>{") && html.includes("if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping')"), 'Analytics filter changes must be handled at a stable document-level listener.');
