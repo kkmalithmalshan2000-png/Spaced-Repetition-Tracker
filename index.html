@@ -2153,11 +2153,62 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     });
 
     const span=activityDayDiff(from,to)+1,longRange=span>35;
-    const buildActivitySeries=(start,end,values)=>buildAnalyticsDateSeries(start,end,values);
-    const renderActivityChart=(series,title,unit,color,gradientId,hasData)=>analyticsLineChartMarkup(
-      (Array.isArray(series)?series:[]).map(item=>({date:item.date,endDate:item.endDate,value:item.value!==undefined?item.value:item.count,label:item.label})),
-      {title,unit,color,gradientId,hasData,svgClass:'nexus-activity-svg',wrapperClass:'nexus-activity-graph-wrap'}
-    );
+    const buildActivitySeries=(start,end,values)=>{
+      const days=activityDayDiff(start,end)+1;
+      if(days<1)return [];
+      const step=days>35?Math.max(1,Math.ceil(days/52)):1,result=[];
+      for(let offset=0;offset<days;offset+=step){
+        const lastOffset=Math.min(days-1,offset+step-1),bucketStart=activityShift(start,offset),bucketEnd=activityShift(start,lastOffset);
+        let count=0;
+        for(let d=offset;d<=lastOffset;d++)count+=Math.max(0,Number(values.get(activityShift(start,d))||0));
+        const label=step===1?(days<=14?bucketStart.slice(8):bucketStart.slice(5)):bucketStart.slice(5);
+        result.push({date:bucketStart,endDate:bucketEnd,count,label});
+      }
+      return result;
+    };
+    const renderActivityChart=(series,title,unit,color,gradientId,hasData)=>{
+      const width=720,height=250,left=48,right=18,top=20,bottom=43,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=top+plotHeight;
+      const values=series.map(item=>Math.max(0,Number(item.count)||0)),rawMax=Math.max(1,...values),tickStep=rawMax<=4?1:Math.ceil(rawMax/4),maxValue=Math.max(1,Math.ceil(rawMax/tickStep)*tickStep);
+      const xAt=i=>left+(values.length>1?i/(values.length-1):.5)*plotWidth;
+      const yAt=value=>top+plotHeight-(value/maxValue)*plotHeight;
+      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,item:series[i]}));
+      const smoothPath=()=>{
+        if(!points.length)return '';
+        if(points.length===1)return 'M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+        let path='M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+        for(let i=0;i<points.length-1;i++){
+          const p0=points[i-1]||points[i],p1=points[i],p2=points[i+1],p3=points[i+2]||p2;
+          const low=Math.min(p1.y,p2.y),high=Math.max(p1.y,p2.y);
+          const c1x=p1.x+(p2.x-p0.x)/6,c1y=Math.min(high,Math.max(low,p1.y+(p2.y-p0.y)/6));
+          const c2x=p2.x-(p3.x-p1.x)/6,c2y=Math.min(high,Math.max(low,p2.y-(p3.y-p1.y)/6));
+          path+=' C '+c1x.toFixed(2)+' '+c1y.toFixed(2)+', '+c2x.toFixed(2)+' '+c2y.toFixed(2)+', '+p2.x.toFixed(2)+' '+p2.y.toFixed(2);
+        }
+        return path;
+      };
+      const linePath=smoothPath(),areaPath=points.length?linePath+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
+      let svg='<svg class="nexus-activity-svg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+escapeActivityHtml(title)+'">';
+      svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="68%" stop-color="'+color+'" stop-opacity=".08"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>';
+      [...new Set([0,Math.round(maxValue/2),maxValue])].forEach(value=>{
+        const y=yAt(value);
+        svg+='<line class="nexus-activity-grid" x1="'+left+'" y1="'+y.toFixed(2)+'" x2="'+(width-right)+'" y2="'+y.toFixed(2)+'"/><text class="nexus-activity-tick" x="'+(left-9)+'" y="'+(y+4).toFixed(2)+'" text-anchor="end">'+value+'</text>';
+      });
+      svg+='<line class="nexus-activity-axis" x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(width-right)+'" y2="'+baseline.toFixed(2)+'"/>';
+      if(hasData&&points.length){
+        if(points.length>1)svg+='<path class="nexus-activity-area" fill="url(#'+gradientId+')" d="'+areaPath+'"/>';
+        svg+='<path class="nexus-activity-line" stroke="'+color+'" d="'+linePath+'"/>';
+        const every=Math.max(1,Math.ceil(points.length/8));
+        points.forEach((point,i)=>{
+          const item=point.item||{},startDate=item.date||'',endDate=item.endDate||'',dateLabel=endDate&&endDate!==startDate?startDate+' – '+endDate:startDate;
+          const noun=unit==='Reviews'?(point.value===1?'review':'reviews'):'minutes';
+          svg+='<circle class="nexus-activity-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.2" fill="'+color+'"><title>'+escapeActivityHtml(dateLabel)+' · '+point.value+' '+noun+'</title></circle>';
+          if(i%every===0||i===points.length-1)svg+='<text class="nexus-activity-tick" x="'+point.x.toFixed(2)+'" y="'+(height-20)+'" text-anchor="middle">'+escapeActivityHtml(item.label||'')+'</text>';
+        });
+      }else{
+        svg+='<text class="nexus-activity-empty-label" x="'+(left+plotWidth/2)+'" y="'+(top+plotHeight/2)+'" text-anchor="middle">No saved '+unit.toLowerCase()+' in this timeframe</text>';
+      }
+      svg+='<text class="nexus-activity-axis-title" x="'+(left+plotWidth/2)+'" y="'+(height-3)+'" text-anchor="middle">Date</text><text class="nexus-activity-axis-title" transform="translate(13 '+(top+plotHeight/2)+') rotate(-90)" text-anchor="middle">'+escapeActivityHtml(unit)+'</text></svg>';
+      return '<div class="nexus-activity-graph-wrap">'+svg+'</div>';
+    };
     const reviewSeries=buildActivitySeries(from,to,reviewsByDate),studySeries=buildActivitySeries(from,to,minutesByDate);
     const reviewTitle=longRange?'Total review count':'Daily review count',studyTitle=longRange?'Total study time':'Daily study time';
     const rangeDescription=longRange?'Aggregated totals across the selected timeframe.':'Daily totals across the selected timeframe.';
