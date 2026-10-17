@@ -756,15 +756,15 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 </style>
 <style id="nexus-linear-analytics">
 /* Linear charts use separate lanes / subject panels to keep unlike data from overlapping. */
-.activity-line-wrap{width:100%;min-width:0;margin-top:4px}
-.activity-line-svg{display:block;width:100%;height:auto;overflow:visible}
-.activity-line-svg .activity-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
-.activity-line-svg .activity-axis{stroke:var(--muted);stroke-width:1}
-.activity-line-svg .activity-line{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.activity-line-svg .activity-point{fill:var(--accent);stroke:var(--surface);stroke-width:2}
-.activity-line-svg .activity-tick{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
-.activity-line-svg .activity-axis-title{fill:var(--muted);font-size:11px;font-weight:650}
-.activity-line-svg .activity-empty-label{fill:var(--muted);font-size:13px}
+
+
+
+
+
+
+
+
+
 .ra-svg:not(.ra-svg-dense){min-width:640px;max-width:none}
 .ra-svg .ra-lane-label{fill:var(--text);font-size:12px;font-weight:800}
 .ra-svg .ra-lane-total{fill:var(--muted);font-size:10px;font-weight:650}
@@ -782,14 +782,14 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 .paper-trend-head span{font-size:10px;color:var(--muted);text-align:right}
 .paper-trend-chart{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden}
 .paper-trend-svg{display:block;width:100%;min-width:500px;height:auto;max-width:none}
-@media(max-width:540px){.activity-line-svg .activity-tick{font-size:10px}.paper-trend-panel{padding:9px}.paper-trend-head{flex-direction:column;gap:3px}.paper-trend-head span{text-align:left}}
-@media print{.activity-line-svg,.paper-trend-svg{max-width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media(max-width:540px){.paper-trend-panel{padding:9px}.paper-trend-head{flex-direction:column;gap:3px}.paper-trend-head span{text-align:left}}
+@media print{.paper-trend-svg{max-width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 <style id="nexus-illustrated-analytics">
 /* Illustrated analytics charts: smooth paths, subtle area fades, and lightweight section navigation. */
-.activity-line-svg .activity-line{stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;fill:none}
-.activity-line-svg .activity-area,.paper-trend-area,.ra-series-area{stroke:none;pointer-events:none}
-.activity-line-svg .activity-point,.paper-trend-point,.ra-svg .ra-point{stroke:var(--surface);stroke-width:1.8}
+
+
+
 .ra-svg .ra-line{stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .ra-svg .ra-series-area{opacity:1}
 .paper-trend-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
@@ -844,6 +844,22 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 @media(max-width:760px){.analytics-chart-grid,.analytics-card-grid{grid-template-columns:minmax(0,1fr);gap:10px}.analytics-nav{margin-bottom:12px}.analytics-tab{font-size:12px;padding:9px 10px}.paper-trend-panel{padding:9px}.paper-trend-head{flex-direction:column;gap:3px}.paper-trend-head span{text-align:left}.analytics-section-content .analytics-log-scroll{max-height:48vh}}
 @media(prefers-reduced-motion:reduce){.activity-line-svg,.paper-trend-svg,.ra-svg{animation:none!important;transition:none!important}}
 @media print{.activity-line-svg,.paper-trend-svg,.ra-svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+.nexus-activity-graph-wrap{width:100%;min-width:0;overflow-x:auto;margin-top:5px}
+.nexus-activity-svg{display:block;width:100%;min-width:500px;max-width:100%;height:auto;overflow:visible}
+.nexus-activity-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+.nexus-activity-axis{stroke:var(--muted);stroke-width:1}
+.nexus-activity-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.nexus-activity-area{stroke:none;pointer-events:none}
+.nexus-activity-point{stroke:var(--surface);stroke-width:1.8}
+.nexus-activity-tick{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.nexus-activity-axis-title{fill:var(--muted);font-size:11px;font-weight:650}
+.nexus-activity-empty-label{fill:var(--muted);font-size:13px}
+.nexus-activity-subjects{display:grid;gap:13px}
+.nexus-activity-subject{display:grid;gap:6px}
+.nexus-activity-subject .hub-inline{gap:8px;font-size:12px}
+.nexus-activity-subject .hub-inline span{color:var(--muted);font-size:11px;white-space:nowrap}
+@media(max-width:540px){.nexus-activity-tick{font-size:10px}}
 </style>
 </head>
 <body>
@@ -1253,36 +1269,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     }
     return d;
   }
-  function lineActivityMarkup(series,title,unit='Reviews',lineColor='var(--accent)'){
-    const values=Array.isArray(series)?series:[],W=720,H=244,left=46,right=18,top=19,bottom=43,plotH=H-top-bottom,plotW=W-left-right;
-    const counts=values.map(x=>Math.max(0,Number(x.count)||0)),rawMax=Math.max(1,...counts),step=rawMax<=4?1:Math.ceil(rawMax/4),yMax=Math.max(1,Math.ceil(rawMax/step)*step);
-    const xAt=i=>left+(values.length>1?i/(values.length-1):.5)*plotW,yAt=n=>top+plotH-(n/yMax)*plotH,baseline=top+plotH,gradientId=nextChartGradientId('activity');
-    const points=counts.map((value,i)=>({x:xAt(i),y:yAt(value),value,item:values[i]})),linePath=smoothCurvePath(points),areaPath=points.length?linePath+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
-    let svg='<svg class="activity-line-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+'">';
-    svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineColor+'" stop-opacity=".28"/><stop offset="62%" stop-color="'+lineColor+'" stop-opacity=".10"/><stop offset="100%" stop-color="'+lineColor+'" stop-opacity="0"/></linearGradient></defs>';
-    [...new Set([0,Math.round(yMax/2),yMax])].forEach(v=>{const yy=yAt(v);svg+='<line class="activity-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="activity-tick" x="'+(left-9)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+v+'</text>';});
-    svg+='<line class="activity-axis" x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(W-right)+'" y2="'+baseline.toFixed(2)+'"/>';
-    if(values.length){
-      if(points.length>1)svg+='<path class="activity-area" fill="url(#'+gradientId+')" d="'+areaPath+'"/><path class="activity-line" stroke="'+lineColor+'" d="'+linePath+'"/>';
-      const every=Math.max(1,Math.ceil(values.length/8));
-      points.forEach((point,i)=>{const item=point.item||{},label=String(item.label||item.short||(item.date||'').slice(8)||''),startDate=String(item.date||item.short||item.label||''),endDate=String(item.endDate||''),date=endDate&&endDate!==startDate?startDate+' – '+endDate:startDate,noun=unit==='Reviews'?(point.value===1?'review':'reviews'):unit.toLowerCase();svg+='<circle class="activity-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.3" fill="'+lineColor+'"><title>'+esc(date)+' · '+point.value+' '+noun+'</title></circle>';if(i%every===0||i===points.length-1)svg+='<text class="activity-tick" x="'+point.x.toFixed(2)+'" y="'+(H-20)+'" text-anchor="middle">'+esc(label)+'</text>';});
-    }else svg+='<text class="activity-empty-label" x="'+(left+plotW/2)+'" y="'+(top+plotH/2)+'" text-anchor="middle">No activity in this period</text>';
-    svg+='<text class="activity-axis-title" x="'+(left+plotW/2)+'" y="'+(H-3)+'" text-anchor="middle">Date</text><text class="activity-axis-title" transform="translate(13 '+(top+plotH/2)+') rotate(-90)" text-anchor="middle">'+esc(unit)+'</text></svg>';
-    return '<div class="activity-line-wrap">'+svg+'</div>';
-  }
-  function buildActivityBuckets(start,end,valuesByDate,maxPoints=80){
-    if(!safeDate(start)||!safeDate(end)||start>end)return [];
-    const span=Math.max(1,dayDiff(start,end)+1),step=span>35?Math.max(7,Math.ceil(span/Math.max(1,maxPoints))):1,series=[];
-    for(let offset=0;offset<span;offset+=step){
-      const bucketStart=dateShift(start,offset),bucketEnd=dateShift(start,Math.min(span-1,offset+step-1));let count=0;
-      for(let dayOffset=offset;dayOffset<Math.min(span,offset+step);dayOffset++)count+=Math.max(0,Number(valuesByDate.get(dateShift(start,dayOffset))||0));
-      const label=step===1?(span<=14?bucketStart.slice(8):bucketStart.slice(5)):bucketStart.slice(5);
-      series.push({date:bucketStart,endDate:bucketEnd,count,label,short:bucketStart});
-    }
-    return series;
-  }
-  function barsMarkup(series){return lineActivityMarkup(series,'Daily review counts across the past '+series.length+' days','Reviews');}
-  function barsMarkup(series){return lineActivityMarkup(series,'Daily review counts across the past '+series.length+' days');}
+  function barsMarkup(series){const max=Math.max(1,...series.map(x=>x.count));return `<div class="chart-bars" style="grid-template-columns:repeat(${series.length},minmax(0,1fr))" role="img" aria-label="Daily review counts for the past ${series.length} days">${series.map((x,i)=>`<div class="chart-column" title="${esc(x.short)}: ${x.count} review${x.count===1?'':'s'}"><span class="chart-value">${x.count||'·'}</span><div class="chart-bar-track"><span class="chart-bar" style="height:${x.count?Math.max(6,Math.round(x.count/max*100)):3}%;animation-delay:${i*24}ms"></span></div><span class="chart-day">${esc(x.label)}</span></div>`).join('')}</div>`;}
   function renderOverviewAnalytics(){
     const recent=state.history.filter(h=>h.reviewedAt>=plusDays(today(),-6)&&h.reviewedAt<=today());
     const average=averageRating();
@@ -1935,9 +1922,6 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     }catch(error){console.error('Nexus analytics CSV export failed',error);notify('Could not export analytics CSV. Please try again.');}
   }
   function exportAnalyticsPdf(){
-    let reportWindow=null,reportHtml='';
-    try{reportWindow=window.open('about:blank','_blank');}catch(_){reportWindow=null;}
-    try{
     const logoUrl=new URL('icon-192.png',window.location.href).href;
     const selection=getRatingAnalyticsSelection(),level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic',entityId=getRatingAnalyticsEntityId(level);
     const records=selection.records.slice().sort((a,b)=>String(b.reviewedAt||'').localeCompare(String(a.reviewedAt||'')));
@@ -1949,24 +1933,17 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     const ratingDistribution=ratingCounts.map((count,i)=>'<div class="pdf-dist-row"><span class="pdf-dist-label"><b>'+ (i+1)+' · '+esc(RATING_LABELS[i+1])+'</b></span><div class="pdf-dist-track"><span data-rating="'+(i+1)+'" style="width:'+(count/maxRating*100)+'%"></span></div><strong>'+count+'</strong></div>').join('');
     const groups=getRatingAnalyticsGroups(records,level);
         const groupTable=groups.length?groups.map(g=>'<tr><td>'+esc(g.label)+'</td>'+g.counts.map(n=>'<td class="num">'+n+'</td>').join('')+'<td class="num"><b>'+g.total+'</b></td></tr>').join(''):'<tr><td colspan="7">No rating groups in this period.</td></tr>';
-    const activityEnd=selection.to>today()?today():selection.to,activitySpan=Math.max(1,dayDiff(selection.from,activityEnd)+1),longActivityRange=activitySpan>35;
-    const reviewCountByDate=new Map();records.forEach(h=>reviewCountByDate.set(h.reviewedAt,(reviewCountByDate.get(h.reviewedAt)||0)+1));
-    const activity=buildActivityBuckets(selection.from,activityEnd,reviewCountByDate),activityChartTitle=longActivityRange?'Total review count':'Daily review count',activityBucketText=longActivityRange?'Weekly totals across the complete selected timeframe.':'Daily totals in the selected timeframe.';
-    const activityChart=lineActivityMarkup(activity,activityChartTitle,'Reviews','#8978f8');
-    const reviewHeatColors=['#eef1f7','#d9d2fb','#b5a8f3','#8a79e3','#5b49bd'];
-    const reviewHeatCells=[];for(let d=selection.from;safeDate(d)&&d<=activityEnd;d=dateShift(d,1)){const count=reviewCountByDate.get(d)||0,level=Math.min(4,count);reviewHeatCells.push('<span class="pdf-heatmap-cell" style="background:'+reviewHeatColors[level]+'" title="'+esc(fmtDate(d)+' · '+count+' reviews')+'" aria-label="'+esc(fmtDate(d)+': '+count+' reviews')+'"></span>');}
-    const reviewHeatmapMarkup=reviewHeatCells.length?'<div class="pdf-heatmap">'+reviewHeatCells.join('')+'</div><p class="pdf-heatmap-note">Selected range: '+esc(fmtDate(selection.from))+' – '+esc(fmtDate(activityEnd))+' · '+reviewHeatCells.length+' days. Darker cells indicate more reviews.</p>':'<p class="pdf-empty">No review dates in the selected timeframe.</p>';
+    const activityEnd=selection.to>today()?today():selection.to,activitySpan=Math.max(1,dayDiff(selection.from,activityEnd)+1),activityDays=selection.range==='week'?7:selection.range==='month'?Math.min(30,activitySpan):selection.range==='year'?30:Math.min(30,activitySpan);
+    const activity=Array.from({length:activityDays},(_,i)=>{const date=dateShift(activityEnd,-(activityDays-1-i));return {date,count:records.filter(h=>h.reviewedAt===date).length};});
+    const maxActivity=Math.max(1,...activity.map(x=>x.count));
+    const activityChart=activity.map((x,i)=>'<div class="pdf-col" title="'+esc(fmtDate(x.date)+': '+x.count+' reviews')+'"><div class="pdf-col-value">'+(x.count||'')+'</div><div class="pdf-col-track"><i style="height:'+Math.max(2,x.count/maxActivity*100)+'%"></i></div><span>'+((i===0||i===activity.length-1||i%5===0)?esc(x.date.slice(8)):'')+'</span></div>').join('');
     const studyLogs=fsState.studyLogs.filter(l=>inRange(l.date)).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
     const studyMinutes=studyLogs.reduce((n,l)=>n+fNum(l.minutes),0);
-    const studyMinutesByDate=new Map(),subjectTimeMap=new Map();
-    studyLogs.forEach(l=>{const mins=Math.max(0,fNum(l.minutes)),subject=state.subjects.find(s=>s.id===l.subjectId),name=String(subject?.name||l.subjectName||'Unassigned subject');studyMinutesByDate.set(l.date,(studyMinutesByDate.get(l.date)||0)+mins);subjectTimeMap.set(name,(subjectTimeMap.get(name)||0)+mins);});
-    const studyTimeSeries=buildActivityBuckets(selection.from,activityEnd,studyMinutesByDate),studyTimeChartTitle=longActivityRange?'Total study time':'Daily study time';
-    const studyTimeChart=lineActivityMarkup(studyTimeSeries,studyTimeChartTitle,'Minutes','#32bfc0');
+    const subjectTimeMap=new Map();
+    studyLogs.forEach(l=>{const subject=state.subjects.find(s=>s.id===l.subjectId),name=String(subject?.name||l.subjectName||'Unassigned subject');subjectTimeMap.set(name,(subjectTimeMap.get(name)||0)+fNum(l.minutes));});
     const subjectTime=Array.from(subjectTimeMap.entries()).sort((a,b)=>b[1]-a[1]);
-    const subjectTimeSummary=subjectTime.length?subjectTime.map(x=>'<div class="pdf-time-row"><span>'+esc(x[0])+'</span><div class="pdf-time-track"><i style="width:'+(x[1]/Math.max(1,...subjectTime.map(y=>y[1]))*100)+'%"></i></div><b>'+x[1]+' min</b></div>').join(''):'<p class="pdf-empty">No logged focus sessions in this period.</p>';
-    const paperGraphPapers=fsState.papers.filter(p=>inRange(p.date)&&p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
-    const paperTrends=paperScoreTrendsMarkup(paperGraphPapers);
-    const paperTrendSection=paperTrends?'<div class="panel pdf-paper-trends">'+paperTrends+'</div>':'<div class="panel"><p class="pdf-empty">No scored paper or practice attempts in this period. Recorded attempts remain listed in the table below.</p></div>';
+    const maxSubjectTime=Math.max(1,...subjectTime.map(x=>x[1]));
+    const subjectTimeChart=subjectTime.length?subjectTime.map(x=>'<div class="pdf-time-row"><span>'+esc(x[0])+'</span><div class="pdf-time-track"><i style="width:'+(x[1]/maxSubjectTime*100)+'%"></i></div><b>'+x[1]+' min</b></div>').join(''):'<p class="pdf-empty">No logged focus sessions in this period.</p>';
     const studyRows=studyLogs.length?studyLogs.map(l=>{const subject=state.subjects.find(s=>s.id===l.subjectId),topic=getTopic(l.topicId);return '<tr><td>'+esc(fmtDate(l.date))+'</td><td>'+esc(subject?.name||l.subjectName||'—')+'</td><td>'+esc(topic?.name||l.topicName||'—')+'</td><td class="num">'+fNum(l.minutes)+'</td><td>'+esc(l.type||'Focus session')+'</td><td>'+esc(l.note||'')+'</td></tr>';}).join(''):'<tr><td colspan="6">No logged focus sessions in this period.</td></tr>';
     const paperList=fsState.papers.filter(p=>inRange(p.date)).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
     const paperRows=paperList.length?paperList.map(p=>'<tr><td>'+esc(fmtDate(p.date))+'</td><td>'+esc(p.name||'Untitled paper')+'</td><td>'+esc(state.subjects.find(s=>s.id===p.subjectId)?.name||'—')+'</td><td class="num">'+(p.score===null||p.maxScore===null?'—':esc(p.score)+' / '+esc(p.maxScore))+'</td><td class="num">'+(p.maxScore>0?Math.round(p.score/p.maxScore*100)+'%':'—')+'</td><td>'+esc(p.notes||p.weakAreas||'')+'</td></tr>').join(''):'<tr><td colspan="6">No saved paper results in this period.</td></tr>';
@@ -1974,43 +1951,26 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     const journalRows=journals.length?journals.map(j=>'<tr><td>'+esc(fmtDate(j.date))+'</td><td>'+esc(j.category||'Other')+'</td><td>'+esc(state.subjects.find(s=>s.id===j.subjectId)?.name||'—')+'</td><td>'+esc(getTopic(j.topicId)?.name||'—')+'</td><td>'+esc(j.issue||'')+'</td><td>'+esc(j.fix||'')+'</td><td>'+(j.solved?'Resolved':'Open')+'</td></tr>').join(''):'<tr><td colspan="7">No journal entries in this period.</td></tr>';
     const historyRows=records.length?records.map(h=>'<tr><td>'+esc(fmtDate(h.reviewedAt))+'</td><td>'+esc(h.streamName||'—')+'</td><td>'+esc(h.subjectName||'—')+'</td><td>'+esc(h.topicName||'—')+'</td><td><span class="pdf-grade" data-rating="'+Number(h.rating)+'">'+Number(h.rating)+' · '+esc(RATING_LABELS[Number(h.rating)]||'Unknown')+'</span></td><td class="num">'+fNum(h.intervalDays)+'</td><td>'+esc(fmtDate(h.dueDate))+'</td><td class="note-cell">'+esc(h.note||'')+'</td></tr>').join(''):'<tr><td colspan="8">No saved review history in this period.</td></tr>';
     const titleGroup=level==='syllabus'?'Syllabus / stream':level==='subject'?'Subject':'Topic';
-    reportHtml='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Nexus · Study & Review History</title><style>'+
-      '@page{size:A4;margin:13mm}*{box-sizing:border-box}:root{--accent:#6c63df;--surface:#fff;--border:#dfe5ef;--muted:#647084}body{font-family:Arial,Helvetica,sans-serif;color:#18212e;font-size:10px;line-height:1.45;margin:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:27px;letter-spacing:-.7px;line-height:1.1;margin:6px 0 8px;color:#121a2a}h2{font-size:16px;letter-spacing:-.25px;margin:24px 0 5px;padding-bottom:7px;border-bottom:1px solid #dfe5ef;color:#19243b;break-after:avoid}h3{font-size:11px;margin:14px 0 6px}p{margin:5px 0}.cover{padding:24px 24px 20px;border-radius:16px;background:linear-gradient(135deg,#17172d,#292354 62%,#14525a);color:white;margin:0 0 17px}.cover-brand{display:flex;align-items:center;gap:12px;margin:0 0 20px;padding:0 0 15px;border-bottom:1px solid #ffffff32}.cover-logo{display:block;width:48px;height:48px;object-fit:cover;flex:0 0 48px;border-radius:13px;border:1px solid #ffffff33;box-shadow:0 5px 18px #0003}.cover-brand-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.cover-brand-copy strong{font-size:19px;line-height:1;font-weight:900;letter-spacing:3px;color:#fff}.cover-brand-copy span{font-size:7px;line-height:1.4;font-weight:800;letter-spacing:1.5px;color:#a5f3ed}.cover-brand-tag{margin-left:auto;padding:6px 9px;border:1px solid #a5f3ed66;border-radius:999px;color:#a5f3ed;font-size:7px;letter-spacing:1px;font-weight:800;white-space:nowrap}.kicker{font-size:9px;font-weight:800;letter-spacing:2px;color:#8af1e7}.cover h1{color:#fff}.cover p{color:#e6e9fb}.cover-meta{margin-top:18px;padding-top:12px;border-top:1px solid #ffffff35;display:flex;justify-content:space-between;gap:12px;font-size:9px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.metric{border:1px solid #e0e5ed;border-radius:9px;padding:11px;background:#f8faff}.metric b{display:block;font-size:20px;color:#28295c;line-height:1.2}.metric span{display:block;color:#68728a;font-size:8px;margin-top:4px}.panel{border:1px solid #e0e5ed;border-radius:12px;padding:12px;margin:12px 0;break-inside:avoid}.muted{color:#657188}.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:8px 0 12px}.legend span{display:inline-flex;align-items:center;gap:5px;font-size:8px}.dot{width:8px;height:8px;border-radius:3px;display:inline-block}.pdf-rating,.pdf-dist-track span,.dot{background:#aaa}.pdf-rating[data-rating="1"],.pdf-dist-track span[data-rating="1"],.dot[data-rating="1"],.pdf-grade[data-rating="1"]{background:#ef4444}.pdf-rating[data-rating="2"],.pdf-dist-track span[data-rating="2"],.dot[data-rating="2"],.pdf-grade[data-rating="2"]{background:#f97316}.pdf-rating[data-rating="3"],.pdf-dist-track span[data-rating="3"],.dot[data-rating="3"],.pdf-grade[data-rating="3"]{background:#eab308}.pdf-rating[data-rating="4"],.pdf-dist-track span[data-rating="4"],.dot[data-rating="4"],.pdf-grade[data-rating="4"]{background:#84cc16}.pdf-rating[data-rating="5"],.pdf-dist-track span[data-rating="5"],.dot[data-rating="5"],.pdf-grade[data-rating="5"]{background:#059669}.pdf-stack-row{display:grid;grid-template-columns:150px 1fr 25px;gap:8px;align-items:center;margin:10px 0}.pdf-stack-label{min-width:0;overflow-wrap:anywhere}.pdf-stack-label strong{display:block;font-size:9px}.pdf-stack-label small{display:block;color:#69738a;font-size:7px}.pdf-stack-track{height:12px;border-radius:7px;background:#edf1f7;display:flex;overflow:hidden}.pdf-rating{height:100%;display:block;min-width:0}.pdf-stack-row>b{font-size:9px;text-align:right}.pdf-dist-row{display:grid;grid-template-columns:100px 1fr 30px;gap:9px;align-items:center;margin:9px 0}.pdf-dist-label{font-size:9px}.pdf-dist-track,.pdf-time-track{height:10px;border-radius:6px;overflow:hidden;background:#edf1f7}.pdf-dist-track span{display:block;height:100%;border-radius:6px}.pdf-dist-row>strong{text-align:right}.pdf-columns{height:145px;display:flex;gap:3px;align-items:stretch;border-bottom:1px solid #d8deea;padding-top:6px}.pdf-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:7px;color:#6c778d}.pdf-col-value{font-size:7px;height:9px}.pdf-col-track{height:112px;width:100%;display:flex;align-items:flex-end;justify-content:center}.pdf-col-track i{display:block;width:75%;background:linear-gradient(180deg,#51d9d0,#7169de);border-radius:3px 3px 0 0;min-height:2px}.pdf-time-row{display:grid;grid-template-columns:125px 1fr 48px;gap:8px;align-items:center;margin:8px 0;font-size:9px}.pdf-time-track i{display:block;background:linear-gradient(90deg,#6c63df,#31c7c3);height:100%;border-radius:6px}.pdf-time-row>b{text-align:right}.ra-svg{display:block;width:100%;height:auto;min-height:210px;overflow:visible}.ra-svg-dense{width:var(--ra-chart-width,100%);min-width:820px;max-width:none}.ra-svg:not(.ra-svg-dense){min-width:640px;max-width:none}.ra-svg .ra-lane-label{fill:#20293a;font-size:12px;font-weight:800}.ra-svg .ra-lane-total{fill:#647084;font-size:10px;font-weight:650}.ra-svg .ra-lane-tick{fill:#647084;font-size:9px}.ra-svg .ra-lane-grid{stroke-dasharray:2 4}.ra-svg .ra-lane-empty{fill:#647084;font-size:10px}@media print{.ra-svg-dense{min-width:0;max-width:100%;width:100%}.ra-count-table-wrap{overflow:visible;max-height:none}}.ra-svg-dense .ra-tick{font-size:10px}.ra-svg .ra-gridline{stroke:#dbe2ee;stroke-width:1}.ra-svg .ra-axis{stroke:#7b8495;stroke-width:1.3}.ra-svg .ra-tick{fill:#647084;font-size:12px}.ra-svg .ra-axis-title{fill:#20293a;font-size:13px;font-weight:700}.ra-svg .ra-line{fill:none;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}.ra-svg .ra-point{stroke:#fff;stroke-width:1.8}.pdf-time-series{padding:12px}.ra-count-table-wrap{overflow-x:auto;max-height:none;margin:8px 0 14px}.ra-count-table{width:100%;border-collapse:collapse;font-size:8px}.ra-count-table th,.ra-count-table td{padding:5px 4px;border-bottom:1px solid #e5e9f0}.ra-count-table th{background:#eef1fb;color:#303b57;text-align:left}.ra-table-rating[data-rating="1"]{color:#ef4444}.ra-table-rating[data-rating="2"]{color:#f97316}.ra-table-rating[data-rating="3"]{color:#b78a00}.ra-table-rating[data-rating="4"]{color:#84cc16}.ra-table-rating[data-rating="5"]{color:#059669}.activity-line-svg{display:block;width:100%;height:auto;overflow:visible}.activity-line{stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;fill:none}.activity-grid{stroke:#dbe2ee;stroke-width:1;stroke-dasharray:3 4}.activity-axis{stroke:#7b8495;stroke-width:1}.activity-tick{fill:#647084;font-size:10px}.activity-axis-title{fill:#20293a;font-size:11px;font-weight:700}.activity-point{stroke:#fff;stroke-width:1.8}.activity-empty-label{fill:#647084;font-size:12px}.activity-line-wrap{width:100%;min-width:0;overflow:visible}.pdf-line-panel{break-inside:avoid}.paper-trend-panel{min-width:0;margin:12px 0 15px;padding:10px;border:1px solid #e0e5ed;border-radius:10px;background:#fff;break-inside:avoid}.paper-trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}.paper-trend-head strong{font-size:10px}.paper-trend-head span{font-size:8px;color:#647084;text-align:right}.paper-trend-chart{width:100%;overflow:visible}.paper-trend-svg{display:block;width:100%!important;max-width:100%;height:auto;overflow:visible}.paper-trend-grid{stroke:#dbe2ee;stroke-width:1;stroke-dasharray:3 4}.paper-trend-axis{stroke:#7b8495;stroke-width:1}.paper-trend-line{fill:none;stroke:#6c63df;stroke-width:2.35;stroke-linecap:round;stroke-linejoin:round}.paper-trend-area{stroke:none}.paper-trend-point{fill:#6c63df;stroke:#fff;stroke-width:1.5}.paper-trend-tick{fill:#647084;font-size:10px}.paper-trend-axis-title{fill:#20293a;font-size:10px;font-weight:650}.pdf-paper-trends .paper-trend-svg{min-width:0!important}.pdf-paper-trends .paper-trend-chart{overflow:hidden}.pdf-paper-trends .paper-trend-head{break-after:avoid}.pdf-empty{color:#66718a;padding:9px 0}.section-note{font-size:8px;color:#66718a;margin:4px 0 10px}.table-wrap{width:100%}table{width:100%;border-collapse:collapse;font-size:8px;table-layout:auto}thead{display:table-header-group}tr{break-inside:avoid}th{background:#eef1fb;color:#303b57;text-align:left;font-size:7.5px;text-transform:uppercase;letter-spacing:.3px;padding:6px 5px}td{padding:6px 5px;border-bottom:1px solid #e5e9f0;vertical-align:top;overflow-wrap:anywhere}tbody tr:nth-child(even){background:#fafbfe}.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.note-cell{white-space:pre-wrap;min-width:80px}.pdf-grade{display:inline-block;border-radius:5px;color:#fff;padding:3px 5px;white-space:nowrap;font-weight:700;font-size:7px}.pdf-grade[data-rating="4"]{color:#1f2937}.footer{margin-top:24px;padding-top:8px;border-top:1px solid #e0e5ed;color:#788197;font-size:8px;display:flex;justify-content:space-between;gap:10px}.page-break{break-before:page}.no-break{break-inside:avoid}@media screen{body{max-width:920px;margin:24px auto;padding:0 18px;background:#f6f8fc}.cover{box-shadow:0 14px 35px #25265726}}@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}.pdf-stack-row{grid-template-columns:110px 1fr 22px}.cover-meta{display:block}.cover-meta span{display:block;margin:3px 0}}'+
-      '.pdf-heatmap{display:grid;grid-template-columns:repeat(26,minmax(0,1fr));gap:3px;margin:9px 0 7px}.pdf-heatmap-cell{display:block;height:8px;border-radius:2px;border:1px solid #dfe5ef;min-width:0}.pdf-heatmap-note{font-size:8px;color:#66718a;margin:4px 0 10px}'+
+    const report='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Nexus · Study & Review History</title><style>'+
+      '@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#18212e;font-size:10px;line-height:1.45;margin:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:27px;letter-spacing:-.7px;line-height:1.1;margin:6px 0 8px;color:#121a2a}h2{font-size:16px;letter-spacing:-.25px;margin:24px 0 5px;padding-bottom:7px;border-bottom:1px solid #dfe5ef;color:#19243b;break-after:avoid}h3{font-size:11px;margin:14px 0 6px}p{margin:5px 0}.cover{padding:24px 24px 20px;border-radius:16px;background:linear-gradient(135deg,#17172d,#292354 62%,#14525a);color:white;margin:0 0 17px}.cover-brand{display:flex;align-items:center;gap:12px;margin:0 0 20px;padding:0 0 15px;border-bottom:1px solid #ffffff32}.cover-logo{display:block;width:48px;height:48px;object-fit:cover;flex:0 0 48px;border-radius:13px;border:1px solid #ffffff33;box-shadow:0 5px 18px #0003}.cover-brand-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.cover-brand-copy strong{font-size:19px;line-height:1;font-weight:900;letter-spacing:3px;color:#fff}.cover-brand-copy span{font-size:7px;line-height:1.4;font-weight:800;letter-spacing:1.5px;color:#a5f3ed}.cover-brand-tag{margin-left:auto;padding:6px 9px;border:1px solid #a5f3ed66;border-radius:999px;color:#a5f3ed;font-size:7px;letter-spacing:1px;font-weight:800;white-space:nowrap}.kicker{font-size:9px;font-weight:800;letter-spacing:2px;color:#8af1e7}.cover h1{color:#fff}.cover p{color:#e6e9fb}.cover-meta{margin-top:18px;padding-top:12px;border-top:1px solid #ffffff35;display:flex;justify-content:space-between;gap:12px;font-size:9px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.metric{border:1px solid #e0e5ed;border-radius:9px;padding:11px;background:#f8faff}.metric b{display:block;font-size:20px;color:#28295c;line-height:1.2}.metric span{display:block;color:#68728a;font-size:8px;margin-top:4px}.panel{border:1px solid #e0e5ed;border-radius:12px;padding:12px;margin:12px 0;break-inside:avoid}.muted{color:#657188}.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:8px 0 12px}.legend span{display:inline-flex;align-items:center;gap:5px;font-size:8px}.dot{width:8px;height:8px;border-radius:3px;display:inline-block}.pdf-rating,.pdf-dist-track span,.dot{background:#aaa}.pdf-rating[data-rating="1"],.pdf-dist-track span[data-rating="1"],.dot[data-rating="1"],.pdf-grade[data-rating="1"]{background:#ef4444}.pdf-rating[data-rating="2"],.pdf-dist-track span[data-rating="2"],.dot[data-rating="2"],.pdf-grade[data-rating="2"]{background:#f97316}.pdf-rating[data-rating="3"],.pdf-dist-track span[data-rating="3"],.dot[data-rating="3"],.pdf-grade[data-rating="3"]{background:#eab308}.pdf-rating[data-rating="4"],.pdf-dist-track span[data-rating="4"],.dot[data-rating="4"],.pdf-grade[data-rating="4"]{background:#22c55e}.pdf-rating[data-rating="5"],.pdf-dist-track span[data-rating="5"],.dot[data-rating="5"],.pdf-grade[data-rating="5"]{background:#10b981}.pdf-stack-row{display:grid;grid-template-columns:150px 1fr 25px;gap:8px;align-items:center;margin:10px 0}.pdf-stack-label{min-width:0;overflow-wrap:anywhere}.pdf-stack-label strong{display:block;font-size:9px}.pdf-stack-label small{display:block;color:#69738a;font-size:7px}.pdf-stack-track{height:12px;border-radius:7px;background:#edf1f7;display:flex;overflow:hidden}.pdf-rating{height:100%;display:block;min-width:0}.pdf-stack-row>b{font-size:9px;text-align:right}.pdf-dist-row{display:grid;grid-template-columns:100px 1fr 30px;gap:9px;align-items:center;margin:9px 0}.pdf-dist-label{font-size:9px}.pdf-dist-track,.pdf-time-track{height:10px;border-radius:6px;overflow:hidden;background:#edf1f7}.pdf-dist-track span{display:block;height:100%;border-radius:6px}.pdf-dist-row>strong{text-align:right}.pdf-columns{height:145px;display:flex;gap:3px;align-items:stretch;border-bottom:1px solid #d8deea;padding-top:6px}.pdf-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:7px;color:#6c778d}.pdf-col-value{font-size:7px;height:9px}.pdf-col-track{height:112px;width:100%;display:flex;align-items:flex-end;justify-content:center}.pdf-col-track i{display:block;width:75%;background:linear-gradient(180deg,#51d9d0,#7169de);border-radius:3px 3px 0 0;min-height:2px}.pdf-time-row{display:grid;grid-template-columns:125px 1fr 48px;gap:8px;align-items:center;margin:8px 0;font-size:9px}.pdf-time-track i{display:block;background:linear-gradient(90deg,#6c63df,#31c7c3);height:100%;border-radius:6px}.pdf-time-row>b{text-align:right}.ra-svg{display:block;width:100%;height:auto;min-height:210px;overflow:visible}.ra-svg-dense{min-width:820px;max-width:none}@media print{.ra-svg-dense{min-width:0;max-width:100%;width:100%}.ra-count-table-wrap{overflow:visible;max-height:none}}.ra-svg-dense .ra-tick{font-size:10px}.ra-svg .ra-gridline{stroke:#dbe2ee;stroke-width:1}.ra-svg .ra-axis{stroke:#7b8495;stroke-width:1.3}.ra-svg .ra-tick{fill:#647084;font-size:12px}.ra-svg .ra-axis-title{fill:#20293a;font-size:13px;font-weight:700}.ra-svg .ra-line{fill:none;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}.ra-svg .ra-point{stroke:#fff;stroke-width:1.8}.pdf-time-series{padding:12px}.ra-count-table-wrap{overflow-x:auto;max-height:none;margin:8px 0 14px}.ra-count-table{width:100%;border-collapse:collapse;font-size:8px}.ra-count-table th,.ra-count-table td{padding:5px 4px;border-bottom:1px solid #e5e9f0}.ra-count-table th{background:#eef1fb;color:#303b57;text-align:left}.ra-table-rating[data-rating="1"]{color:#ef4444}.ra-table-rating[data-rating="2"]{color:#f97316}.ra-table-rating[data-rating="3"]{color:#b78a00}.ra-table-rating[data-rating="4"]{color:#22c55e}.ra-table-rating[data-rating="5"]{color:#10b981}.pdf-empty{color:#66718a;padding:9px 0}.section-note{font-size:8px;color:#66718a;margin:4px 0 10px}.table-wrap{width:100%}table{width:100%;border-collapse:collapse;font-size:8px;table-layout:auto}thead{display:table-header-group}tr{break-inside:avoid}th{background:#eef1fb;color:#303b57;text-align:left;font-size:7.5px;text-transform:uppercase;letter-spacing:.3px;padding:6px 5px}td{padding:6px 5px;border-bottom:1px solid #e5e9f0;vertical-align:top;overflow-wrap:anywhere}tbody tr:nth-child(even){background:#fafbfe}.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.note-cell{white-space:pre-wrap;min-width:80px}.pdf-grade{display:inline-block;border-radius:5px;color:#fff;padding:3px 5px;white-space:nowrap;font-weight:700;font-size:7px}.footer{margin-top:24px;padding-top:8px;border-top:1px solid #e0e5ed;color:#788197;font-size:8px;display:flex;justify-content:space-between;gap:10px}.page-break{break-before:page}.no-break{break-inside:avoid}@media screen{body{max-width:920px;margin:24px auto;padding:0 18px;background:#f6f8fc}.cover{box-shadow:0 14px 35px #25265726}}@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}.pdf-stack-row{grid-template-columns:110px 1fr 22px}.cover-meta{display:block}.cover-meta span{display:block;margin:3px 0}}'+
       '</style></head><body><header class="cover"><div class="cover-brand"><img class="cover-logo" src="'+esc(logoUrl)+'" alt="Nexus logo"><div class="cover-brand-copy"><strong>NEXUS</strong><span>SPACED REPETITION TRACKER</span></div><span class="cover-brand-tag">LEARNING INTELLIGENCE</span></div><h1>Study &amp; Review History</h1><p>A detailed record of your recall ratings, review schedule, focus sessions and study progress.</p><div class="cover-meta"><span><b>Coverage:</b> '+esc(rangeText)+'</span><span><b>Generated:</b> '+esc(fmtDate(today()))+'</span><span><b>Chart grouping:</b> '+esc(titleGroup)+'</span></div></header>'+
       '<div class="metrics"><div class="metric"><b>'+records.length+'</b><span>Saved review events</span></div><div class="metric"><b>'+(average?average.toFixed(2):'—')+' / 5</b><span>Average rating</span></div><div class="metric"><b>'+successful+'%</b><span>Ratings 3–5</span></div><div class="metric"><b>'+studyMinutes+'</b><span>Focus minutes logged</span></div></div>'+
       '<h2>1. Recall rating distribution</h2><p class="section-note">Every review is counted once under its saved rating. Colour labels match Nexus review buttons.</p><div class="panel"><div class="legend">'+[1,2,3,4,5].map(r=>'<span><i class="dot" data-rating="'+r+'"></i>'+r+' · '+esc(RATING_LABELS[r])+'</span>').join('')+'</div>'+ratingDistribution+'</div>'+
-      '<h2>2. Review difficulty over time · '+esc(entityLabel)+'</h2><p class="section-note">The same separated, colour-coded rating trend lanes used in Analytics. Each lane has its own count scale; the X-axis is the selected timeframe.</p><div class="panel pdf-time-series">'+timelineSvg+'</div>'+timelineTable+'<div class="section-note">Table: exact count for each rating in every plotted day, week or month.</div>'+
+      '<h2>2. Rating presses over time · '+esc(entityLabel)+'</h2><p class="section-note">The same colour-coded X/Y time-series used in Analytics. Y-axis is review count; X-axis is the selected timeframe.</p><div class="panel pdf-time-series">'+timelineSvg+'</div>'+timelineTable+'<div class="section-note">Table: exact count for each rating in every plotted day, week or month.</div>'+
       '<h2>3. Complete rating counts by '+esc(titleGroup.toLowerCase())+'</h2><p class="section-note">Exact per-rating counts for each topic, subject or syllabus in the selected date range.</p><div class="table-wrap"><table><thead><tr><th>'+esc(titleGroup)+'</th><th class="num">1 Again</th><th class="num">2 Hard</th><th class="num">3 Good</th><th class="num">4 Very good</th><th class="num">5 Easy</th><th class="num">Total</th></tr></thead><tbody>'+groupTable+'</tbody></table></div>'+
-      '<h2>4. '+esc(activityChartTitle)+'</h2><p class="section-note">Smooth line and fading gradient match Activity Analytics. '+esc(activityBucketText)+' Covers '+esc(fmtDate(selection.from))+' through '+esc(fmtDate(activityEnd))+'.</p><div class="panel pdf-line-panel">'+activityChart+'</div><h3>Review activity heatmap</h3>'+reviewHeatmapMarkup+'<div class="section-note">Each square represents one day in the selected timeframe.</div>'+
-      '<h2>5. '+esc(studyTimeChartTitle)+'</h2><p class="section-note">Smooth focus-time trend matching Activity Analytics. '+esc(activityBucketText)+' Only saved study-log minutes are counted.</p><div class="panel pdf-line-panel">'+studyTimeChart+'</div><h3>Study time by subject</h3><div class="panel">'+subjectTimeSummary+'</div>'+
-      '<h2>6. Paper &amp; practice score trends</h2><p class="section-note">The same smooth, gradient-filled percentage graphs shown in Paper analytics, separated by subject. Only scored attempts in the selected date range are plotted; the complete attempt list follows.</p>'+paperTrendSection+
-      '<h2>7. Detailed review history <span class="muted">('+records.length+' records)</span></h2><p class="section-note">Newest reviews first. Includes the saved rating, next interval, next due date and review note. Deleted topics remain visible when their historical details were saved.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Syllabus</th><th>Subject</th><th>Topic</th><th>Rating</th><th class="num">Interval d</th><th>Next due</th><th>Review note</th></tr></thead><tbody>'+historyRows+'</tbody></table></div>'+
-
-      '<h2>8. Logged focus sessions <span class="muted">('+studyLogs.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Subject</th><th>Topic</th><th class="num">Minutes</th><th>Session type</th><th>Note</th></tr></thead><tbody>'+studyRows+'</tbody></table></div>'+
-      '<h2>9. Paper / practice results <span class="muted">('+paperList.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Paper / practice</th><th>Subject</th><th class="num">Score</th><th class="num">Percent</th><th>Notes / weak areas</th></tr></thead><tbody>'+paperRows+'</tbody></table></div>'+
-      '<h2>10. Mistakes and lesson journal <span class="muted">('+journals.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Subject</th><th>Topic</th><th>Issue</th><th>Correction / fix</th><th>Status</th></tr></thead><tbody>'+journalRows+'</tbody></table></div>'+
+      '<h2>4. Daily review activity</h2><p class="section-note">Daily saved review counts for '+activityDays+' days ending '+esc(fmtDate(selection.to))+'. The chart focuses on the latest days within your selection; the detailed review table covers the selected range.</p><div class="panel"><div class="pdf-columns">'+activityChart+'</div></div>'+
+      '<h2>5. Study time by subject</h2><p class="section-note">Based on focus sessions explicitly logged in Nexus. Only recorded minutes are included.</p><div class="panel">'+subjectTimeChart+'</div>'+
+      '<h2>6. Detailed review history <span class="muted">('+records.length+' records)</span></h2><p class="section-note">Newest reviews first. Includes the saved rating, next interval, next due date and review note. Deleted topics remain visible when their historical details were saved.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Syllabus</th><th>Subject</th><th>Topic</th><th>Rating</th><th class="num">Interval d</th><th>Next due</th><th>Review note</th></tr></thead><tbody>'+historyRows+'</tbody></table></div>'+
+      '<h2>7. Logged focus sessions <span class="muted">('+studyLogs.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Subject</th><th>Topic</th><th class="num">Minutes</th><th>Session type</th><th>Note</th></tr></thead><tbody>'+studyRows+'</tbody></table></div>'+
+      '<h2>8. Paper / practice results <span class="muted">('+paperList.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Paper / practice</th><th>Subject</th><th class="num">Score</th><th class="num">Percent</th><th>Notes / weak areas</th></tr></thead><tbody>'+paperRows+'</tbody></table></div>'+
+      '<h2>9. Mistakes and lesson journal <span class="muted">('+journals.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Subject</th><th>Topic</th><th>Issue</th><th>Correction / fix</th><th>Status</th></tr></thead><tbody>'+journalRows+'</tbody></table></div>'+
       '<div class="footer"><span>Nexus · Spaced Repetition Tracker</span><span>Private report generated locally in your browser</span></div></body></html>';
-    if(!reportWindow){
-      downloadBlob('nexus-study-review-report.html',reportHtml,'text/html;charset=utf-8');
-      notify('The print window was blocked, so a report file was downloaded instead. Open it and choose Print / Save as PDF.');
-      return;
-    }
-    try{reportWindow.document.open();reportWindow.document.write(reportHtml);reportWindow.document.close();setTimeout(function(){try{reportWindow.focus();reportWindow.print();}catch(e){downloadBlob('nexus-study-review-report.html',reportHtml,'text/html;charset=utf-8');notify('Printing was blocked, so the report was downloaded as HTML. Open it and choose Print / Save as PDF.');}},450);}catch(e){
-      console.error('Could not write the Nexus report',e);
-      downloadBlob('nexus-study-review-report.html',reportHtml,'text/html;charset=utf-8');
-      notify('The report was downloaded as HTML because the print window could not be used. Open it and choose Print / Save as PDF.');
-    }
-    }catch(error){
-      console.error('Nexus PDF export failed',error);
-      const fallbackRows=(Array.isArray(state.history)?state.history:[]).slice().sort((a,b)=>String(b.reviewedAt||'').localeCompare(String(a.reviewedAt||''))).map(h=>'<tr><td>'+esc(h.reviewedAt||'')+'</td><td>'+esc(h.streamName||'')+'</td><td>'+esc(h.subjectName||'')+'</td><td>'+esc(h.topicName||'')+'</td><td>'+esc(h.rating??'')+'</td><td>'+esc(h.note||'')+'</td></tr>').join('');
-      const fallbackLogs=(Array.isArray(fsState.studyLogs)?fsState.studyLogs:[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(log=>'<tr><td>'+esc(log.date||'')+'</td><td>'+esc(log.subjectName||state.subjects.find(sub=>sub.id===log.subjectId)?.name||'')+'</td><td>'+esc(log.topicName||'')+'</td><td>'+Math.max(0,fNum(log.minutes))+'</td><td>'+esc(log.note||'')+'</td></tr>').join('');
-      const fallbackReport='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nexus Study & Review Report</title><style>body{font:14px system-ui,sans-serif;max-width:1100px;margin:28px auto;padding:0 16px;color:#172033}h1,h2{color:#292354}table{border-collapse:collapse;width:100%;margin:12px 0 28px}th,td{border:1px solid #d9dfeb;padding:7px;text-align:left;font-size:12px}th{background:#f0efff}p{color:#596579}@media print{body{margin:0}h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body><h1>Nexus · Study & Review Report</h1><p>The full visual report could not be generated, so this recovery report contains your saved records. Your data has not been changed. Use your browser menu to Print / Save as PDF.</p><h2>Review history ('+(Array.isArray(state.history)?state.history.length:0)+')</h2><table><thead><tr><th>Date</th><th>Syllabus</th><th>Subject</th><th>Topic</th><th>Rating</th><th>Note</th></tr></thead><tbody>'+(fallbackRows||'<tr><td colspan="6">No saved review records.</td></tr>')+'</tbody></table><h2>Study sessions ('+(Array.isArray(fsState.studyLogs)?fsState.studyLogs.length:0)+')</h2><table><thead><tr><th>Date</th><th>Subject</th><th>Topic</th><th>Minutes</th><th>Note</th></tr></thead><tbody>'+(fallbackLogs||'<tr><td colspan="5">No saved study sessions.</td></tr>')+'</tbody></table></body></html>';
-      try{downloadBlob('nexus-study-review-report.html',reportHtml||fallbackReport,'text/html;charset=utf-8');notify('PDF generation hit an error; a report file was downloaded as a fallback. Open it and choose Print / Save as PDF. Your saved data was not changed.');}
-      catch(downloadError){console.error('Nexus fallback report download failed',downloadError);notify('Report generation failed. Your saved data was not changed. Try reloading and exporting again.');}
-    }
+    const reportWindow=window.open('','_blank');
+    if(!reportWindow){notify('Allow pop-ups for Nexus to open the print-ready report, then choose Save as PDF.');return;}
+    try{reportWindow.document.open();reportWindow.document.write(report);reportWindow.document.close();setTimeout(function(){try{reportWindow.focus();reportWindow.print();}catch(e){notify('The report opened, but printing was blocked. Use the browser menu to Print / Save as PDF.');}},450);}catch(e){try{reportWindow.close();}catch(_){}notify('Could not open the PDF report. Try allowing pop-ups and retry.');}
   }
-function paperScoreTrendsMarkup(papers){
+
+  function paperScoreTrendsMarkup(papers){
     const groups=new Map();
     (papers||[]).filter(p=>p&&safeDate(p.date)&&p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0).forEach(p=>{const subject=state.subjects.find(s=>s.id===p.subjectId),key=String(p.subjectId||'unassigned');if(!groups.has(key))groups.set(key,{name:subject?subject.name:'Unassigned subject',items:[]});groups.get(key).items.push(p);});
     return Array.from(groups.values()).map(group=>{
@@ -2045,68 +2005,136 @@ function paperScoreTrendsMarkup(papers){
     target.innerHTML=intelligence+'<div class="home-heatmap-head"><div><strong>Review activity heatmap</strong><small>Each square represents a day; darker squares indicate more saved reviews.</small></div><div class="ra-field"><label for="homeHeatmapPeriod">Heatmap period</label><select class="hub-input" id="homeHeatmapPeriod">'+selectOptions([['7','7 days'],['30','30 days'],['84','12 weeks'],['180','6 months'],['365','12 months']],String(heatDays))+'</select></div></div><div class="hub-heatmap analytics-heatmap home-activity-heatmap">'+heat+'</div>';
   }
   function renderActivityAnalytics(selection){
-    // Keep Activity independent from the Review difficulty chart's grouping and topic helpers.
-    // Every optional data collection is normalized before it is read so older saved states remain safe.
-    const from=String(selection?.from||today()),to=String(selection?.to||today()),valid=selection?.valid!==false&&safeDate(from)&&safeDate(to)&&from<=to;
-    const end=valid&&to>today()?today():to,rangeValid=valid&&safeDate(end)&&from<=end;
-    const history=Array.isArray(state.history)?state.history:[],studyLogs=Array.isArray(fsState.studyLogs)?fsState.studyLogs:[];
-    const reviews=rangeValid?history.filter(h=>h&&safeDate(h.reviewedAt)&&h.reviewedAt>=from&&h.reviewedAt<=end):[];
-    const logs=rangeValid?studyLogs.filter(log=>log&&safeDate(log.date)&&log.date>=from&&log.date<=end):[];
-    const reviewsByDate=new Map(),reviewsBySubject=new Map(),minutesByDate=new Map(),minutesBySubject=new Map();
-    reviews.forEach(review=>{
-      const date=String(review.reviewedAt);
-      reviewsByDate.set(date,(reviewsByDate.get(date)||0)+1);
-      const subjectId=String(review.subjectId||'unassigned');
-      reviewsBySubject.set(subjectId,(reviewsBySubject.get(subjectId)||0)+1);
+    // This renderer owns every date, aggregation, and SVG helper it needs.
+    // It must not depend on private helpers from the main application's separate IIFE.
+    const escapeActivityHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const activityDate=value=>{
+      const date=String(value??'').slice(0,10);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return '';
+      const parts=date.split('-').map(Number),check=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+      return check.getUTCFullYear()===parts[0]&&check.getUTCMonth()===parts[1]-1&&check.getUTCDate()===parts[2]?date:'';
+    };
+    const activityToday=()=>{
+      const d=new Date();
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    };
+    const activityShift=(date,days)=>{
+      const d=new Date(date+'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate()+days);
+      return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    };
+    const activityDayDiff=(from,to)=>Math.round((Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000);
+    const from=activityDate(selection&&selection.from),selectedTo=activityDate(selection&&selection.to),todayDate=activityToday();
+    const valid=!!(selection&&selection.valid!==false&&from&&selectedTo&&from<=selectedTo);
+    const to=valid&&selectedTo>todayDate?todayDate:selectedTo;
+    const rangeValid=valid&&from<=to;
+    if(!rangeValid)return '<div class="hub-empty">Choose a valid timeframe to view saved activity.</div>';
+
+    const history=Array.isArray(state&&state.history)?state.history:[];
+    const studyLogs=Array.isArray(fsState&&fsState.studyLogs)?fsState.studyLogs:[];
+    const subjects=Array.isArray(state&&state.subjects)?state.subjects:[];
+    const subjectNameById=new Map(subjects.map(subject=>[String(subject.id),String(subject.name||'Unnamed subject')]));
+    const reviews=history.map(record=>({record,date:activityDate(record&&record.reviewedAt)}))
+      .filter(item=>item.record&&item.date&&item.date>=from&&item.date<=to);
+    const sessions=studyLogs.map(record=>({record,date:activityDate(record&&record.date),minutes:Math.max(0,Number(record&&record.minutes)||0)}))
+      .filter(item=>item.record&&item.date&&item.date>=from&&item.date<=to);
+    const reviewsByDate=new Map(),minutesByDate=new Map(),reviewsBySubject=new Map(),minutesBySubject=new Map();
+    const activeDates=new Set();
+    const subjectLabel=record=>{
+      const id=String(record&&record.subjectId||'');
+      return subjectNameById.get(id)||String(record&&record.subjectName||'Unassigned subject');
+    };
+    reviews.forEach(item=>{
+      reviewsByDate.set(item.date,(reviewsByDate.get(item.date)||0)+1);
+      const name=subjectLabel(item.record);
+      reviewsBySubject.set(name,(reviewsBySubject.get(name)||0)+1);
+      activeDates.add(item.date);
     });
     let totalMinutes=0;
-    logs.forEach(log=>{
-      const minutes=Math.max(0,fNum(log.minutes)),date=String(log.date);
-      totalMinutes+=minutes;
-      minutesByDate.set(date,(minutesByDate.get(date)||0)+minutes);
-      const subjectId=String(log.subjectId||'unassigned');
-      minutesBySubject.set(subjectId,(minutesBySubject.get(subjectId)||0)+minutes);
+    sessions.forEach(item=>{
+      minutesByDate.set(item.date,(minutesByDate.get(item.date)||0)+item.minutes);
+      const name=subjectLabel(item.record);
+      minutesBySubject.set(name,(minutesBySubject.get(name)||0)+item.minutes);
+      totalMinutes+=item.minutes;
+      if(item.minutes>0)activeDates.add(item.date);
     });
-    const span=rangeValid?Math.max(1,dayDiff(from,end)+1):0,longRange=span>35;
-    const reviewSeries=rangeValid?buildActivityBuckets(from,end,reviewsByDate):[];
-    const minuteSeries=rangeValid?buildActivityBuckets(from,end,minutesByDate):[];
-    const reviewTitle=longRange?'Total review count':'Daily review count';
-    const studyTitle=longRange?'Total study time':'Daily study time';
-    const rangeDescription=longRange?'Weekly totals across the selected timeframe.':'Daily totals across the selected timeframe.';
-    const reviewGraph=lineActivityMarkup(reviewSeries,reviewTitle,'Reviews','#8978f8');
-    const studyGraph=lineActivityMarkup(minuteSeries,studyTitle,'Minutes','#32bfc0');
-    const daysWithActivity=new Set([
-      ...Array.from(reviewsByDate.entries()).filter(([,count])=>count>0).map(([date])=>date),
-      ...Array.from(minutesByDate.entries()).filter(([,minutes])=>minutes>0).map(([date])=>date)
-    ]).size;
-    const sessions=logs.filter(log=>Math.max(0,fNum(log.minutes))>0).length;
-    const kpis='<div class="hub-kpis">'+
-      '<div class="hub-kpi"><strong>'+reviews.length+'</strong><span>Reviews in range</span></div>'+
-      '<div class="hub-kpi"><strong>'+Math.round(totalMinutes)+' min</strong><span>Logged study time</span></div>'+
-      '<div class="hub-kpi"><strong>'+sessions+'</strong><span>Study sessions logged</span></div>'+
-      '<div class="hub-kpi"><strong>'+daysWithActivity+'</strong><span>Days with activity</span></div></div>';
-    const reviewEmpty=reviews.length?'':'<p class="hub-muted small">No saved reviews in this timeframe yet. The graph will populate as you complete reviews.</p>';
-    const studyEmpty=logs.some(log=>Math.max(0,fNum(log.minutes))>0)?'':'<p class="hub-muted small">No saved study-session minutes in this timeframe. Finish a focus session to record study time.</p>';
+
+    const span=activityDayDiff(from,to)+1,longRange=span>35;
+    const buildActivitySeries=(start,end,values)=>{
+      const days=activityDayDiff(start,end)+1;
+      if(days<1)return [];
+      const step=days>35?Math.max(1,Math.ceil(days/52)):1,result=[];
+      for(let offset=0;offset<days;offset+=step){
+        const lastOffset=Math.min(days-1,offset+step-1),bucketStart=activityShift(start,offset),bucketEnd=activityShift(start,lastOffset);
+        let count=0;
+        for(let d=offset;d<=lastOffset;d++)count+=Math.max(0,Number(values.get(activityShift(start,d))||0));
+        const label=step===1?(days<=14?bucketStart.slice(8):bucketStart.slice(5)):bucketStart.slice(5);
+        result.push({date:bucketStart,endDate:bucketEnd,count,label});
+      }
+      return result;
+    };
+    const renderActivityChart=(series,title,unit,color,gradientId,hasData)=>{
+      const width=720,height=250,left=48,right=18,top=20,bottom=43,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=top+plotHeight;
+      const values=series.map(item=>Math.max(0,Number(item.count)||0)),rawMax=Math.max(1,...values),tickStep=rawMax<=4?1:Math.ceil(rawMax/4),maxValue=Math.max(1,Math.ceil(rawMax/tickStep)*tickStep);
+      const xAt=i=>left+(values.length>1?i/(values.length-1):.5)*plotWidth;
+      const yAt=value=>top+plotHeight-(value/maxValue)*plotHeight;
+      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,item:series[i]}));
+      const smoothPath=()=>{
+        if(!points.length)return '';
+        if(points.length===1)return 'M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+        let path='M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+        for(let i=0;i<points.length-1;i++){
+          const p0=points[i-1]||points[i],p1=points[i],p2=points[i+1],p3=points[i+2]||p2;
+          const low=Math.min(p1.y,p2.y),high=Math.max(p1.y,p2.y);
+          const c1x=p1.x+(p2.x-p0.x)/6,c1y=Math.min(high,Math.max(low,p1.y+(p2.y-p0.y)/6));
+          const c2x=p2.x-(p3.x-p1.x)/6,c2y=Math.min(high,Math.max(low,p2.y-(p3.y-p1.y)/6));
+          path+=' C '+c1x.toFixed(2)+' '+c1y.toFixed(2)+', '+c2x.toFixed(2)+' '+c2y.toFixed(2)+', '+p2.x.toFixed(2)+' '+p2.y.toFixed(2);
+        }
+        return path;
+      };
+      const linePath=smoothPath(),areaPath=points.length?linePath+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
+      let svg='<svg class="nexus-activity-svg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+escapeActivityHtml(title)+'">';
+      svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="68%" stop-color="'+color+'" stop-opacity=".08"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>';
+      [...new Set([0,Math.round(maxValue/2),maxValue])].forEach(value=>{
+        const y=yAt(value);
+        svg+='<line class="nexus-activity-grid" x1="'+left+'" y1="'+y.toFixed(2)+'" x2="'+(width-right)+'" y2="'+y.toFixed(2)+'"/><text class="nexus-activity-tick" x="'+(left-9)+'" y="'+(y+4).toFixed(2)+'" text-anchor="end">'+value+'</text>';
+      });
+      svg+='<line class="nexus-activity-axis" x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(width-right)+'" y2="'+baseline.toFixed(2)+'"/>';
+      if(hasData&&points.length){
+        if(points.length>1)svg+='<path class="nexus-activity-area" fill="url(#'+gradientId+')" d="'+areaPath+'"/>';
+        svg+='<path class="nexus-activity-line" stroke="'+color+'" d="'+linePath+'"/>';
+        const every=Math.max(1,Math.ceil(points.length/8));
+        points.forEach((point,i)=>{
+          const item=point.item||{},startDate=item.date||'',endDate=item.endDate||'',dateLabel=endDate&&endDate!==startDate?startDate+' – '+endDate:startDate;
+          const noun=unit==='Reviews'?(point.value===1?'review':'reviews'):'minutes';
+          svg+='<circle class="nexus-activity-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.2" fill="'+color+'"><title>'+escapeActivityHtml(dateLabel)+' · '+point.value+' '+noun+'</title></circle>';
+          if(i%every===0||i===points.length-1)svg+='<text class="nexus-activity-tick" x="'+point.x.toFixed(2)+'" y="'+(height-20)+'" text-anchor="middle">'+escapeActivityHtml(item.label||'')+'</text>';
+        });
+      }else{
+        svg+='<text class="nexus-activity-empty-label" x="'+(left+plotWidth/2)+'" y="'+(top+plotHeight/2)+'" text-anchor="middle">No saved '+unit.toLowerCase()+' in this timeframe</text>';
+      }
+      svg+='<text class="nexus-activity-axis-title" x="'+(left+plotWidth/2)+'" y="'+(height-3)+'" text-anchor="middle">Date</text><text class="nexus-activity-axis-title" transform="translate(13 '+(top+plotHeight/2)+') rotate(-90)" text-anchor="middle">'+escapeActivityHtml(unit)+'</text></svg>';
+      return '<div class="nexus-activity-graph-wrap">'+svg+'</div>';
+    };
+    const reviewSeries=buildActivitySeries(from,to,reviewsByDate),studySeries=buildActivitySeries(from,to,minutesByDate);
+    const reviewTitle=longRange?'Total review count':'Daily review count',studyTitle=longRange?'Total study time':'Daily study time';
+    const rangeDescription=longRange?'Aggregated totals across the selected timeframe.':'Daily totals across the selected timeframe.';
+    const reviewGraph=renderActivityChart(reviewSeries,reviewTitle,'Reviews','#8978f8','nexusActivityReviewsGradient',reviews.length>0);
+    const studyGraph=renderActivityChart(studySeries,studyTitle,'Minutes','#32bfc0','nexusActivityStudyGradient',sessions.some(item=>item.minutes>0));
+    const sessionCount=sessions.filter(item=>item.minutes>0).length;
+    const kpis='<div class="hub-kpis"><div class="hub-kpi"><strong>'+reviews.length+'</strong><span>Reviews in range</span></div><div class="hub-kpi"><strong>'+Math.round(totalMinutes)+' min</strong><span>Logged study time</span></div><div class="hub-kpi"><strong>'+sessionCount+'</strong><span>Study sessions logged</span></div><div class="hub-kpi"><strong>'+activeDates.size+'</strong><span>Days with activity</span></div></div>';
     const charts='<div class="hub-grid analytics-chart-grid">'+
-      hubCard(reviewTitle,rangeDescription,reviewGraph+reviewEmpty,true)+
-      hubCard(studyTitle,rangeDescription+' Only completed, saved focus sessions are counted.',studyGraph+studyEmpty,true)+
+      hubCard(reviewTitle,rangeDescription,reviewGraph,true)+
+      hubCard(studyTitle,rangeDescription+' Only completed focus sessions with saved minutes contribute to the graph.',studyGraph,true)+
       '</div>';
-    const subjects=Array.isArray(state.subjects)?state.subjects:[];
-    const subjectReviewRows=subjects.map(subject=>{
-      const count=reviewsBySubject.get(String(subject.id))||0;
-      return {name:String(subject.name||'Unnamed subject'),count};
-    }).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
-    const unassignedReviews=reviewsBySubject.get('unassigned')||0;
-    if(unassignedReviews)subjectReviewRows.push({name:'Unassigned subject',count:unassignedReviews});
-    const maxReviews=Math.max(1,...subjectReviewRows.map(row=>row.count));
-    const subjectReviewMarkup=subjectReviewRows.length?subjectReviewRows.map(row=>'<div class="analytics-subject-row"><div class="hub-inline" style="justify-content:space-between"><strong>'+localEsc(row.name)+'</strong><span>'+row.count+' review(s)</span></div><div class="progress-track"><span style="width:'+Math.round(row.count/maxReviews*100)+'%"></span></div></div>').join(''):'<div class="hub-empty">Add a subject to see the breakdown.</div>';
-    const subjectTimeRows=subjects.map(subject=>({name:String(subject.name||'Unnamed subject'),minutes:minutesBySubject.get(String(subject.id))||0})).sort((a,b)=>b.minutes-a.minutes||a.name.localeCompare(b.name));
-    const unassignedMinutes=minutesBySubject.get('unassigned')||0;
-    if(unassignedMinutes)subjectTimeRows.push({name:'Unassigned subject',minutes:unassignedMinutes});
-    const subjectTimeMarkup=subjectTimeRows.some(row=>row.minutes>0)?subjectTimeRows.filter(row=>row.minutes>0).map(row=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(row.name)+'</div><div class="hub-row-meta">Saved focus-session time</div></div><strong>'+Math.round(row.minutes)+' min</strong></div>').join(''):'<div class="hub-empty">No saved focus-session time in this timeframe.</div>';
+    const reviewSubjectRows=[...reviewsBySubject.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+    const maxReviews=Math.max(1,...reviewSubjectRows.map(item=>item[1]));
+    const reviewSubjectMarkup=reviewSubjectRows.length?reviewSubjectRows.map(([name,count])=>'<div class="nexus-activity-subject"><div class="hub-inline" style="justify-content:space-between"><strong>'+escapeActivityHtml(name)+'</strong><span>'+count+' review'+(count===1?'':'s')+'</span></div><div class="progress-track"><span style="width:'+Math.round(count/maxReviews*100)+'%"></span></div></div>').join(''):'<div class="hub-empty">No saved reviews in this timeframe.</div>';
+    const studySubjectRows=[...minutesBySubject.entries()].filter(item=>item[1]>0).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+    const studySubjectMarkup=studySubjectRows.length?studySubjectRows.map(([name,minutes])=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+escapeActivityHtml(name)+'</div><div class="hub-row-meta">Saved focus-session time</div></div><strong>'+Math.round(minutes)+' min</strong></div>').join(''):'<div class="hub-empty">No saved focus-session time in this timeframe.</div>';
     return kpis+charts+'<div class="hub-grid analytics-card-grid">'+
-      hubCard('Review activity by subject','Saved review counts in the selected timeframe.','<div class="analytics-subject-rows">'+subjectReviewMarkup+'</div>')+
-      hubCard('Study time by subject','Minutes from completed focus sessions in the same timeframe.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Study time by subject" tabindex="0">'+subjectTimeMarkup+'</div>')+
+      hubCard('Review activity by subject','Saved review counts in the selected timeframe.','<div class="nexus-activity-subjects">'+reviewSubjectMarkup+'</div>')+
+      hubCard('Study time by subject','Minutes from saved focus sessions in the same timeframe.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Study time by subject" tabindex="0">'+studySubjectMarkup+'</div>')+
       '</div>';
   }
 
@@ -2122,6 +2150,14 @@ function paperScoreTrendsMarkup(papers){
     };
     const tabSpecs=[['presses','Review difficulty'],['papers','Paper analytics'],['activity','Activity analytics']];
     const nav='<nav class="hub-nav analytics-nav" aria-label="Analytics sections">'+tabSpecs.map(([key,label])=>'<button type="button" class="hub-tab analytics-tab '+(analyticsSection===key?'active':'')+'" data-hub-action="analytics-section" data-analytics-section="'+key+'" aria-pressed="'+(analyticsSection===key)+'">'+icons[key]+'<span>'+label+'</span></button>').join('')+'</nav>';
+
+    if(analyticsSection==='activity'){
+      const customRange=selection.range==='custom';
+      const activityCustomDates='<div class="ra-custom-dates" id="hubRatingCustomDates" '+(customRange?'':'hidden')+'><div class="ra-field"><label for="hubRatingCustomStart">From date</label><input class="hub-input" type="date" id="hubRatingCustomStart" value="'+localEsc(selection.from)+'"></div><div class="ra-field"><label for="hubRatingCustomEnd">To date</label><input class="hub-input" type="date" id="hubRatingCustomEnd" value="'+localEsc(selection.to)+'"></div><button class="btn btn-primary" type="button" data-hub-action="analytics-custom-apply">Apply custom range</button></div>';
+      const activityFilter='<div class="analytics-global-filter ra-controls single-filter"><div class="ra-field"><label for="hubRatingPeriod">Timeframe</label><select class="hub-input" id="hubRatingPeriod">'+selectOptions([['week','This week'],['month','This month'],['year','This year'],['custom','Choose date range']],selection.range)+'</select></div></div>'+activityCustomDates;
+      const activityHero='<div class="analytics-hero"><div><span class="analytics-eyebrow">LEARNING INTELLIGENCE</span><h3>Your progress, decoded.</h3><p>Review history and saved study sessions for the selected timeframe.</p></div><div class="hub-actions"><button class="btn btn-primary" data-hub-action="analytics-export-pdf">⇩ Export detailed PDF</button><button class="btn btn-soft" data-hub-action="analytics-export">Export CSV</button></div></div>';
+      return activityHero+nav+activityFilter+'<div class="analytics-section-content" data-analytics-section="activity">'+renderActivityAnalytics(selection)+'</div>';
+    }
     const ratingLevel=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic',ratingOptions=getRatingAnalyticsEntityOptions(ratingLevel),ratingEntityId=getRatingAnalyticsEntityId(ratingLevel),ratingEntityChoices=ratingOptions.length?selectOptions(ratingOptions.map(x=>[x.value,x.label+' — '+x.subtitle]),ratingEntityId):'<option value="">No '+esc(ratingLevel)+' records available</option>',groupingLabel=ratingLevel==='syllabus'?'syllabus / stream':ratingLevel;
     const reviewScopeFields=analyticsSection==='presses'?'<div class="ra-field"><label for="hubRatingGrouping">Analyse by</label><select class="hub-input" id="hubRatingGrouping">'+selectOptions([['topic','Individual topic'],['subject','Subject'],['syllabus','Syllabus / stream']],ratingLevel)+'</select></div><div class="ra-field"><label for="hubRatingEntity">Choose '+esc(groupingLabel)+'</label><select class="hub-input" id="hubRatingEntity">'+ratingEntityChoices+'</select></div>':'';
     const customRange=selection.range==='custom',customDates='<div class="ra-custom-dates" id="hubRatingCustomDates" '+(customRange?'':'hidden')+'><div class="ra-field"><label for="hubRatingCustomStart">From date</label><input class="hub-input" type="date" id="hubRatingCustomStart" value="'+localEsc(selection.from)+'"></div><div class="ra-field"><label for="hubRatingCustomEnd">To date</label><input class="hub-input" type="date" id="hubRatingCustomEnd" value="'+localEsc(selection.to)+'"></div><button class="btn btn-primary" type="button" data-hub-action="analytics-custom-apply">Apply custom range</button></div>';
@@ -2145,8 +2181,6 @@ function paperScoreTrendsMarkup(papers){
         return '<article class="hub-row analytics-log-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(p.name||'Untitled practice')+'</div><div class="hub-row-meta">'+meta+'</div>'+(details?'<details class="analytics-log-details"><summary>View notes and weak areas</summary><div>'+details+'</div></details>':'')+'</div></article>';
       }).join('');
       content=hubCard('Paper score trends','Each subject has its own smooth percentage trend with a soft gradient beneath the curve. The scale is always 0–100%.',chart||'<div class="hub-empty">Add scored papers or practice records in this date range to see your trends.</div>',true)+hubCard('Paper performance summary','Only recorded scores are used for the average. Unscored practice logs are still shown in the records below.',kpis,true)+hubCard('Practice & paper records','Scroll through saved papers and practice attempts. All entries remain in your records and full backups.','<div class="hub-scroll-list analytics-log-scroll" role="region" aria-label="Practice and paper log" tabindex="0">'+(rows||'<div class="hub-empty">No practice or paper records in this timeframe.</div>')+'</div>',true);
-    }else if(analyticsSection==='activity'){
-      content=renderActivityAnalytics(selection);
     }
     return hero+nav+sharedTimeframeFilter+'<div class="analytics-section-content" data-analytics-section="'+analyticsSection+'">'+content+'</div>';
   }
