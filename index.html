@@ -2053,7 +2053,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   function paperScoreTrendsMarkup(papers){
     const groups=new Map();
     (papers||[]).filter(p=>p&&safeDate(p.date)&&p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0).forEach(p=>{const subject=state.subjects.find(s=>s.id===p.subjectId),key=String(p.subjectId||'unassigned');if(!groups.has(key))groups.set(key,{name:subject?subject.name:'Unassigned subject',items:[]});groups.get(key).items.push(p);});
-    return Array.from(groups.values()).map(group=>{
+    return Array.from(groups.values()).map((group,groupIndex)=>{
       const items=group.items.slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.name||'').localeCompare(String(b.name||'')));
       let graphItems=items;
       if(items.length>180){
@@ -2061,7 +2061,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
         for(let start=0;start<items.length;start+=bucketSize){const end=Math.min(items.length,start+bucketSize);let minIndex=start,maxIndex=start,minValue=Infinity,maxValue=-Infinity;for(let i=start;i<end;i++){const value=Number(items[i].score)/Number(items[i].maxScore)*100;if(value<minValue){minValue=value;minIndex=i;}if(value>maxValue){maxValue=value;maxIndex=i;}}picked.set(minIndex,items[minIndex]);picked.set(maxIndex,items[maxIndex]);}
         graphItems=Array.from(picked.entries()).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
       }
-      const left=46,right=18,height=214,top=18,bottom=42,plotH=height-top-bottom,width=Math.max(720,left+right+graphItems.length*30),plotW=width-left-right,baseline=top+plotH,values=graphItems.map(p=>Math.max(0,Math.min(100,Number(p.score)/Number(p.maxScore)*100))),xAt=i=>left+(graphItems.length>1?i/(graphItems.length-1):.5)*plotW,yAt=value=>top+plotH-(value/100)*plotH,gradientId=nextChartGradientId('paper-trend');
+      const left=46,right=18,height=214,top=18,bottom=42,plotH=height-top-bottom,width=Math.max(720,left+right+graphItems.length*30),plotW=width-left-right,baseline=top+plotH,values=graphItems.map(p=>Math.max(0,Math.min(100,Number(p.score)/Number(p.maxScore)*100))),xAt=i=>left+(graphItems.length>1?i/(graphItems.length-1):.5)*plotW,yAt=value=>top+plotH-(value/100)*plotH,gradientId='nexus-paper-trend-'+groupIndex;
       const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,p:graphItems[i]})),path=smoothCurvePath(points),areaPath=points.length?path+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
       let svg='<svg class="paper-trend-svg" style="width:'+width+'px" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(group.name)+' paper score percentages over time"><defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="62%" stop-color="var(--accent)" stop-opacity=".10"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>';
       [0,50,100].forEach(value=>{const yy=yAt(value);svg+='<line class="paper-trend-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(width-right)+'" y2="'+yy.toFixed(2)+'"/><text class="paper-trend-tick" x="'+(left-8)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+value+'%</text>';});
