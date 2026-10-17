@@ -48,7 +48,7 @@ assert(html.includes('id="hubRatingCustomStart"') && html.includes('id="hubRatin
 assert(html.includes('function ratingAnalyticsSvgMarkup') && html.includes('data-rating-line=') && html.includes('Line chart of review difficulty ratings over time') && html.includes('same count scale'), 'Analytics must render a shared-scale multi-line chart for the selected rating difficulties.');
 assert(html.includes('No reviews for the selected difficulties in this timeframe'), 'Analytics must show a clear empty-state message instead of an unexplained blank chart.');
 assert(html.includes('class="hub-nav analytics-nav"') && html.includes("data-analytics-section=") && html.includes("if(a==='analytics-section')"), 'Analytics must expose the four-section top navigation.');
-assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Mistake journal"') && html.includes('touch-action:pan-y'), 'Growing practice and mistake histories must use scrollable touch-friendly inboxes.');
+assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Study time by subject"') && html.includes('touch-action:pan-y'), 'Practice records and study-time breakdowns must use scrollable touch-friendly regions.');
 assert(html.includes("new Map()") && html.includes("dateToBin=new Map()"), 'Analytics review history must be aggregated instead of repeatedly filtering every record for every day.');
 assert(html.includes('function lineActivityMarkup') && html.includes('class="activity-line-svg"') && html.includes('function smoothCurvePath') && html.includes('class="activity-area"'), 'Home and Analytics activity must use a smooth line chart with a fading area gradient.');
 assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('paper-trend-area') && html.includes('all records remain below'), 'Paper marks must use smooth gradient trend charts while preserving the full attempt log.');
@@ -263,11 +263,11 @@ assert(html.includes('function buildActivityBuckets(start,end,valuesByDate,maxPo
 assert(html.includes('homeConsistencySummary') && html.includes('homeHeatmapPeriod') && !html.includes("['consistency','Heatmap & streaks']"), 'Heatmap and streak summary must be located on Overview.');
 assert(!html.includes('id="startReviewBtn"') && !html.includes("startReviewBtn').addEventListener"), 'Overview must not expose a Start review action.');
 assert(!/inbox/i.test(html), 'Analytics wording must use records rather than inbox terminology.');
-assert(html.includes('Practice & paper records') && html.includes('Mistake journal records') && html.includes('analytics-card-toggle'), 'Practice and journal records cards must support collapsing.');
+assert(html.includes('Practice & paper records') && html.includes('Study time by subject') && html.includes('analytics-card-toggle'), 'Practice records and the rebuilt Activity study-time breakdown must support collapsing.');
 assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html.includes("4:'#84cc16',5:'#059669'"), 'Summary card tint and distinct green rating palette must be present.');
 
 
-assert(html.includes("const reportWindow=window.open('about:blank','_blank')") && html.includes('Nexus PDF export failed'), 'PDF export must open its print window synchronously and surface generation failures.');
+assert(html.includes("reportWindow=window.open('about:blank','_blank')") && html.includes('Nexus PDF export failed'), 'PDF export must attempt to open its print window synchronously and surface generation failures.');
 assert(html.includes('function exportAnalyticsCsv()') && html.includes("if(action==='analytics-export'){exportAnalyticsCsv();return;}") && html.includes('text/csv;charset=utf-8'), 'Analytics CSV export must use the shared timeframe and produce a downloadable UTF-8 CSV.');
 assert(html.includes(".join(',')).join('\\\\r\\\\n')"), 'Analytics CSV rows must be comma-separated with CRLF row endings.');
 assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") && html.includes('data-home-collapse="dueQueue"') && html.includes('data-home-collapse="progressList"') && html.includes('data-home-collapse="upcomingQueue"') && html.includes('data-home-collapse="overviewAnalytics"'), 'Overview list cards must use labelled Collapse/Expand buttons.');
