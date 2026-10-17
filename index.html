@@ -785,6 +785,48 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 @media(max-width:540px){.activity-line-svg .activity-tick{font-size:10px}.paper-trend-panel{padding:9px}.paper-trend-head{flex-direction:column;gap:3px}.paper-trend-head span{text-align:left}}
 @media print{.activity-line-svg,.paper-trend-svg{max-width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
+<style id="nexus-illustrated-analytics">
+/* Illustrated analytics charts: smooth paths, subtle area fades, and lightweight section navigation. */
+.activity-line-svg .activity-line{stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.activity-line-svg .activity-area,.paper-trend-area,.ra-series-area{stroke:none;pointer-events:none}
+.activity-line-svg .activity-point,.paper-trend-point,.ra-svg .ra-point{stroke:var(--surface);stroke-width:1.8}
+.ra-svg .ra-line{stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.ra-svg .ra-series-area{opacity:1}
+.paper-trend-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+.paper-trend-axis{stroke:var(--muted);stroke-width:1}
+.paper-trend-line{fill:none;stroke:var(--accent);stroke-width:2.35;stroke-linecap:round;stroke-linejoin:round}
+.paper-trend-point{fill:var(--accent)}
+.paper-trend-tick{fill:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
+.paper-trend-axis-title{fill:var(--muted);font-size:10px;font-weight:650}
+.paper-trend-panel{min-width:0;margin:12px 0 15px;padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
+.paper-trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.paper-trend-head strong{font-size:12px;overflow-wrap:anywhere}
+.paper-trend-head span{font-size:10px;color:var(--muted);text-align:right}
+.paper-trend-chart{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}
+.paper-trend-svg{display:block;min-width:500px;height:auto;max-width:none}
+.analytics-nav{position:relative;z-index:3;display:flex;flex-wrap:nowrap!important;gap:5px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;margin:0 0 16px;padding:5px;scrollbar-width:thin;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}
+.analytics-tab{display:inline-flex;flex:0 0 auto;align-items:center;gap:8px;white-space:nowrap;padding:9px 12px}
+.analytics-tab svg{width:18px;height:18px;flex:none}
+.analytics-tab.active svg{color:var(--accent)}
+.analytics-section-content{min-width:0}
+.analytics-chart-grid,.analytics-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.analytics-subject-rows{display:grid;gap:13px}
+.analytics-subject-row{display:grid;gap:6px}
+.analytics-subject-row .hub-inline{gap:8px;font-size:12px}
+.analytics-subject-row .hub-inline span{color:var(--muted);font-size:11px;white-space:nowrap}
+.analytics-log-scroll .analytics-log-row{content-visibility:auto;contain-intrinsic-size:auto 92px}
+.analytics-log-details{margin-top:8px;font-size:12px;color:var(--muted)}
+.analytics-log-details summary{cursor:pointer;width:fit-content;color:var(--accent);font-size:11px;font-weight:750;padding:3px 0}
+.analytics-log-details>div{display:grid;gap:6px;margin-top:7px;overflow-wrap:anywhere;white-space:pre-wrap}
+.analytics-log-details p{margin:3px 0;overflow-wrap:anywhere}
+.analytics-heatmap{margin-top:12px}
+.analytics-section-content .hub-card{animation:none!important;transition:box-shadow .16s ease!important}
+.analytics-section-content .hub-card:hover{transform:none!important}
+.analytics-section-content .analytics-log-scroll{max-height:min(58vh,520px);overflow-y:auto;overscroll-behavior-y:auto;touch-action:pan-y;scrollbar-gutter:stable;padding-right:7px;-webkit-overflow-scrolling:touch}
+@media(max-width:760px){.analytics-chart-grid,.analytics-card-grid{grid-template-columns:minmax(0,1fr);gap:10px}.analytics-nav{margin-bottom:12px}.analytics-tab{font-size:12px;padding:9px 10px}.paper-trend-panel{padding:9px}.paper-trend-head{flex-direction:column;gap:3px}.paper-trend-head span{text-align:left}.analytics-section-content .analytics-log-scroll{max-height:48vh}}
+@media(prefers-reduced-motion:reduce){.activity-line-svg,.paper-trend-svg,.ra-svg{animation:none!important;transition:none!important}}
+@media print{.activity-line-svg,.paper-trend-svg,.ra-svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
 </head>
 <body>
   <main class="app">
