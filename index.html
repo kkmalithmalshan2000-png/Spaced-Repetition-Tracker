@@ -828,6 +828,10 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
 .analytics-card-toggle{flex:0 0 auto;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--muted);padding:6px 8px;font-size:10px;font-weight:750;white-space:nowrap}
 .analytics-card-toggle:hover{border-color:color-mix(in srgb,var(--accent) 42%,var(--border));color:var(--text)}
 .analytics-card-content[hidden]{display:none!important}
+.home-collapsible-content[hidden]{display:none!important}
+.home-panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;min-width:0}
+.analytics-render-error{padding:22px}.analytics-render-error strong{display:block;font-size:14px}.analytics-render-error p{margin:7px 0 12px;color:var(--muted);font-size:12px;line-height:1.5}
+
 .home-consistency-panel .panel-body{display:grid;gap:14px}
 .home-heatmap-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:20px}
 .home-heatmap-head strong,.home-heatmap-head small{display:block}
@@ -873,12 +877,12 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
       </section>
       <section class="panel home-calendar-panel"><div class="panel-head"><div><h3>Upcoming review calendar</h3><p>See review dates and exams across the months ahead.</p></div></div><div class="panel-body"><div class="calendar-launch-card"><div class="calendar-launch-icon">▦</div><div class="calendar-launch-copy"><strong>Plan your next study sessions</strong><span>Month-by-month reviews and exam dates</span></div><button class="btn btn-soft" type="button" id="homeOpenCalendarSecondary">View schedule</button></div></div></section>
       <div class="layout-two">
-        <section class="panel"><div class="panel-head"><div><h3>Review queue</h3><p>Overdue and due topics appear first, followed by new topics.</p></div><button class="btn btn-sm btn-soft" id="viewDueBtn">View topics</button></div><div class="due-list" id="dueQueue"></div></section>
-        <section class="panel"><div class="panel-head"><div><h3>Progress by subject</h3><p>Share of active topics reviewed at least once.</p></div></div><div class="progress-list" id="progressList"></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Review queue</h3><p>Overdue and due topics appear first, followed by new topics.</p></div><div class="home-panel-actions"><button type="button" class="analytics-card-toggle" data-home-collapse="dueQueue" aria-controls="dueQueue" aria-expanded="true">Collapse</button><button class="btn btn-sm btn-soft" id="viewDueBtn">View topics</button></div></div><div class="due-list home-collapsible-content" id="dueQueue"></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Progress by subject</h3><p>Share of active topics reviewed at least once.</p></div><button type="button" class="analytics-card-toggle" data-home-collapse="progressList" aria-controls="progressList" aria-expanded="true">Collapse</button></div><div class="progress-list home-collapsible-content" id="progressList"></div></section>
       </div>
       <div class="layout-two insight-layout">
-        <section class="panel"><div class="panel-head"><div><h3>Coming up · next 7 days</h3><p>Plan ahead before topics become overdue.</p></div><span class="pill upcoming" id="upcomingCount">0 scheduled</span></div><div class="due-list" id="upcomingQueue"></div></section>
-        <section class="panel"><div class="panel-head"><div><h3>Your momentum</h3><p>Recent study activity from your saved review history.</p></div><span class="pill" id="overviewChartRange">Last 7 days</span></div><div class="panel-body" id="overviewAnalytics"></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Coming up · next 7 days</h3><p>Plan ahead before topics become overdue.</p></div><div class="home-panel-actions"><span class="pill upcoming" id="upcomingCount">0 scheduled</span><button type="button" class="analytics-card-toggle" data-home-collapse="upcomingQueue" aria-controls="upcomingQueue" aria-expanded="true">Collapse</button></div></div><div class="due-list home-collapsible-content" id="upcomingQueue"></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Your momentum</h3><p>Recent study activity from your saved review history.</p></div><div class="home-panel-actions"><span class="pill" id="overviewChartRange">Last 7 days</span><button type="button" class="analytics-card-toggle" data-home-collapse="overviewAnalytics" aria-controls="overviewAnalytics" aria-expanded="true">Collapse</button></div></div><div class="panel-body home-collapsible-content" id="overviewAnalytics"></div></section>
       </div>
       <section class="panel home-consistency-panel"><div class="panel-head"><div><h3>Consistency &amp; streaks</h3><p>Long-term review activity, topic mastery, and your current study streak.</p></div></div><div class="panel-body" id="homeConsistencySummary" aria-live="polite"></div></section>
     </section>
@@ -1940,7 +1944,55 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     if(!visible.length)return '<p class="pdf-empty">No review ratings in this period.</p>';
     return visible.map(g=>'<div class="pdf-stack-row"><div class="pdf-stack-label"><strong>'+esc(g.label)+'</strong><small>'+esc(g.subtitle)+'</small></div><div class="pdf-stack-track">'+g.counts.map((count,i)=>count?'<span class="pdf-rating" data-rating="'+(i+1)+'" style="width:'+((count/max)*100).toFixed(3)+'%" title="'+esc(RATING_LABELS[i+1]+': '+count)+'"></span>':'').join('')+'</div><b>'+g.total+'</b></div>').join('');
   }
+  function exportAnalyticsCsv(){
+    try{
+      const selection=getRatingAnalyticsSelection(),from=selection.from,to=selection.to;
+      if(!selection||selection.valid===false||!safeDate(from)||!safeDate(to)){notify('Choose a valid analytics timeframe before exporting.');return;}
+      const rows=[['Section','Date / interval start','Interval end','Subject / stream','Topic / paper / record','Metric','Value','Unit','Notes']];
+      const add=(section,date,end,subject,record,metric,value,unit,notes='')=>rows.push([section,date||'',end||'',subject||'',record||'',metric||'',value??'',unit||'',notes||'']);
+      add('Report',from,to,'','Selected timeframe','Coverage',selection.label,'','The export uses the current shared Analytics timeframe.');
+      const inRange=d=>safeDate(d)&&d>=from&&d<=to;
+      const reviewRecords=state.history.filter(h=>inRange(h.reviewedAt)).slice().sort((a,b)=>String(a.reviewedAt||'').localeCompare(String(b.reviewedAt||'')));
+      const reviewByDate=new Map();reviewRecords.forEach(h=>reviewByDate.set(h.reviewedAt,(reviewByDate.get(h.reviewedAt)||0)+1));
+      const studyLogs=fsState.studyLogs.filter(l=>inRange(l.date)).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+      const studyByDate=new Map();studyLogs.forEach(l=>studyByDate.set(l.date,(studyByDate.get(l.date)||0)+Math.max(0,fNum(l.minutes))));
+      const activityEnd=to>today()?today():to;
+      for(let d=from;safeDate(d)&&d<=activityEnd;d=dateShift(d,1)){
+        add('Daily activity',d,d,'','All subjects','Review count',reviewByDate.get(d)||0,'reviews');
+        add('Daily activity',d,d,'','All subjects','Study time',studyByDate.get(d)||0,'minutes');
+      }
+      const ratingCounts=[1,2,3,4,5].map(rating=>reviewRecords.filter(h=>Number(h.rating)===rating).length);
+      add('Summary',from,to,'','Review history','Total reviews',reviewRecords.length,'reviews');
+      add('Summary',from,to,'','Review history','Mean recall rating',reviewRecords.length?(reviewRecords.reduce((sum,h)=>sum+fNum(h.rating),0)/reviewRecords.length).toFixed(2):'N/A','out of 5');
+      [1,2,3,4,5].forEach((rating,i)=>add('Review distribution',from,to,'',RATING_LABELS[rating],'Saved reviews',ratingCounts[i],'reviews'));
+      add('Summary',from,to,'','Study logs','Total study time',studyLogs.reduce((sum,l)=>sum+Math.max(0,fNum(l.minutes)),0),'minutes');
+      reviewRecords.forEach(h=>add('Review record',h.reviewedAt,'',h.streamName||'',h.topicName||'',RATING_LABELS[Number(h.rating)]||'Rating',h.rating,'out of 5',[h.subjectName,h.note].filter(Boolean).join(' · ')));
+      fsState.papers.filter(p=>inRange(p.date)).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).forEach(p=>{
+        const subject=state.subjects.find(x=>x.id===p.subjectId)?.name||'Unassigned subject',validScore=p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0;
+        const pct=validScore?Math.round(Number(p.score)/Number(p.maxScore)*100):'';
+        add('Paper / practice record',p.date,'',subject,p.name||'Untitled record','Score',validScore?p.score:'','points',p.notes||p.weakAreas||'');
+        add('Paper / practice record',p.date,'',subject,p.name||'Untitled record','Maximum score',validScore?p.maxScore:'','points');
+        if(validScore)add('Paper / practice record',p.date,'',subject,p.name||'Untitled record','Percentage',pct,'%');
+        if(p.duration!==undefined&&p.duration!==null)add('Paper / practice record',p.date,'',subject,p.name||'Untitled record','Duration',p.duration,'minutes');
+        if(p.errorCount!==undefined&&p.errorCount!==null)add('Paper / practice record',p.date,'',subject,p.name||'Untitled record','Errors',p.errorCount,'');
+      });
+      studyLogs.forEach(l=>{
+        const subject=state.subjects.find(x=>x.id===l.subjectId)?.name||l.subjectName||'Unassigned subject',topic=getTopic(l.topicId);
+        add('Study session',l.date,'',subject,topic?.name||l.topicName||'Unlinked session','Study time',fNum(l.minutes),'minutes',[l.type,l.note].filter(Boolean).join(' · '));
+      });
+      fsState.journal.filter(j=>inRange(j.date)).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).forEach(j=>{
+        const subject=state.subjects.find(x=>x.id===j.subjectId)?.name||'General',topic=getTopic(j.topicId);
+        add('Mistake journal record',j.date,'',subject,topic?.name||j.category||'Other',j.solved?'Status: resolved':'Status: open',j.severity??'','severity',[j.issue,j.fix].filter(Boolean).join(' · '));
+      });
+      const csv='\uFEFF'+rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join('\r\n'));
+      downloadBlob('nexus-analytics-'+from+'-to-'+to+'.csv',csv,'text/csv;charset=utf-8');
+      notify('Analytics CSV exported for '+from+' to '+to+'.');
+    }catch(error){console.error('Nexus analytics CSV export failed',error);notify('Could not export analytics CSV. Please try again.');}
+  }
   function exportAnalyticsPdf(){
+    const reportWindow=window.open('about:blank','_blank');
+    if(!reportWindow){notify('Allow pop-ups for Nexus to open the print-ready report, then choose Save as PDF.');return;}
+    try{
     const logoUrl=new URL('icon-192.png',window.location.href).href;
     const selection=getRatingAnalyticsSelection(),level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic',entityId=getRatingAnalyticsEntityId(level);
     const records=selection.records.slice().sort((a,b)=>String(b.reviewedAt||'').localeCompare(String(a.reviewedAt||'')));
@@ -1994,9 +2046,12 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
       '<h2>9. Paper / practice results <span class="muted">('+paperList.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Paper / practice</th><th>Subject</th><th class="num">Score</th><th class="num">Percent</th><th>Notes / weak areas</th></tr></thead><tbody>'+paperRows+'</tbody></table></div>'+
       '<h2>10. Mistakes and lesson journal <span class="muted">('+journals.length+' records)</span></h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Subject</th><th>Topic</th><th>Issue</th><th>Correction / fix</th><th>Status</th></tr></thead><tbody>'+journalRows+'</tbody></table></div>'+
       '<div class="footer"><span>Nexus · Spaced Repetition Tracker</span><span>Private report generated locally in your browser</span></div></body></html>';
-    const reportWindow=window.open('','_blank');
-    if(!reportWindow){notify('Allow pop-ups for Nexus to open the print-ready report, then choose Save as PDF.');return;}
-    try{reportWindow.document.open();reportWindow.document.write(report);reportWindow.document.close();setTimeout(function(){try{reportWindow.focus();reportWindow.print();}catch(e){notify('The report opened, but printing was blocked. Use the browser menu to Print / Save as PDF.');}},450);}catch(e){try{reportWindow.close();}catch(_){}notify('Could not open the PDF report. Try allowing pop-ups and retry.');}
+    try{reportWindow.document.open();reportWindow.document.write(report);reportWindow.document.close();setTimeout(function(){try{reportWindow.focus();reportWindow.print();}catch(e){notify('The report opened, but printing was blocked. Use the browser menu to Print / Save as PDF.');}},450);}catch(e){console.error('Could not write the Nexus report',e);notify('The report tab opened, but its content could not be written. Try again.');}
+    }catch(error){
+      console.error('Nexus PDF export failed',error);
+      try{if(!reportWindow.closed){reportWindow.document.open();reportWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Nexus report error</title></head><body style="font:16px system-ui;padding:24px"><h1>Report could not be generated</h1><p>Your saved data was not changed. Return to Nexus and retry the PDF export. If the problem continues, reload the app.</p></body></html>');reportWindow.document.close();}}catch(_){ }
+      notify('Could not generate the PDF report. Please try again; your saved data was not changed.');
+    }
   }
 function paperScoreTrendsMarkup(papers){
     const groups=new Map();
@@ -2094,6 +2149,7 @@ function paperScoreTrendsMarkup(papers){
   }
   
   let analyticsReturnParent=null,analyticsReturnNext=null;
+  const analyticsDefaultParent=hubEl('hubContent')?.parentElement||null,analyticsDefaultNext=hubEl('hubContent')?.nextSibling||null;
   function ensureAnalyticsEntityForRange(level){
     const options=getRatingAnalyticsEntityOptions(level),prior=String(fsState.analyticsRatingEntity||''),selected=options.find(option=>option.value===prior);
     const range=getRatingAnalyticsSelection();
@@ -2108,14 +2164,39 @@ function paperScoreTrendsMarkup(papers){
     return next;
   }
   function openAnalyticsWindow(){
-    const panel=hubEl('hubContent'),target=document.getElementById('analyticsScreenContent');if(!panel||!target||document.body.classList.contains('analytics-mode'))return;
-    const level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic';
-    ensureAnalyticsEntityForRange(level);
-    analyticsReturnParent=panel.parentElement;analyticsReturnNext=panel.nextSibling;hubTab='analytics';renderHub();target.appendChild(panel);$('analyticsStandalone').hidden=false;document.body.classList.add('analytics-mode');window.scrollTo({top:0,behavior:'auto'});
-  }   function closeAnalyticsWindow(){
-    const panel=hubEl('hubContent');document.body.classList.remove('analytics-mode');$('analyticsStandalone').hidden=true;
-    if(panel&&analyticsReturnParent)analyticsReturnParent.insertBefore(panel,analyticsReturnNext&&analyticsReturnNext.parentElement===analyticsReturnParent?analyticsReturnNext:null);
-    analyticsReturnParent=null;analyticsReturnNext=null;hubTab='planner';renderHub();window.scrollTo({top:0,behavior:'auto'});
+    const panel=hubEl('hubContent'),target=hubEl('analyticsScreenContent'),standalone=hubEl('analyticsStandalone');
+    if(!panel||!target||!standalone){notify('Analytics could not open. Reload the app and try again.');return;}
+    if(document.body.classList.contains('analytics-mode')&&!standalone.hidden){
+      if(panel.parentElement!==target)target.appendChild(panel);
+      standalone.hidden=false;return;
+    }
+    document.body.classList.remove('analytics-mode');standalone.hidden=true;
+    if(panel.parentElement===target&&analyticsDefaultParent)analyticsDefaultParent.insertBefore(panel,analyticsDefaultNext&&analyticsDefaultNext.parentElement===analyticsDefaultParent?analyticsDefaultNext:null);
+    const parent=panel.parentElement||analyticsDefaultParent,next=panel.nextSibling;
+    try{
+      const level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic';
+      ensureAnalyticsEntityForRange(level);hubTab='analytics';renderHub();
+      analyticsReturnParent=parent;analyticsReturnNext=next;
+      target.appendChild(panel);standalone.hidden=false;document.body.classList.add('analytics-mode');
+      window.scrollTo({top:0,behavior:'auto'});
+    }catch(error){
+      document.body.classList.remove('analytics-mode');standalone.hidden=true;
+      if(parent&&panel.parentElement===target)parent.insertBefore(panel,next&&next.parentElement===parent?next:null);
+      analyticsReturnParent=null;analyticsReturnNext=null;hubTab='planner';
+      console.error('Nexus Analytics failed to open',error);
+      notify('Analytics could not open. Please try again; reload the app if it continues.');
+    }
+  }
+  function closeAnalyticsWindow(){
+    const panel=hubEl('hubContent'),standalone=hubEl('analyticsStandalone');
+    document.body.classList.remove('analytics-mode');
+    const parent=analyticsReturnParent&&analyticsReturnParent.isConnected?analyticsReturnParent:analyticsDefaultParent;
+    const next=analyticsReturnParent&&analyticsReturnParent.isConnected?analyticsReturnNext:analyticsDefaultNext;
+    if(panel&&parent)parent.insertBefore(panel,next&&next.parentElement===parent?next:null);
+    if(standalone)standalone.hidden=true;
+    analyticsReturnParent=null;analyticsReturnNext=null;hubTab='planner';
+    try{renderHub();}catch(error){console.error('Nexus Study Hub failed to return from Analytics',error);notify('The Study Hub could not refresh. Please reload the app.');}
+    window.scrollTo({top:0,behavior:'auto'});
   }
   function openDangerZone(){if(document.body.classList.contains('danger-mode'))return;renderHistory();$('dangerZoneStandalone').hidden=false;document.body.classList.add('danger-mode');window.scrollTo({top:0,behavior:'auto'});}
   function closeDangerZone(){document.body.classList.remove('danger-mode');$('dangerZoneStandalone').hidden=true;window.scrollTo({top:0,behavior:'auto'});}
@@ -2127,11 +2208,24 @@ function paperScoreTrendsMarkup(papers){
     const goals=fsState.goals.map(g=>{const progress=goalProgress(g),pct=Math.min(100,Math.round(progress/Math.max(1,g.target)*100));return `<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">${localEsc(g.title)}</div><div class="hub-row-meta">${localEsc(g.unit)} · ${progress}/${g.target}${g.dueDate?` · due ${localEsc(fmtDate(g.dueDate))}`:''}</div><div class="hub-meter"><span style="width:${pct}%"></span></div></div><div class="hub-row-actions">${g.unit==='custom'?`<button class="btn btn-sm" data-hub-action="goal-plus" data-id="${localEsc(g.id)}">+1</button>`:''}<button class="btn btn-sm btn-danger" data-hub-action="delete-goal" data-id="${localEsc(g.id)}">Delete</button></div></div>`;}).join('');
     return `<div class="hub-grid">${hubCard('Global search and bulk actions','Find items across the app, select several topics, and apply reversible schedule or archive operations.',searchCard,true)}${hubCard('Reminder & backlog settings','Browser notification capability and backlog controls.',settings)}${hubCard('Backup, restore, import and export','Portable data protection, CSV imports, and feature export.',data)}${hubCard('Goals and milestones','Count reviews, papers, focus hours, topics, or manual progress toward targets.',`${goalForm}<div class="hub-list" style="margin-top:14px">${goals||'<div class="hub-empty">No milestones yet. Add one that is measurable and date-bounded.</div>'}</div>`,true)}</div>`;}
   function goalProgress(g){switch(g.unit){case'reviews':return state.history.filter(h=>!g.dueDate||h.reviewedAt<=g.dueDate).length;case'papers':return fsState.papers.length;case'hours':return Math.floor(totalStudyMinutes()/60);case'topics':return activeTopics().filter(t=>t.reviewCount>0).length;default:return fNum(g.progress);}}
-  function renderHub(){if(!hubEl('hubContent'))return;updateKpis();document.querySelectorAll('[data-hub-tab]').forEach(b=>b.classList.toggle('active',b.dataset.hubTab===hubTab));const renderers={planner:renderPlanner,mastery:renderMastery,papers:renderPapers,journal:renderJournal,analytics:renderAnalytics,tools:renderTools};hubEl('hubContent').innerHTML=(renderers[hubTab]||renderPlanner)();if(hubTab==='tools')renderGlobalResults();renderHomeConsistencySummary();}
+  function renderHub(){
+    const content=hubEl('hubContent');if(!content)return;
+    try{
+      updateKpis();document.querySelectorAll('[data-hub-tab]').forEach(b=>b.classList.toggle('active',b.dataset.hubTab===hubTab));
+      const renderers={planner:renderPlanner,mastery:renderMastery,papers:renderPapers,journal:renderJournal,analytics:renderAnalytics,tools:renderTools};
+      content.innerHTML=(renderers[hubTab]||renderPlanner)();
+      if(hubTab==='tools')renderGlobalResults();
+    }catch(error){
+      console.error('Nexus Study Hub render failed ('+hubTab+')',error);
+      if(hubTab==='analytics')content.innerHTML='<div class="hub-empty analytics-render-error"><strong>This analytics section could not be displayed.</strong><p>Your saved data has not been changed. Retry the section; if the problem repeats, reload the app and report the failure.</p><button type="button" class="btn btn-primary" data-hub-action="analytics-retry">Retry analytics</button></div>';
+      else notify('The Study Hub could not refresh. Please try again.');
+    }
+    try{renderHomeConsistencySummary();}catch(error){console.error('Nexus Overview consistency summary failed',error);}
+  }
   function renderGlobalResults(){const inp=hubEl('hubGlobalSearch'),out=hubEl('hubSearchResults');if(!inp||!out)return;inp.value=inp.dataset.q||'';out.innerHTML=globalSearchMarkup(inp.value);}
   function hubSwitch(tab){hubTab=tab;renderHub();try{hubEl('view-studyhub').scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}}
   function persistAndRender(base=false){saveFs();if(base){save();renderAll();}renderHub();}
-  function downloadBlob(filename,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+  function downloadBlob(filename,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.rel='noopener';a.style.position='fixed';a.style.left='-10000px';document.body.appendChild(a);try{a.click();}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);}}
   function csvCellHub(v){return `"${String(v??'').replace(/"/g,'""')}"`;}
   function exportHubCsv(which){let rows=[],filename='nexus-hub-export.csv';if(which==='papers'){filename=`nexus-papers-${today()}.csv`;rows=[['Name','Subject','Kind','Date','Score','Max score','Duration minutes','Error count','Weak areas','Notes'],...fsState.papers.map(p=>[p.name,state.subjects.find(s=>s.id===p.subjectId)?.name||'',p.kind,p.date,p.score,p.maxScore,p.duration,p.errorCount,p.weakAreas,p.notes])];}else if(which==='journal'){filename=`nexus-journal-${today()}.csv`;rows=[['Date','Type','Subject','Topic','Severity','Issue','Correction','Resolved'],...fsState.journal.map(j=>[j.date,j.category,state.subjects.find(s=>s.id===j.subjectId)?.name||'',getTopic(j.topicId)?.name||'',j.severity,j.issue,j.fix,j.solved?'yes':'no'])];}else if(which==='selected'){filename=`nexus-selected-topics-${today()}.csv`;const ts=state.topics.filter(t=>fsState.selectedTopicIds.includes(t.id));rows=[['Stream','Subject','Topic','Notes','Last reviewed','Last rating','Next due','Review count','Status'],...ts.map(t=>{const d=subjectDisplay(t);return[d.stream,d.subject,t.name,t.notes,t.lastReviewed,t.lastRating,t.dueDate,t.reviewCount,status(t)];})];}else{filename=`nexus-study-log-${today()}.csv`;rows=[['Date','Minutes','Type','Note'],...fsState.studyLogs.map(x=>[x.date,x.minutes,x.type,x.note||''])];}downloadBlob(filename,'\uFEFF'+rows.map(r=>r.map(csvCellHub).join(',')).join('\r\n'),'text/csv;charset=utf-8');notify('Study Hub CSV exported.');}
   function exportTemplate(){const rows=[['Stream','Subject','Topic','Notes','Last reviewed','Last rating','Next due','Interval days','Review count'],['Commerce','Economics','Demand and supply','','','','','','']];downloadBlob('nexus-topic-import-template.csv','\uFEFF'+rows.map(r=>r.map(csvCellHub).join(',')).join('\r\n'),'text/csv;charset=utf-8');}
@@ -2178,11 +2272,11 @@ Reconstructed: ${recalled||'Not recorded.'}`,fix:gaps||'No specific gap recorded
   resetAll=function(){baseResetAll();};
   // Add Study Hub to navigation and hook controls.
   const hubTabBtn=document.querySelector('[data-view="studyhub"]');if(hubTabBtn)hubTabBtn.addEventListener('click',()=>{hubTab='planner';renderHub();});
-  hubEl('homeOpenAnalytics').addEventListener('click',openAnalyticsWindow);hubEl('homeConsistencySummary').addEventListener('change',e=>{if(e.target.id==='homeHeatmapPeriod'){fsState.heatmapPeriod=e.target.value;saveFs();renderHomeConsistencySummary();}});hubEl('analyticsBackBtn').addEventListener('click',closeAnalyticsWindow);hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone);hubEl('dangerBackBtn').addEventListener('click',closeDangerZone);
+  hubEl('analyticsBackBtn').addEventListener('click',closeAnalyticsWindow);hubEl('openDangerZoneBtn').addEventListener('click',openDangerZone);hubEl('dangerBackBtn').addEventListener('click',closeDangerZone);
   document.querySelectorAll('[data-hub-tab]').forEach(b=>b.addEventListener('click',()=>hubSwitch(b.dataset.hubTab)));
   hubEl('hubQuickBackup').addEventListener('click',fullBackup);
   hubEl('hubContent').addEventListener('input',e=>{if(e.target.id==='hubGlobalSearch'){e.target.dataset.q=e.target.value;const out=hubEl('hubSearchResults');if(out)out.innerHTML=globalSearchMarkup(e.target.value);}});
-  hubEl('hubContent').addEventListener('change',e=>{const el=e.target;if(el.id==='hubRatingGrouping'||el.id==='hubRatingEntity'||el.id==='hubRatingPeriod'){if(el.id==='hubRatingGrouping'){fsState.analyticsRatingGrouping=el.value;fsState.analyticsRatingEntity='';}else if(el.id==='hubRatingEntity')fsState.analyticsRatingEntity=el.value;else fsState.analyticsPeriod=el.value;
+  hubEl('hubContent').addEventListener('change',e=>{const el=e.target;if(['hubRatingGrouping','hubRatingEntity','hubRatingPeriod','hubStudyTimeGrouping'].includes(el.id))return;if(el.id==='hubRatingGrouping'||el.id==='hubRatingEntity'||el.id==='hubRatingPeriod'){if(el.id==='hubRatingGrouping'){fsState.analyticsRatingGrouping=el.value;fsState.analyticsRatingEntity='';}else if(el.id==='hubRatingEntity')fsState.analyticsRatingEntity=el.value;else fsState.analyticsPeriod=el.value;
       if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping'){
         const level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic';
         ensureAnalyticsEntityForRange(level);
@@ -2190,6 +2284,7 @@ Reconstructed: ${recalled||'Not recorded.'}`,fix:gaps||'No specific gap recorded
       saveFs();renderHub();}else if(el.dataset.hubAction==='check-task'){markTask(el.dataset.id,el.checked);}else if(el.dataset.hubAction==='select-topic'){const a=new Set(fsState.selectedTopicIds);el.checked?a.add(el.dataset.id):a.delete(el.dataset.id);fsState.selectedTopicIds=Array.from(a);saveFs();const inp=hubEl('hubGlobalSearch');if(inp){inp.dataset.q=inp.value;renderGlobalResults();}}});
   hubEl('hubContent').addEventListener('submit',e=>{if(e.target.id==='hubPaperForm')savePaper(e);if(e.target.id==='hubJournalForm')saveJournal(e);if(e.target.id==='hubGoalForm')saveGoal(e);if(e.target.id==='hubRecallForm')saveRecallSession(e);});
   hubEl('hubContent').addEventListener('click',e=>{const b=e.target.closest('[data-hub-action]');if(!b)return;const a=b.dataset.hubAction,id=b.dataset.id;
+    if(['analytics-card-toggle','analytics-section','analytics-toggle-rating','analytics-custom-apply','analytics-export-pdf','analytics-export','analytics-retry'].includes(a))return;
     if(a==='analytics-card-toggle'){const card=b.closest('[data-analytics-collapsible]'),content=card?.querySelector('.analytics-card-content');if(!card||!content)return;content.hidden=!content.hidden;b.setAttribute('aria-expanded',String(!content.hidden));b.textContent=content.hidden?'Expand':'Collapse';return;}
     if(a==='analytics-section'){const next=b.dataset.analyticsSection;if(['presses','papers','activity'].includes(next)){analyticsSection=next;renderHub();}return;}
     if(a==='analytics-toggle-rating'){
@@ -2211,8 +2306,66 @@ Reconstructed: ${recalled||'Not recorded.'}`,fix:gaps||'No specific gap recorded
     if(a==='bulk-due-today'||a==='bulk-due-custom'||a==='bulk-archive'||a==='bulk-unarchive'||a==='bulk-export'||a==='bulk-delete'||a==='bulk-clear'){bulkAction(a);return;}
     if(a==='delete-goal'){if(confirm('Delete this milestone?')){fsState.goals=fsState.goals.filter(g=>g.id!==id);saveFs();renderHub();}return;}if(a==='goal-plus'){const g=fsState.goals.find(g=>g.id===id);if(g){g.progress=(g.progress||0)+1;saveFs();renderHub();}return;}
   });
+  document.addEventListener('click',e=>{
+    const toggle=e.target.closest('[data-home-collapse]');if(!toggle)return;
+    const target=document.getElementById(toggle.dataset.homeCollapse);if(!target)return;
+    target.hidden=!target.hidden;const expanded=!target.hidden;
+    toggle.setAttribute('aria-expanded',String(expanded));toggle.textContent=expanded?'Collapse':'Expand';
+  });
+  document.addEventListener('click',e=>{
+    const openButton=e.target.closest('#homeOpenAnalytics');
+    if(openButton){e.preventDefault();openAnalyticsWindow();return;}
+    const button=e.target.closest('[data-hub-action]');if(!button)return;
+    const action=button.dataset.hubAction;
+    if(!['analytics-card-toggle','analytics-section','analytics-toggle-rating','analytics-custom-apply','analytics-export-pdf','analytics-export','analytics-retry'].includes(action))return;
+    if(!button.closest('#analyticsStandalone')&&!document.body.classList.contains('analytics-mode'))return;
+    e.preventDefault();
+    try{
+      if(action==='analytics-card-toggle'){
+        const card=button.closest('[data-analytics-collapsible]'),content=card?.querySelector('.analytics-card-content');
+        if(!card||!content)return;
+        content.hidden=!content.hidden;button.setAttribute('aria-expanded',String(!content.hidden));button.textContent=content.hidden?'Expand':'Collapse';return;
+      }
+      if(action==='analytics-section'){const next=button.dataset.analyticsSection;if(['presses','papers','activity'].includes(next)){analyticsSection=next;renderHub();}return;}
+      if(action==='analytics-toggle-rating'){
+        const rating=Number(button.dataset.ratingToggle),current=getVisibleAnalyticsRatings();
+        if(!Number.isInteger(rating)||rating<1||rating>5)return;
+        if(current.includes(rating)){
+          if(current.length===1){notify('Keep at least one rating selected.');return;}
+          fsState.analyticsVisibleRatings=current.filter(r=>r!==rating);
+        }else fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y);
+        saveFs();renderHub();return;
+      }
+      if(action==='analytics-custom-apply'){
+        const from=hubEl('hubRatingCustomStart')?.value||'',to=hubEl('hubRatingCustomEnd')?.value||'';
+        if(!safeDate(from)||!safeDate(to)||from>to){notify('Choose valid dates. The From date must be on or before the To date.');return;}
+        fsState.analyticsCustomStart=from;fsState.analyticsCustomEnd=to;fsState.analyticsPeriod='custom';saveFs();renderHub();return;
+      }
+      if(action==='analytics-export-pdf'){exportAnalyticsPdf();return;}
+      if(action==='analytics-export'){exportAnalyticsCsv();return;}
+      if(action==='analytics-retry'){renderHub();return;}
+    }catch(error){
+      console.error('Nexus Analytics action failed ('+action+')',error);
+      notify(action==='analytics-export-pdf'?'Could not generate the PDF report. Allow pop-ups and try again.':action==='analytics-export'?'Could not export analytics CSV. Please try again.':'Analytics could not update. Please try again.');
+    }
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;if(!el)return;
+    if(['hubRatingGrouping','hubRatingEntity','hubRatingPeriod'].includes(el.id)){
+      if(el.id==='hubRatingGrouping'){fsState.analyticsRatingGrouping=el.value;fsState.analyticsRatingEntity='';}
+      else if(el.id==='hubRatingEntity')fsState.analyticsRatingEntity=el.value;
+      else fsState.analyticsPeriod=el.value;
+      if(el.id==='hubRatingPeriod'||el.id==='hubRatingGrouping'){
+        const level=['topic','subject','syllabus'].includes(fsState.analyticsRatingGrouping)?fsState.analyticsRatingGrouping:'topic';
+        ensureAnalyticsEntityForRange(level);
+      }
+      saveFs();try{renderHub();}catch(error){console.error('Analytics timeframe change failed',error);notify('Could not update the selected timeframe.');}return;
+    }
+    if(el.id==='hubStudyTimeGrouping'){fsState.studyTimeGrouping=el.value==='topic'?'topic':'subject';saveFs();try{renderHub();}catch(error){console.error('Study time grouping failed',error);notify('Could not update study-time grouping.');}return;}
+    if(el.id==='homeHeatmapPeriod'){fsState.heatmapPeriod=el.value;saveFs();try{renderHomeConsistencySummary();}catch(error){console.error('Home heatmap update failed',error);notify('Could not update the Overview heatmap.');}}
+  });
   hubEl('hubContent').addEventListener('input',e=>{if(e.target.id==='hubStudySearch'){fsState.studyTopicQuery=e.target.value;saveFs();const sel=hubEl('hubStudyTopic');if(sel){const q=e.target.value.toLowerCase();sel.innerHTML=selectOptions(state.topics.filter(t=>!t.archived&&(!q||[t.name,t.notes,subjectFor(t)?.name].some(v=>String(v||'').toLowerCase().includes(q)))).map(t=>[t.id,(subjectFor(t)?.name?subjectFor(t).name+' · ':'')+t.name]),focusTopicId);}}});
-  hubEl('hubContent').addEventListener('change',async e=>{if(e.target.id==='hubStudyTimeGrouping'){fsState.studyTimeGrouping=e.target.value==='topic'?'topic':'subject';saveFs();renderHub();return;}if(e.target.id==='hubStudyTopic'){focusTopicId=e.target.value;const t=getTopic(focusTopicId);focusSubjectId=t?(subjectFor(t)?.id||''):focusSubjectId;fsState.focusTopicId=focusTopicId;fsState.focusSubjectId=focusSubjectId;saveFs();return;}if(e.target.id==='hubTimerMinutes'){fsState.settings.sessionMinutes=Math.max(5,Math.min(240,Number(e.target.value)||25));saveFs();return;}if(e.target.id==='hubCalendarWindow'){fsState.calendarWindow=e.target.value;saveFs();renderHub();return;}if(e.target.id==='hubImportFile'){const f=e.target.files?.[0];e.target.value='';if(f)await restoreOrMerge(f);}});
+  hubEl('hubContent').addEventListener('change',async e=>{if(e.target.id==='hubStudyTimeGrouping')return;if(e.target.id==='hubStudyTimeGrouping'){fsState.studyTimeGrouping=e.target.value==='topic'?'topic':'subject';saveFs();renderHub();return;}if(e.target.id==='hubStudyTopic'){focusTopicId=e.target.value;const t=getTopic(focusTopicId);focusSubjectId=t?(subjectFor(t)?.id||''):focusSubjectId;fsState.focusTopicId=focusTopicId;fsState.focusSubjectId=focusSubjectId;saveFs();return;}if(e.target.id==='hubTimerMinutes'){fsState.settings.sessionMinutes=Math.max(5,Math.min(240,Number(e.target.value)||25));saveFs();return;}if(e.target.id==='hubCalendarWindow'){fsState.calendarWindow=e.target.value;saveFs();renderHub();return;}if(e.target.id==='hubImportFile'){const f=e.target.files?.[0];e.target.value='';if(f)await restoreOrMerge(f);}});
 
   // Override reset to clear all extension data only after the user's existing reset flow confirms.
   const oldReset=resetAll;
