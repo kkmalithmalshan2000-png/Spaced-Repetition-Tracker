@@ -276,8 +276,10 @@ assert(html.includes("document.addEventListener('change',e=>{") && html.includes
 
 
 assert(!html.includes("arrow.textContent='⌃'") && !html.includes('function makeCollapsible(panelSelector'), 'Overview must not inject the legacy arrow-only collapse controls; use labelled Collapse/Expand buttons.');
-assert(html.includes("const safeDate=d=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||'')))return false;") && html.includes('activityKpis+chartGrid'), 'Activity date validation must be self-contained and the Activity view must render summary metrics with both trend charts.');
-assert(html.includes('const activityReviews=activityRangeValid?state.history.filter') && html.includes('fsState.studyLogs.filter(l=>safeDate(l.date)') && html.includes("lineActivityMarkup(reviewSeries,reviewChartTitle,'Reviews'") && html.includes("lineActivityMarkup(minuteSeries,studyChartTitle,'Minutes'"), 'Activity charts must read saved review history and saved study-time logs.');
+assert(html.includes("const safeDate=d=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||'')))return false;") && html.includes('function renderActivityAnalytics(selection)'), 'Activity must use self-contained date validation and a dedicated renderer.');
+assert(html.includes("content=renderActivityAnalytics(selection)") && html.includes("lineActivityMarkup(reviewSeries,reviewTitle,'Reviews','#8978f8')") && html.includes("lineActivityMarkup(minuteSeries,studyTitle,'Minutes','#32bfc0')"), 'Activity must render the review-count and study-time line charts from its dedicated renderer.');
+assert(html.includes("Array.isArray(state.history)?state.history:[]") && html.includes("Array.isArray(fsState.studyLogs)?fsState.studyLogs:[]") && html.includes("buildActivityBuckets(from,end,reviewsByDate)") && html.includes("buildActivityBuckets(from,end,minutesByDate)"), 'Activity graph inputs must be normalized saved review history and study logs for the selected timeframe.');
+assert(html.includes("reportHtml='<!doctype html>") && html.includes("downloadBlob('nexus-study-review-report.html',reportHtml,'text/html;charset=utf-8')") && html.includes("const fallbackReport='<!doctype html>"), 'PDF export must retain a print-ready report and provide an HTML download fallback when popup or printing fails.');
 // Existing shared-filter placement assertion above also covers all Analytics sections.
 
 
