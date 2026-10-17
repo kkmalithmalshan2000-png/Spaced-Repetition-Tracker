@@ -1179,29 +1179,37 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
   function averageRating(entries=state.history){return entries.length?entries.reduce((sum,h)=>sum+(Number(h.rating)||0),0)/entries.length:0;}
   function metricMarkup(value,label){return `<div class="insight-metric"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`;}
-  function lineActivityMarkup(series,title){
-    const values=Array.isArray(series)?series:[],W=720,H=230,left=44,right=18,top=20,bottom=39,ph=H-top-bottom,pw=W-left-right;
-    const counts=values.map(x=>Math.max(0,Number(x.count)||0)),rawMax=Math.max(1,...counts),step=rawMax<=4?1:Math.ceil(rawMax/4),yMax=Math.max(1,Math.ceil(rawMax/step)*step);
-    const xAt=i=>left+(values.length>1?i/(values.length-1):.5)*pw,yAt=n=>top+ph-(n/yMax)*ph;
-    let svg='<svg class="activity-line-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+'">';
-    [...new Set([0,Math.round(yMax/2),yMax])].forEach(v=>{const yy=yAt(v);svg+='<line class="activity-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="activity-tick" x="'+(left-9)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+v+'</text>';});
-    svg+='<line class="activity-axis" x1="'+left+'" y1="'+(top+ph)+'" x2="'+(W-right)+'" y2="'+(top+ph)+'"/>';
-    if(values.length){
-      const points=counts.map((v,i)=>xAt(i).toFixed(2)+','+yAt(v).toFixed(2)).join(' ');
-      if(values.length>1)svg+='<polyline class="activity-line" points="'+points+'"/>';
-      const every=Math.max(1,Math.ceil(values.length/8));
-      values.forEach((item,i)=>{
-        const x=xAt(i),y=yAt(counts[i]),label=String(item.label||item.short||(item.date||'').slice(8)||''),date=String(item.date||item.short||item.label||''),noun=counts[i]===1?'review':'reviews';
-        svg+='<circle class="activity-point" cx="'+x.toFixed(2)+'" cy="'+y.toFixed(2)+'" r="4"><title>'+esc(date)+' · '+counts[i]+' '+noun+'</title></circle>';
-        if(i%every===0||i===values.length-1)svg+='<text class="activity-tick" x="'+x.toFixed(2)+'" y="'+(H-17)+'" text-anchor="middle">'+esc(label)+'</text>';
-      });
-      if(values.length===1)svg+='<text class="activity-tick" x="'+xAt(0).toFixed(2)+'" y="'+(yAt(counts[0])-10).toFixed(2)+'" text-anchor="middle">'+counts[0]+'</text>';
-    }else{
-      svg+='<text class="activity-empty-label" x="'+(left+pw/2)+'" y="'+(top+ph/2)+'" text-anchor="middle">No review activity in this period</text>';
+  let chartGradientCounter=0;
+  function nextChartGradientId(prefix){return String(prefix||'nexus-chart')+'-'+(++chartGradientCounter);}
+  function smoothCurvePath(points){
+    if(!points||!points.length)return '';
+    if(points.length===1)return 'M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+    let d='M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+    for(let i=0;i<points.length-1;i++){
+      const p0=points[i-1]||points[i],p1=points[i],p2=points[i+1],p3=points[i+2]||p2,low=Math.min(p1.y,p2.y),high=Math.max(p1.y,p2.y);
+      const c1x=p1.x+(p2.x-p0.x)/6,c1y=Math.min(high,Math.max(low,p1.y+(p2.y-p0.y)/6)),c2x=p2.x-(p3.x-p1.x)/6,c2y=Math.min(high,Math.max(low,p2.y-(p3.y-p1.y)/6));
+      d+=' C '+c1x.toFixed(2)+' '+c1y.toFixed(2)+', '+c2x.toFixed(2)+' '+c2y.toFixed(2)+', '+p2.x.toFixed(2)+' '+p2.y.toFixed(2);
     }
-    svg+='<text class="activity-axis-title" x="'+(left+pw/2)+'" y="'+(H-2)+'" text-anchor="middle">Date</text><text class="activity-axis-title" transform="translate(13 '+(top+ph/2)+') rotate(-90)" text-anchor="middle">Reviews</text></svg>';
+    return d;
+  }
+  function lineActivityMarkup(series,title,unit='Reviews',lineColor='var(--accent)'){
+    const values=Array.isArray(series)?series:[],W=720,H=244,left=46,right=18,top=19,bottom=43,plotH=H-top-bottom,plotW=W-left-right;
+    const counts=values.map(x=>Math.max(0,Number(x.count)||0)),rawMax=Math.max(1,...counts),step=rawMax<=4?1:Math.ceil(rawMax/4),yMax=Math.max(1,Math.ceil(rawMax/step)*step);
+    const xAt=i=>left+(values.length>1?i/(values.length-1):.5)*plotW,yAt=n=>top+plotH-(n/yMax)*plotH,baseline=top+plotH,gradientId=nextChartGradientId('activity');
+    const points=counts.map((value,i)=>({x:xAt(i),y:yAt(value),value,item:values[i]})),linePath=smoothCurvePath(points),areaPath=points.length?linePath+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
+    let svg='<svg class="activity-line-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+'">';
+    svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineColor+'" stop-opacity=".28"/><stop offset="62%" stop-color="'+lineColor+'" stop-opacity=".10"/><stop offset="100%" stop-color="'+lineColor+'" stop-opacity="0"/></linearGradient></defs>';
+    [...new Set([0,Math.round(yMax/2),yMax])].forEach(v=>{const yy=yAt(v);svg+='<line class="activity-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="activity-tick" x="'+(left-9)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+v+'</text>';});
+    svg+='<line class="activity-axis" x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(W-right)+'" y2="'+baseline.toFixed(2)+'"/>';
+    if(values.length){
+      if(points.length>1)svg+='<path class="activity-area" fill="url(#'+gradientId+')" d="'+areaPath+'"/><path class="activity-line" stroke="'+lineColor+'" d="'+linePath+'"/>';
+      const every=Math.max(1,Math.ceil(values.length/8));
+      points.forEach((point,i)=>{const item=point.item||{},label=String(item.label||item.short||(item.date||'').slice(8)||''),date=String(item.date||item.short||item.label||''),noun=unit==='Reviews'?(point.value===1?'review':'reviews'):unit.toLowerCase();svg+='<circle class="activity-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.3" fill="'+lineColor+'"><title>'+esc(date)+' · '+point.value+' '+noun+'</title></circle>';if(i%every===0||i===points.length-1)svg+='<text class="activity-tick" x="'+point.x.toFixed(2)+'" y="'+(H-20)+'" text-anchor="middle">'+esc(label)+'</text>';});
+    }else svg+='<text class="activity-empty-label" x="'+(left+plotW/2)+'" y="'+(top+plotH/2)+'" text-anchor="middle">No activity in this period</text>';
+    svg+='<text class="activity-axis-title" x="'+(left+plotW/2)+'" y="'+(H-3)+'" text-anchor="middle">Date</text><text class="activity-axis-title" transform="translate(13 '+(top+plotH/2)+') rotate(-90)" text-anchor="middle">'+esc(unit)+'</text></svg>';
     return '<div class="activity-line-wrap">'+svg+'</div>';
   }
+  function barsMarkup(series){return lineActivityMarkup(series,'Daily review counts across the past '+series.length+' days','Reviews');}
   function barsMarkup(series){return lineActivityMarkup(series,'Daily review counts across the past '+series.length+' days');}
   function renderOverviewAnalytics(){
     const recent=state.history.filter(h=>h.reviewedAt>=plusDays(today(),-6)&&h.reviewedAt<=today());
@@ -1790,106 +1798,52 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
 
   function getRatingAnalyticsTimeline(selection,level,entityId){
-    const period=selection.range,from=selection.from,to=selection.to,bins=[],now=today();
-    const empty={bins,records:[],totals:[0,0,0,0,0]};
+    const period=selection.range,from=selection.from,to=selection.to,bins=[],now=today(),empty={bins,records:[],totals:[0,0,0,0,0]};
     if(!safeDate(from)||!safeDate(to)||from>to)return empty;
     const pushDay=date=>bins.push({start:date,end:date,label:period==='week'?new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}):date.slice(8),title:fmtDate(date)});
-    if(period==='week'){
-      for(let i=0;i<7;i++)pushDay(dateShift(from,i));
-    }else if(period==='month'){
-      const n=dayDiff(from,to)+1;
-      for(let i=0;i<n;i++)pushDay(dateShift(from,i));
-      bins.forEach(b=>{b.label=String(Number(b.start.slice(8)));b.title=fmtDate(b.start);});
-    }else if(period==='year'){
-      // Use calendar-month bins and honour both endpoints, including partial custom years.
+    if(period==='week'){for(let i=0;i<7;i++)pushDay(dateShift(from,i));}
+    else if(period==='month'){const n=dayDiff(from,to)+1;for(let i=0;i<n;i++)pushDay(dateShift(from,i));bins.forEach(b=>{b.label=String(Number(b.start.slice(8)));b.title=fmtDate(b.start);});}
+    else if(period==='year'){
       let cursor=from;
-      while(cursor<=to){
-        const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1;
-        const last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
-        const end=last<to?last:to;
-        bins.push({start:cursor,end,label:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'short'}),title:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})});
-        cursor=dateShift(end,1);
-      }
+      while(cursor<=to){const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1,last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0'),end=last<to?last:to;bins.push({start:cursor,end,label:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'short'}),title:new Date(year,month-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})});cursor=dateShift(end,1);}
     }else{
       const n=dayDiff(from,to)+1;
-      if(n<=31){
-        for(let i=0;i<n;i++)pushDay(dateShift(from,i));
-        bins.forEach(b=>{b.label=new Date(b.start+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'});});
-      }else if(n<=186){
-        for(let cursor=from;cursor<=to;){
-          const end=dateShift(cursor,Math.min(6,dayDiff(cursor,to)));
-          bins.push({start:cursor,end,label:new Date(cursor+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'}),title:fmtDate(cursor)+' – '+fmtDate(end)});
-          cursor=dateShift(end,1);
-        }
-      }else{
-        for(let cursor=from;cursor<=to;){
-          const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1;
-          const last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
-          const end=last<to?last:to;
-          bins.push({start:cursor,end,label:d.toLocaleDateString(undefined,{month:'short',year:'2-digit'}),title:fmtDate(cursor)+' – '+fmtDate(end)});
-          cursor=dateShift(end,1);
-        }
-      }
+      if(n<=31){for(let i=0;i<n;i++)pushDay(dateShift(from,i));bins.forEach(b=>{b.label=new Date(b.start+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'});});}
+      else if(n<=186){for(let cursor=from;cursor<=to;){const end=dateShift(cursor,Math.min(6,dayDiff(cursor,to)));bins.push({start:cursor,end,label:new Date(cursor+'T12:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'}),title:fmtDate(cursor)+' – '+fmtDate(end)});cursor=dateShift(end,1);}}
+      else{for(let cursor=from;cursor<=to;){const d=new Date(cursor+'T12:00:00'),year=d.getFullYear(),month=d.getMonth()+1,last=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0'),end=last<to?last:to;bins.push({start:cursor,end,label:d.toLocaleDateString(undefined,{month:'short',year:'2-digit'}),title:fmtDate(cursor)+' – '+fmtDate(end)});cursor=dateShift(end,1);}}
     }
-    const scoped=getRatingAnalyticsScopedRecords(selection.records||[],level,entityId);
-    bins.forEach(bin=>{
-      // Don't plot future dates/intervals as zero: those observations have not happened yet.
-      bin.isFuture=bin.start>now;
-      bin.counts=bin.isFuture?[null,null,null,null,null]:[1,2,3,4,5].map(r=>scoped.filter(h=>Number(h.rating)===r&&h.reviewedAt>=bin.start&&h.reviewedAt<=bin.end).length);
-      bin.total=bin.isFuture?null:bin.counts.reduce((a,b)=>a+b,0);
-    });
-    return {bins,records:scoped,totals:[1,2,3,4,5].map(r=>scoped.filter(h=>Number(h.rating)===r).length)};
+    const scoped=getRatingAnalyticsScopedRecords(selection.records||[],level,entityId),totals=[0,0,0,0,0],dateToBin=new Map();
+    bins.forEach((bin,index)=>{bin.isFuture=bin.start>now;bin.counts=bin.isFuture?[null,null,null,null,null]:[0,0,0,0,0];if(!bin.isFuture)for(let d=bin.start;d<=bin.end&&d<=now;d=dateShift(d,1))dateToBin.set(d,index);});
+    scoped.forEach(record=>{const index=dateToBin.get(record.reviewedAt),rating=Number(record.rating);if(index===undefined||!Number.isInteger(rating)||rating<1||rating>5)return;bins[index].counts[rating-1]++;totals[rating-1]++;});
+    bins.forEach(bin=>{bin.total=bin.isFuture?null:bin.counts.reduce((sum,count)=>sum+count,0);});
+    return {bins,records:scoped,totals};
   }
   function getVisibleAnalyticsRatings(){
     const saved=Array.isArray(fsState.analyticsVisibleRatings)?fsState.analyticsVisibleRatings.map(Number).filter(r=>Number.isInteger(r)&&r>=1&&r<=5):[1,2,3,4,5];
     return saved.length?saved:[1,2,3,4,5];
   }
   function ratingAnalyticsSvgMarkup(selection,level,entityId){
-    const result=getRatingAnalyticsTimeline(selection,level,entityId),bins=result.bins,visibleRatings=getVisibleAnalyticsRatings(),dense=bins.length>12;
-    const left=132,right=20,top=18,bottom=46,laneHeight=76,minCellWidth=bins.length>24?28:bins.length>12?42:60;
-    const W=Math.max(680,left+right+bins.length*minCellWidth),pw=W-left-right,cellW=bins.length?pw/bins.length:pw,H=top+Math.max(1,visibleRatings.length)*laneHeight+bottom;
-    const xAt=i=>left+(i+.5)*cellW;
-    let svg='<svg class="ra-svg'+(dense?' ra-svg-dense':' ra-svg-small-multiples')+'" '+(dense?'style="--ra-chart-width:'+W+'px" ':'')+'viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Review rating trends shown as separate line charts for Again, Hard, Good, Very good, and Easy. Each rating has an independent scale so the data lines do not overlap.">';
-    bins.forEach((bin,i)=>{
-      const cx=xAt(i);
-      svg+='<line class="ra-gridline" x1="'+cx.toFixed(2)+'" y1="'+top+'" x2="'+cx.toFixed(2)+'" y2="'+(top+visibleRatings.length*laneHeight-8)+'"/>';
-    });
-    visibleRatings.forEach((rating,rowIndex)=>{
-      const laneY=top+rowIndex*laneHeight,plotTop=laneY+24,plotBottom=laneY+62,plotHeight=plotBottom-plotTop;
-      const maxCount=Math.max(1,...bins.map(bin=>!bin.isFuture&&Number.isFinite(bin.counts[rating-1])?bin.counts[rating-1]:0));
-      const yAt=count=>plotBottom-(count/maxCount)*plotHeight;
-      const ratingLabel=String(rating)+' · '+String(RATING_LABELS[rating]||'Rating'),ratingTotal=result.totals[rating-1]||0;
-      svg+='<text class="ra-lane-label" x="10" y="'+(laneY+14)+'">'+esc(ratingLabel)+'</text><text class="ra-lane-total" x="'+(W-right)+'" y="'+(laneY+14)+'" text-anchor="end">'+ratingTotal+' press'+(ratingTotal===1?'':'es')+'</text>';
-      [...new Set([0,Math.round(maxCount/2),maxCount])].forEach(v=>{
-        const yy=yAt(v);
-        svg+='<line class="ra-gridline ra-lane-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/>';
-        svg+='<text class="ra-lane-tick" x="'+(left-8)+'" y="'+(yy+3.5).toFixed(2)+'" text-anchor="end">'+v+'</text>';
-      });
-      svg+='<line class="ra-axis" x1="'+left+'" y1="'+plotBottom+'" x2="'+(W-right)+'" y2="'+plotBottom+'"/>';
-      const points=bins.map((bin,i)=>{
-        if(bin.isFuture||!Number.isFinite(bin.counts[rating-1]))return null;
-        return {x:xAt(i),y:yAt(bin.counts[rating-1]),count:bin.counts[rating-1],title:bin.title,index:i};
-      }).filter(Boolean);
-      if(ratingTotal>0&&points.length){
-        const path=points.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
-        svg+='<g class="ra-line-series" data-rating-line="'+rating+'" data-scale-max="'+maxCount+'"><path class="ra-line" stroke="'+RATING_ANALYTICS_COLORS[rating]+'" d="'+path+'"/>';
-        points.forEach(p=>{
-          svg+='<circle class="ra-point" data-rating-point="'+rating+'" data-bin-index="'+p.index+'" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="3.4" fill="'+RATING_ANALYTICS_COLORS[rating]+'"><title>'+esc(p.title)+' · '+rating+' '+esc(RATING_LABELS[rating])+': '+p.count+'</title></circle>';
-        });
+    const result=getRatingAnalyticsTimeline(selection,level,entityId),bins=result.bins,visibleRatings=getVisibleAnalyticsRatings(),dense=bins.length>12,left=50,right=20,top=22,bottom=51,minCellWidth=bins.length>24?28:bins.length>12?35:56,W=Math.max(720,left+right+bins.length*minCellWidth),H=300,plotW=W-left-right,plotH=H-top-bottom,cellW=bins.length?plotW/bins.length:plotW,baseline=top+plotH;
+    const maxCount=Math.max(1,...bins.map(bin=>visibleRatings.reduce((max,rating)=>Math.max(max,Number(bin.counts[rating-1])||0),0))),magnitude=Math.pow(10,Math.floor(Math.log10(maxCount)))||1,norm=maxCount/magnitude,mult=norm<=1?1:norm<=2?2:norm<=5?5:10,yMax=maxCount<=5?5:mult*magnitude,yAt=count=>top+plotH-(count/yMax)*plotH,xAt=i=>left+(i+.5)*cellW;
+    let svg='<svg class="ra-svg'+(dense?' ra-svg-dense':' ra-svg-single')+'" '+(dense?'style="--ra-chart-width:'+W+'px" ':'')+'viewBox="0 0 '+W+' '+H+'" role="img" aria-label="One line chart of all selected review rating-button presses over time. Each rating uses the same count scale; filter difficulty lines with the colored buttons."><defs>';
+    visibleRatings.forEach(rating=>{const color=RATING_ANALYTICS_COLORS[rating];svg+='<linearGradient id="rating-'+rating+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".18"/><stop offset="62%" stop-color="'+color+'" stop-opacity=".06"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient>';});
+    svg+='</defs>';
+    const tickStep=Math.max(1,Math.ceil(yMax/4)),ticks=[0,tickStep,Math.min(yMax,tickStep*2),Math.min(yMax,tickStep*3),yMax].filter((v,i,a)=>a.indexOf(v)===i);
+    ticks.forEach(value=>{const yy=yAt(value);svg+='<line class="ra-gridline" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(W-right)+'" y2="'+yy.toFixed(2)+'"/><text class="ra-tick" x="'+(left-9)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+value+'</text>';});
+    svg+='<line class="ra-axis" x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+baseline+'"/><line class="ra-axis" x1="'+left+'" y1="'+baseline+'" x2="'+(W-right)+'" y2="'+baseline+'"/>';
+    const labelEvery=bins.length<=12?1:Math.max(1,Math.ceil(bins.length/(selection.range==='month'?12:10)));
+    bins.forEach((bin,index)=>{const x=xAt(index);if(index%labelEvery===0||index===bins.length-1)svg+='<line class="ra-gridline" x1="'+x.toFixed(2)+'" y1="'+baseline+'" x2="'+x.toFixed(2)+'" y2="'+(baseline+4)+'"/><text class="ra-tick" x="'+x.toFixed(2)+'" y="'+(H-23)+'" text-anchor="middle">'+esc(bin.label)+'</text>';});
+    visibleRatings.forEach(rating=>{
+      const color=RATING_ANALYTICS_COLORS[rating],points=bins.map((bin,index)=>bin.isFuture||!Number.isFinite(bin.counts[rating-1])?null:{x:xAt(index),y:yAt(bin.counts[rating-1]),count:bin.counts[rating-1],title:bin.title,index}).filter(Boolean);
+      if(result.totals[rating-1]>0&&points.length){
+        const path=smoothCurvePath(points),area=path+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z';
+        svg+='<g class="ra-line-series" data-rating-line="'+rating+'" data-scale-max="'+yMax+'"><path class="ra-series-area" data-rating-area="'+rating+'" fill="url(#rating-'+rating+')" d="'+area+'"/><path class="ra-line" data-rating-line-path="'+rating+'" stroke="'+color+'" d="'+path+'"/>';
+        points.forEach(point=>{svg+='<circle class="ra-point" data-rating-point="'+rating+'" data-bin-index="'+point.index+'" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.1" fill="'+color+'"><title>'+esc(point.title)+' · '+rating+' '+esc(RATING_LABELS[rating])+': '+point.count+' press'+(point.count===1?'':'es')+'</title></circle>';});
         svg+='</g>';
-      }else{
-        svg+='<text class="ra-lane-empty" x="'+(left+pw/2)+'" y="'+(plotTop+plotHeight/2+4)+'" text-anchor="middle">No presses in this period</text>';
       }
     });
-    const labelEvery=bins.length<=12?1:Math.max(1,Math.ceil(bins.length/(selection.range==='month'?16:12)));
-    bins.forEach((bin,i)=>{
-      const cx=xAt(i);
-      if(i%labelEvery===0||i===bins.length-1)svg+='<line class="ra-gridline" x1="'+cx.toFixed(2)+'" y1="'+(top+visibleRatings.length*laneHeight-8)+'" x2="'+cx.toFixed(2)+'" y2="'+(top+visibleRatings.length*laneHeight-3)+'"/><text class="ra-tick" x="'+cx.toFixed(2)+'" y="'+(H-23)+'" text-anchor="middle">'+esc(bin.label)+'</text>';
-    });
-    if(!visibleRatings.some(r=>result.totals[r-1]>0)){
-      svg+='<text class="ra-no-data" x="'+(left+pw/2)+'" y="'+(top+visibleRatings.length*laneHeight/2)+'" text-anchor="middle">No presses for the selected ratings in this timeframe</text>';
-    }
-    svg+='<text class="ra-axis-title" x="'+(left+pw/2)+'" y="'+(H-5)+'" text-anchor="middle">Selected timeframe</text></svg>';
+    if(!visibleRatings.some(rating=>result.totals[rating-1]>0))svg+='<text class="ra-no-data" x="'+(left+plotW/2)+'" y="'+(top+plotH/2)+'" text-anchor="middle">No presses for the selected ratings in this timeframe</text>';
+    svg+='<text class="ra-axis-title" x="'+(left+plotW/2)+'" y="'+(H-5)+'" text-anchor="middle">Selected timeframe</text><text class="ra-axis-title" transform="translate(15 '+(top+plotH/2)+') rotate(-90)" text-anchor="middle">Button presses per interval</text></svg>';
     return svg;
   }
   function ratingAnalyticsTimelineTableMarkup(selection,level,entityId){
@@ -1902,14 +1856,12 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
 
   function ratingAnalyticsChartMarkup(selection,level,entityId){
-    const options=getRatingAnalyticsEntityOptions(level),selected=options.find(x=>x.value===entityId),timeline=getRatingAnalyticsTimeline(selection,level,entityId),scopeLabel=selected?.label||'No '+level+' selected',subtitle=selected?.subtitle||'';
-    const visibleRatings=getVisibleAnalyticsRatings();const legend=[1,2,3,4,5].map(r=>'<button type="button" class="ra-legend-item" data-hub-action="analytics-toggle-rating" data-rating-toggle="'+r+'" aria-pressed="'+visibleRatings.includes(r)+'" title="'+(visibleRatings.includes(r)?'Hide ':'Show ')+esc(RATING_LABELS[r])+' ratings in the graph"><i class="ra-swatch" data-rating="'+r+'"></i>'+r+' · '+esc(RATING_LABELS[r])+' <strong>'+timeline.totals[r-1]+'</strong></button>').join('');
-    const groupingLabel=level==='syllabus'?'syllabus / stream':level,custom=selection.range==='custom';
-    const customDates='<div class="ra-custom-dates" id="hubRatingCustomDates" '+(custom?'':'hidden')+'><div class="ra-field"><label for="hubRatingCustomStart">From date</label><input class="hub-input" type="date" id="hubRatingCustomStart" value="'+localEsc(selection.from)+'"></div><div class="ra-field"><label for="hubRatingCustomEnd">To date</label><input class="hub-input" type="date" id="hubRatingCustomEnd" value="'+localEsc(selection.to)+'"></div><button class="btn btn-primary" type="button" data-hub-action="analytics-custom-apply">Apply custom range</button></div>';
-    const choices=options.length?selectOptions(options.map(x=>[x.value,x.label+' — '+x.subtitle]),entityId):'<option value="">No '+esc(level)+' records available</option>';
-    const controls='<div class="ra-controls"><div class="ra-field"><label for="hubRatingGrouping">Analyse by</label><select class="hub-input" id="hubRatingGrouping">'+selectOptions([['topic','Individual topic'],['subject','Subject'],['syllabus','Syllabus / stream']],level)+'</select></div><div class="ra-field"><label for="hubRatingEntity">Choose '+esc(groupingLabel)+'</label><select class="hub-input" id="hubRatingEntity">'+choices+'</select></div><div class="ra-field"><label for="hubRatingPeriod">Timeframe</label><select class="hub-input" id="hubRatingPeriod">'+selectOptions([['week','This week'],['month','This month'],['year','This year'],['custom','Choose date range']],selection.range)+'</select></div></div>'+customDates;
-    const selectedCount=visibleRatings.reduce((sum,r)=>sum+timeline.totals[r-1],0);const summary='<div class="ra-chart-summary"><div><strong>'+esc(scopeLabel)+'</strong><small>'+esc(subtitle)+' · '+esc(selection.label)+' · '+esc(fmtDate(selection.from))+' – '+esc(fmtDate(selection.to))+'</small></div><div><strong>'+selectedCount+' selected review presses</strong><small>Toggle ratings to isolate trends. Each rating has its own scale, so lines never obscure one another.</small></div></div>';
-    return controls+summary+'<div class="ra-legend">'+legend+'</div><div class="ra-svg-wrap">'+ratingAnalyticsSvgMarkup(selection,level,entityId)+'</div><details class="ra-count-details"><summary>View exact counts by date / interval</summary>'+ratingAnalyticsTimelineTableMarkup(selection,level,entityId)+'</details><div class="ra-foot">Each rating is shown in its own line lane with an independent count scale, keeping the trends separate. Hover or tap a point for its exact count. X-axis: '+(selection.range==='year'?'12 months':selection.range==='month'?'each day of this month':selection.range==='week'?'seven days of this week':(dayDiff(selection.from,selection.to)+1)+'-day custom range, grouped into readable time intervals')+'. Future intervals remain blank until they pass; the count table marks them with — rather than implying zero presses.</div>';
+    const options=getRatingAnalyticsEntityOptions(level),selected=options.find(x=>x.value===entityId),timeline=getRatingAnalyticsTimeline(selection,level,entityId),scopeLabel=selected?.label||'No '+level+' selected',subtitle=selected?.subtitle||'',visibleRatings=getVisibleAnalyticsRatings();
+    const legend=[1,2,3,4,5].map(rating=>'<button type="button" class="ra-legend-item" data-hub-action="analytics-toggle-rating" data-rating-toggle="'+rating+'" aria-pressed="'+visibleRatings.includes(rating)+'" title="'+(visibleRatings.includes(rating)?'Hide ':'Show ')+esc(RATING_LABELS[rating])+' difficulty in the graph"><i class="ra-swatch" data-rating="'+rating+'"></i>'+rating+' · '+esc(RATING_LABELS[rating])+' <strong>'+timeline.totals[rating-1]+'</strong></button>').join('');
+    const groupingLabel=level==='syllabus'?'syllabus / stream':level,custom=selection.range==='custom',customDates='<div class="ra-custom-dates" id="hubRatingCustomDates" '+(custom?'':'hidden')+'><div class="ra-field"><label for="hubRatingCustomStart">From date</label><input class="hub-input" type="date" id="hubRatingCustomStart" value="'+localEsc(selection.from)+'"></div><div class="ra-field"><label for="hubRatingCustomEnd">To date</label><input class="hub-input" type="date" id="hubRatingCustomEnd" value="'+localEsc(selection.to)+'"></div><button class="btn btn-primary" type="button" data-hub-action="analytics-custom-apply">Apply custom range</button></div>',choices=options.length?selectOptions(options.map(x=>[x.value,x.label+' — '+x.subtitle]),entityId):'<option value="">No '+esc(level)+' records available</option>';
+    const controls='<div class="ra-controls"><div class="ra-field"><label for="hubRatingGrouping">Analyse by</label><select class="hub-input" id="hubRatingGrouping">'+selectOptions([['topic','Individual topic'],['subject','Subject'],['syllabus','Syllabus / stream']],level)+'</select></div><div class="ra-field"><label for="hubRatingEntity">Choose '+esc(groupingLabel)+'</label><select class="hub-input" id="hubRatingEntity">'+choices+'</select></div><div class="ra-field"><label for="hubRatingPeriod">Timeframe</label><select class="hub-input" id="hubRatingPeriod">'+selectOptions([['week','This week'],['month','This month'],['year','This year'],['custom','Choose date range']],selection.range)+'</select></div></div>'+customDates,selectedCount=visibleRatings.reduce((sum,rating)=>sum+timeline.totals[rating-1],0);
+    const summary='<div class="ra-chart-summary"><div><strong>'+esc(scopeLabel)+'</strong><small>'+esc(subtitle)+' · '+esc(selection.label)+' · '+esc(fmtDate(selection.from))+' – '+esc(fmtDate(selection.to))+'</small></div><div><strong>'+selectedCount+' selected button presses</strong><small>Toggle difficulty labels to show or hide each curve. All difficulties use the same count scale.</small></div></div>';
+    return controls+summary+'<div class="ra-legend">'+legend+'</div><div class="ra-svg-wrap">'+ratingAnalyticsSvgMarkup(selection,level,entityId)+'</div><details class="ra-count-details"><summary>View exact counts by date / interval</summary>'+ratingAnalyticsTimelineTableMarkup(selection,level,entityId)+'</details><div class="ra-foot">Each colored curve tracks one review-button difficulty on a shared count scale. The shaded area fades toward the baseline; tap a difficulty label to filter its curve. Hover or tap a point for the exact count. Future intervals remain blank, and the table marks them unavailable rather than treating them as zero.</div>';
   }
   function analyticsReportStackedRows(groups,limit){
     const visible=groups.slice(0,limit||20),max=Math.max(1,...groups.map(g=>g.total));
@@ -1966,31 +1918,26 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
 function paperScoreTrendsMarkup(papers){
     const groups=new Map();
-    (papers||[]).filter(p=>p&&safeDate(p.date)&&p.score!==null&&p.score!==undefined&&Number(p.maxScore)>0).forEach(p=>{
-      const subject=state.subjects.find(s=>s.id===p.subjectId),key=String(p.subjectId||'unassigned');
-      if(!groups.has(key))groups.set(key,{name:subject?subject.name:'Unassigned subject',items:[]});
-      groups.get(key).items.push(p);
-    });
+    (papers||[]).filter(p=>p&&safeDate(p.date)&&p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0).forEach(p=>{const subject=state.subjects.find(s=>s.id===p.subjectId),key=String(p.subjectId||'unassigned');if(!groups.has(key))groups.set(key,{name:subject?subject.name:'Unassigned subject',items:[]});groups.get(key).items.push(p);});
     return Array.from(groups.values()).map(group=>{
       const items=group.items.slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.name||'').localeCompare(String(b.name||'')));
-      const width=720,height=190,left=44,right=18,top=17,bottom=39,plotH=height-top-bottom,plotW=width-left-right;
-      const values=items.map(p=>Math.max(0,Math.min(100,Number(p.score)/Number(p.maxScore)*100)));
-      const xAt=i=>left+(items.length>1?i/(items.length-1):.5)*plotW,yAt=value=>top+plotH-(value/100)*plotH;
-      let svg='<svg class="paper-trend-svg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(group.name)+' paper score percentages over time">';
-      [0,50,100].forEach(value=>{
-        const yy=yAt(value);
-        svg+='<line class="paper-trend-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(width-right)+'" y2="'+yy.toFixed(2)+'"/><text class="paper-trend-tick" x="'+(left-8)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+value+'%</text>';
-      });
-      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,p:items[i]}));
-      if(points.length>1)svg+='<polyline class="paper-trend-line" points="'+points.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+'"/>';
-      const labelEvery=Math.max(1,Math.ceil(items.length/6));
-      points.forEach((point,i)=>{
-        svg+='<circle class="paper-trend-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="4"><title>'+localEsc(point.p.date)+' · '+localEsc(point.p.name||'Paper')+' · '+point.value.toFixed(1)+'%</title></circle>';
-        if(i%labelEvery===0||i===points.length-1)svg+='<text class="paper-trend-tick" x="'+point.x.toFixed(2)+'" y="'+(height-17)+'" text-anchor="middle">'+localEsc(point.p.date.slice(5))+'</text>';
-      });
-      svg+='<text class="paper-trend-axis-title" x="'+(left+plotW/2)+'" y="'+(height-2)+'" text-anchor="middle">Attempt date</text></svg>';
-      const first=Math.round(values[0]||0),last=Math.round(values[values.length-1]||0),change=last-first,changeText=items.length>1?' · '+(change>0?'+':'')+change+' pp from first attempt':'';
-      return '<div class="paper-trend-panel"><div class="paper-trend-head"><strong>'+localEsc(group.name)+'</strong><span>'+items.length+' scored attempt'+(items.length===1?'':'s')+' · latest '+last+'%'+changeText+'</span></div><div class="paper-trend-chart">'+svg+'</div></div>';
+      let graphItems=items;
+      if(items.length>180){
+        const bucketSize=Math.ceil(items.length/90),picked=new Map();picked.set(0,items[0]);picked.set(items.length-1,items[items.length-1]);
+        for(let start=0;start<items.length;start+=bucketSize){const end=Math.min(items.length,start+bucketSize);let minIndex=start,maxIndex=start,minValue=Infinity,maxValue=-Infinity;for(let i=start;i<end;i++){const value=Number(items[i].score)/Number(items[i].maxScore)*100;if(value<minValue){minValue=value;minIndex=i;}if(value>maxValue){maxValue=value;maxIndex=i;}}picked.set(minIndex,items[minIndex]);picked.set(maxIndex,items[maxIndex]);}
+        graphItems=Array.from(picked.entries()).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+      }
+      const left=46,right=18,height=214,top=18,bottom=42,plotH=height-top-bottom,width=Math.max(720,left+right+graphItems.length*30),plotW=width-left-right,baseline=top+plotH,values=graphItems.map(p=>Math.max(0,Math.min(100,Number(p.score)/Number(p.maxScore)*100))),xAt=i=>left+(graphItems.length>1?i/(graphItems.length-1):.5)*plotW,yAt=value=>top+plotH-(value/100)*plotH,gradientId=nextChartGradientId('paper-trend');
+      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,p:graphItems[i]})),path=smoothCurvePath(points),areaPath=points.length?path+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
+      let svg='<svg class="paper-trend-svg" style="width:'+width+'px" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(group.name)+' paper score percentages over time"><defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="62%" stop-color="var(--accent)" stop-opacity=".10"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>';
+      [0,50,100].forEach(value=>{const yy=yAt(value);svg+='<line class="paper-trend-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(width-right)+'" y2="'+yy.toFixed(2)+'"/><text class="paper-trend-tick" x="'+(left-8)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+value+'%</text>';});
+      svg+='<line class="paper-trend-axis" x1="'+left+'" y1="'+baseline+'" x2="'+(width-right)+'" y2="'+baseline+'"/>';
+      if(points.length>1)svg+='<path class="paper-trend-area" fill="url(#'+gradientId+')" d="'+areaPath+'"/><path class="paper-trend-line" d="'+path+'"/>';
+      const labelEvery=Math.max(1,Math.ceil(graphItems.length/Math.min(12,Math.floor(plotW/56)||1)));
+      points.forEach((point,i)=>{svg+='<circle class="paper-trend-point" cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.2"><title>'+localEsc(point.p.date)+' · '+localEsc(point.p.name||'Paper')+' · '+point.value.toFixed(1)+'%</title></circle>';if(i%labelEvery===0||i===points.length-1)svg+='<text class="paper-trend-tick" x="'+point.x.toFixed(2)+'" y="'+(height-19)+'" text-anchor="middle">'+localEsc(point.p.date.slice(5))+'</text>';});
+      svg+='<text class="paper-trend-axis-title" x="'+(left+plotW/2)+'" y="'+(height-3)+'" text-anchor="middle">Attempt date</text></svg>';
+      const first=Math.round(values[0]||0),last=Math.round(values[values.length-1]||0),change=last-first,changeText=items.length>1?' · '+(change>0?'+':'')+change+' pp from first attempt':'',sampleNote=graphItems.length<items.length?' · showing '+graphItems.length+' trend points for '+items.length+' attempts; all records remain below':'';
+      return '<div class="paper-trend-panel"><div class="paper-trend-head"><strong>'+localEsc(group.name)+'</strong><span>'+items.length+' scored attempt'+(items.length===1?'':'s')+' · latest '+last+'%'+changeText+sampleNote+'</span></div><div class="paper-trend-chart" tabindex="0" role="region" aria-label="Scrollable '+localEsc(group.name)+' score chart">'+svg+'</div></div>';
     }).join('');
   }
     function renderAnalytics(){const policy=analyticsAccessPolicy(),selection=getRatingAnalyticsSelection(),start=selection.from,end=selection.to,valid=selection.valid!==false,rangeDays=valid?Math.max(1,dayDiff(start,end)+1):30;const from=start,to=end;const recent=selection.records,avg=recent.length?recent.reduce((n,h)=>n+fNum(h.rating),0)/recent.length:0,good=recent.length?Math.round(recent.filter(h=>h.rating>=3).length/recent.length*100):0;const activityTo=to>today()?today():to,activityFrom=activityTo<from?from:dateShift(activityTo,-Math.min(13,Math.max(0,dayDiff(from,activityTo)))),series=[];for(let d=activityFrom;valid&&d<=activityTo;d=dateShift(d,1)){series.push({date:d,count:state.history.filter(h=>h.reviewedAt===d).length});}const activityChart=lineActivityMarkup(series.slice(-14).map(x=>({date:x.date,count:x.count,label:x.date.slice(8)})),'Daily saved review activity');const heatDays=({7:7,30:30,84:84,180:180,365:365})[Number(fsState.heatmapPeriod)]||84,heat=reviewActivity(heatDays).map(x=>'<div class="hub-heat" data-count="'+Math.min(4,x.count)+'" title="'+localEsc(x.date)+' · '+x.count+' review(s)"></div>').join('');const top=state.subjects.map(sub=>({name:sub.name,n:recent.filter(h=>h.subjectId===sub.id).length})).sort((a,b)=>b.n-a.n),subBars=top.map(x=>'<div style="margin:9px 0"><div class="hub-inline" style="justify-content:space-between"><span>'+localEsc(x.name)+'</span><strong>'+x.n+'</strong></div><div class="hub-meter"><span style="width:'+Math.min(100,x.n/Math.max(1,...top.map(y=>y.n))*100)+'%"></span></div></div>').join('');const papers=fsState.papers.filter(p=>p.date>=from&&p.date<=to&&p.score!==null&&p.maxScore>0).slice().sort((a,b)=>a.date.localeCompare(b.date));const paperRows=papers.map(p=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(p.name)+'</div><div class="hub-row-meta">'+localEsc(p.date)+' · '+localEsc(p.kind||'Practice')+'</div></div><strong>'+Math.round(p.score/p.maxScore*100)+'%</strong></div>').join('');const paperChart=paperScoreTrendsMarkup(papers);const mistakes=fsState.journal.filter(j=>j.date>=from&&j.date<=to),cats={};mistakes.forEach(j=>cats[j.category||'Other']=(cats[j.category||'Other']||0)+1);const mistakeRows=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,n])=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(k)+'</div><div class="hub-row-meta">Recurring mistake / lesson category</div></div><strong>'+n+'</strong></div>').join('');const studyLogs=fsState.studyLogs.filter(l=>l.date>=from&&l.date<=to),study=studyLogs.reduce((n,l)=>n+fNum(l.minutes),0),timeBySubject=state.subjects.map(sub=>({name:sub.name,mins:studyLogs.filter(l=>l.subjectId===sub.id).reduce((n,l)=>n+fNum(l.minutes),0)})).sort((a,b)=>b.mins-a.mins),timeRows=timeBySubject.map(x=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(x.name)+'</div><div class="hub-row-meta">Logged focus sessions</div></div><strong>'+x.mins+' min</strong></div>').join(''),topicTime=state.topics.map(t=>({name:t.name,mins:studyLogs.filter(l=>l.topicId===t.id).reduce((n,l)=>n+fNum(l.minutes),0)})).filter(x=>x.mins>0).sort((a,b)=>b.mins-a.mins).slice(0,12).map(x=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(x.name)+'</div><div class="hub-row-meta">Topic-linked focus sessions</div></div><strong>'+x.mins+' min</strong></div>').join('');const weakest=activeTopics().filter(t=>t.reviewCount).sort((a,b)=>featureMeta(a).avg-featureMeta(b).avg).slice(0,5),weakRows=weakest.map(t=>'<div class="hub-row"><div class="hub-row-main"><div class="hub-row-title">'+localEsc(t.name)+'</div><div class="hub-row-meta">'+localEsc(subjectFor(t)?.name||'')+' · recent rating '+featureMeta(t).avg.toFixed(1)+'/5</div></div><button class="btn btn-sm" data-hub-action="edit-topic" data-id="'+localEsc(t.id)+'">Open</button></div>').join('');const ratingBuckets=[1,2,3,4,5].map(r=>({rating:r,count:recent.filter(h=>Number(h.rating)===r).length})),ratingTotal=Math.max(1,recent.length),ratingMarkup=ratingBuckets.map(x=>'<div class="insight-rating-row"><span class="insight-rating-label">'+x.rating+' · '+localEsc(({1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'})[x.rating])+'</span><div class="insight-track"><span style="width:'+(x.count/ratingTotal*100)+'%" data-rating="'+x.rating+'"></span></div><strong>'+x.count+'</strong></div>').join('');const active=activeTopics(),dueSoon=active.filter(t=>safeDate(t.dueDate)&&t.dueDate>=today()&&t.dueDate<=dateShift(today(),6)).length,overdue=active.filter(t=>status(t)==='overdue').length,mastered=active.filter(isMastered).length,masteryPct=active.length?Math.round(mastered/active.length*100):0,weeklyTarget=Math.max(1,fNum(fsState.settings.dailyMinutes)||90)*7,weeklyMinutes=fsState.studyLogs.filter(l=>l.date>=dateShift(today(),-6)&&l.date<=today()).reduce((n,l)=>n+fNum(l.minutes),0),weeklyPct=Math.min(100,Math.round(weeklyMinutes/weeklyTarget*100)),prevStart=dateShift(from,-rangeDays),prev=state.history.filter(h=>h.reviewedAt>=prevStart&&h.reviewedAt<from),momentum=prev.length?Math.round((recent.length-prev.length)/prev.length*100):null;const intelligence='<div class="insight-grid"><div class="insight-metric"><span class="insight-icon insight-icon-momentum" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5 9.2 11l3.4 3.3L20 6.5M14.5 6.5H20v5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="insight-label">Review momentum</span><strong>'+(momentum===null?'New baseline':(momentum>0?'+':'')+momentum+'%')+'</strong><small>'+(momentum===null?'No prior-period data': 'vs. previous '+rangeDays+' days')+'</small></div><div class="insight-metric"><span class="insight-icon insight-icon-mastery" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4.8" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span><span class="insight-label">Mastery coverage</span><strong>'+masteryPct+'%</strong><small>'+mastered+' of '+active.length+' active topics</small><div class="insight-track"><span style="width:'+masteryPct+'%"></span></div></div><div class="insight-metric"><span class="insight-icon insight-icon-load" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5v5l3.3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="insight-label">Next 7-day load</span><strong>'+dueSoon+'</strong><small>'+overdue+' overdue now</small></div><div class="insight-metric"><span class="insight-icon insight-icon-goal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 2.8 2.1 6.1 6.1 2.1-6.1 2.1-2.1 6.1-2.1-6.1-6.1-2.1 6.1-2.1L12 2.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" fill="currentColor"/></svg></span><span class="insight-label">Weekly study goal</span><strong>'+weeklyPct+'%</strong><small>'+weeklyMinutes+' / '+weeklyTarget+' min logged</small><div class="insight-track"><span style="width:'+weeklyPct+'%"></span></div></div></div>';const metrics='<div class="hub-kpis"><div class="hub-kpi"><strong>'+recent.length+'</strong><span>Reviews in range</span></div><div class="hub-kpi"><strong>'+(avg?avg.toFixed(2)+'/5':'—')+'</strong><span>Mean recall rating</span></div><div class="hub-kpi"><strong>'+good+'%</strong><span>Ratings 3–5</span></div><div class="hub-kpi"><strong>'+study+'</strong><span>Focus minutes</span></div></div>';return '<div class="analytics-hero"><div><span class="analytics-eyebrow">LEARNING INTELLIGENCE</span><h3>Your progress, decoded.</h3><p>Spot patterns, measure consistency, and decide what to study next.</p></div><div class="hub-actions"><button class="btn btn-primary" data-hub-action="analytics-export-pdf">⇩ Export detailed PDF</button><button class="btn btn-soft" data-hub-action="analytics-export">Export CSV</button></div></div>'+hubCard('Recall score analytics','Explore the number of times each rating button was pressed across the selected timeframe.',ratingAnalyticsChartMarkup(selection,fsState.analyticsRatingGrouping||'topic',getRatingAnalyticsEntityId(fsState.analyticsRatingGrouping||'topic')),true)+hubCard('At-a-glance intelligence','Derived from your saved review ratings, topic mastery, and logged study sessions.',intelligence,true)+hubCard('Selected period summary','All metrics and detail tables below use the timeframe selected in Recall score analytics.',metrics,true)+hubCard('Review activity · selected range','Daily saved review events shown as a line over the last 14 days of the selected period.',activityChart)+hubCard('Consistency heatmap','Choose a calendar period; each square is one date.','<div class="hub-field"><label for="hubHeatmapPeriod">Period</label><select class="hub-input" id="hubHeatmapPeriod">'+selectOptions([['7','7 days'],['30','30 days'],['84','12 weeks'],['180','6 months'],['365','12 months']],String(heatDays))+'</select></div><div class="hub-heatmap">'+heat+'</div>')+hubCard('Paper score trends','Each subject has its own percentage trend line on a shared 0–100% scale, keeping different subjects separate.',(paperChart||'<div class="hub-empty">Add scored paper/practice records in this date range to see trends.</div>')+paperRows,true)+hubCard('Recurring mistakes','Journal entries grouped by mistake category in the selected range.',mistakeRows||'<div class="hub-empty">No journal entries in this date range.</div>',true)+hubCard('Study time breakdown','Choose whether to group your recorded focus time by subject or by topic.','<div class="hub-field"><label for="hubStudyTimeGrouping">Show study time by</label><select class="hub-input" id="hubStudyTimeGrouping"><option value="subject" '+((fsState.studyTimeGrouping||'subject')==='subject'?'selected':'')+'>Subject</option><option value="topic" '+(fsState.studyTimeGrouping==='topic'?'selected':'')+'>Topic</option></select></div><div class="hub-scroll-list">'+((fsState.studyTimeGrouping||'subject')==='topic'?(topicTime||'<div class="hub-empty">Select a topic when starting a focus session to see topic-level time.</div>'):(timeRows||'<div class="hub-empty">No subject-linked focus time in this date range yet.</div>'))+'</div>',true)+hubCard('Subject review activity','Saved review records per subject in the selected range.',subBars||'<div class="hub-empty">No reviews in this range.</div>')+hubCard('Topics needing attention','Lowest recent topic ratings; this ranking uses each topic’s recent history, not just the selected range.',weakRows||'<div class="hub-empty">Rate topics to unlock this view.</div>',true)+'</div>';}
