@@ -1959,7 +1959,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
   }
   function analyticsLineChartMarkup(series,options){
     const config=options&&typeof options==='object'?options:{},items=Array.isArray(series)?series:[],title=String(config.title||'Analytics trend'),unit=String(config.unit||'Value'),color=String(config.color||'#8978f8'),gradientId=String(config.gradientId||'pdf-analytics-line').replace(/[^a-z0-9_-]/gi,''),svgClass=String(config.svgClass||'pdf-line-svg').replace(/[^a-zA-Z0-9 _-]/g,''),wrapperClass=String(config.wrapperClass||'pdf-line-chart-wrap').replace(/[^a-zA-Z0-9 _-]/g,''),hasData=Boolean(config.hasData);
-    const width=760,height=252,left=52,right=22,top=20,bottom=46,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=top+plotHeight;
+    const width=720,height=250,left=48,right=18,top=20,bottom=43,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=top+plotHeight;
     const values=items.map(item=>Math.max(0,Number(item&&item.value)||0)),rawMax=Math.max(1,...values),tickStep=rawMax<=4?1:Math.ceil(rawMax/4),maxValue=Math.max(1,Math.ceil(rawMax/tickStep)*tickStep);
     const xAt=i=>left+(values.length>1?i/(values.length-1)*plotWidth:plotWidth/2),yAt=value=>top+plotHeight-(value/maxValue)*plotHeight;
     const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,item:items[i]}));
@@ -1975,18 +1975,18 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
       return path;
     };
     const linePath=smoothPath(),areaPath=points.length>1?linePath+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
-    let svg='<svg class="'+svgClass+'" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(title)+'"><defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".24"/><stop offset="70%" stop-color="'+color+'" stop-opacity=".07"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>';
-    [...new Set([0,Math.round(maxValue/2),maxValue])].forEach(value=>{const y=yAt(value);svg+='<line x1="'+left+'" y1="'+y.toFixed(2)+'" x2="'+(width-right)+'" y2="'+y.toFixed(2)+'" stroke="#dbe2ee" stroke-width="1"/><text x="'+(left-9)+'" y="'+(y+4).toFixed(2)+'" text-anchor="end" fill="#647084" font-size="12">'+value+'</text>';});
-    svg+='<line x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(width-right)+'" y2="'+baseline.toFixed(2)+'" stroke="#7b8495" stroke-width="1.2"/>';
+    let svg='<svg class="'+svgClass+'" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(title)+'"><defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="68%" stop-color="'+color+'" stop-opacity=".08"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>';
+    [...new Set([0,Math.round(maxValue/2),maxValue])].forEach(value=>{const y=yAt(value);svg+='<line x1="'+left+'" y1="'+y.toFixed(2)+'" x2="'+(width-right)+'" y2="'+y.toFixed(2)+'" stroke="#dbe2ee" stroke-width="1" stroke-dasharray="3 4"/><text x="'+(left-9)+'" y="'+(y+4).toFixed(2)+'" text-anchor="end" fill="#647084" font-size="11">'+value+'</text>';});
+    svg+='<line x1="'+left+'" y1="'+baseline.toFixed(2)+'" x2="'+(width-right)+'" y2="'+baseline.toFixed(2)+'" stroke="#7b8495" stroke-width="1"/>';
     if(hasData&&points.length){
       if(points.length>1)svg+='<path d="'+areaPath+'" fill="url(#'+gradientId+')"/>';
-      svg+='<path d="'+linePath+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+      svg+='<path d="'+linePath+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
       const labelEvery=Math.max(1,Math.ceil(points.length/8));
-      points.forEach((point,i)=>{const item=point.item||{},start=String(item.date||''),end=String(item.endDate||''),dateLabel=end&&end!==start?start+' – '+end:start;svg+='<circle cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.2" fill="'+color+'"><title>'+localEsc(dateLabel)+' · '+point.value+' '+localEsc(unit.toLowerCase())+'</title></circle>';if(i%labelEvery===0||i===points.length-1)svg+='<text x="'+point.x.toFixed(2)+'" y="'+(height-22)+'" text-anchor="middle" fill="#647084" font-size="11">'+localEsc(item.label||'')+'</text>';});
+      points.forEach((point,i)=>{const item=point.item||{},start=String(item.date||''),end=String(item.endDate||''),dateLabel=end&&end!==start?start+' – '+end:start;svg+='<circle cx="'+point.x.toFixed(2)+'" cy="'+point.y.toFixed(2)+'" r="3.2" fill="'+color+'"><title>'+localEsc(dateLabel)+' · '+point.value+' '+localEsc(unit.toLowerCase())+'</title></circle>';if(i%labelEvery===0||i===points.length-1)svg+='<text x="'+point.x.toFixed(2)+'" y="'+(height-20)+'" text-anchor="middle" fill="#647084" font-size="11">'+localEsc(item.label||'')+'</text>';});
     }else{
       svg+='<text x="'+(left+plotWidth/2)+'" y="'+(top+plotHeight/2)+'" text-anchor="middle" fill="#647084" font-size="13">No saved '+localEsc(unit.toLowerCase())+' in this timeframe</text>';
     }
-    svg+='<text x="'+(left+plotWidth/2)+'" y="'+(height-4)+'" text-anchor="middle" fill="#20293a" font-size="12" font-weight="700">Date</text><text transform="translate(15 '+(top+plotHeight/2)+') rotate(-90)" text-anchor="middle" fill="#20293a" font-size="12" font-weight="700">'+localEsc(unit)+'</text></svg>';
+    svg+='<text x="'+(left+plotWidth/2)+'" y="'+(height-4)+'" text-anchor="middle" fill="#20293a" font-size="11" font-weight="650">Date</text><text transform="translate(15 '+(top+plotHeight/2)+') rotate(-90)" text-anchor="middle" fill="#20293a" font-size="11" font-weight="650">'+localEsc(unit)+'</text></svg>';
     return '<div class="'+wrapperClass+'">'+svg+'</div>';
   }
 
