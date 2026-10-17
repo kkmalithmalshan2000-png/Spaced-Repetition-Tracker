@@ -50,11 +50,11 @@ assert(html.includes('No reviews for the selected difficulties in this timeframe
 assert(html.includes('class="hub-nav analytics-nav"') && html.includes("data-analytics-section=") && html.includes("if(a==='analytics-section')"), 'Analytics must expose the four-section top navigation.');
 assert(html.includes('aria-label="Practice and paper log"') && html.includes('aria-label="Study time by subject"') && html.includes('touch-action:pan-y'), 'Practice records and study-time breakdowns must use scrollable touch-friendly regions.');
 assert(html.includes("new Map()") && html.includes("dateToBin=new Map()"), 'Analytics review history must be aggregated instead of repeatedly filtering every record for every day.');
-assert(html.includes('function lineActivityMarkup') && html.includes('class="activity-line-svg"') && html.includes('function smoothCurvePath') && html.includes('class="activity-area"'), 'Home and Analytics activity must use a smooth line chart with a fading area gradient.');
+assert(html.includes('function renderActivityAnalytics(selection)') && html.includes('class="nexus-activity-svg"') && html.includes('const buildActivitySeries=') && html.includes('class="nexus-activity-area"'), 'Activity must use a dedicated, self-contained smooth line renderer.');
 assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('paper-trend-area') && html.includes('all records remain below'), 'Paper marks must use smooth gradient trend charts while preserving the full attempt log.');
 assert(html.includes('homeOpenAnalytics') && html.includes('linear-gradient(135deg,#8978f8,#6c63df)'), 'The Home Analytics launch button must retain its premium purple theme.');
 assert(!html.includes('id="homeOpenCalendar"') && html.includes('id="homeOpenCalendarSecondary"'), 'Home must keep View schedule and remove the duplicate Open calendar button.');
-assert(html.includes('data-rating-point=') && html.includes('class="ra-line"') && html.includes('class="activity-line"'), 'Line charts must provide discrete, tooltipped points and a visible trend path.');
+assert(html.includes('data-rating-point=') && html.includes('class="ra-line"') && html.includes('class="nexus-activity-line"'), 'Analytics line charts must provide discrete points and a visible trend path.');
 assert(html.includes('data-hub-action="analytics-toggle-rating"') && html.includes("if(a==='analytics-toggle-rating')"), 'Every rating legend item must toggle its series in the graph.');
 assert(html.includes("fsState.analyticsVisibleRatings=current.filter(r=>r!==rating)") && html.includes("fsState.analyticsVisibleRatings=[...current,rating].sort((x,y)=>x-y)"), 'Rating filters must support hiding and restoring multiple ratings.');
 assert(html.includes('getVisibleAnalyticsRatings()') && html.includes('data-rating-line=') && html.includes('data-scale-max=') && html.includes('same count scale'), 'Difficulty toggles must filter lines that share the same count axis.');
@@ -80,10 +80,10 @@ assert(!html.includes('data-hub-tab="analytics"'), 'Analytics must not remain a 
 assert(!html.includes('data-view="history"') && html.includes('id="dangerZoneStandalone"'), 'Review history must be moved out of the main navigation and into Danger Zone.');
 assert(html.includes('DANGER ZONE — Clear every saved review-history entry?'), 'History deletion must warn users that analytics records will be lost.');
 assert(html.includes('function exportAnalyticsPdf()') && html.includes('data-hub-action="analytics-export-pdf"'), 'Analytics must include the detailed printable PDF report action.');
-assert(html.includes('buildActivityBuckets(selection.from,activityEnd,reviewCountByDate)') && html.includes('buildActivityBuckets(selection.from,activityEnd,studyMinutesByDate)') && html.includes('activityChartTitle') && html.includes('studyTimeChartTitle') && html.includes('class="activity-line-svg"') && html.includes('activity-area'), 'PDF export must use full-range smooth gradient line charts for review counts and study time.');
-assert(html.includes('paperScoreTrendsMarkup(paperGraphPapers)') && html.includes('Paper &amp; practice score trends') && html.includes('pdf-paper-trends'), 'PDF export must include the subject-separated smooth paper/practice score graphs.');
-assert(html.includes('reviewHeatmapMarkup') && html.includes('pdf-heatmap-cell') && html.includes('Review activity heatmap'), 'PDF export must include a review activity heatmap for the selected timeframe.');
-assert(html.includes('.activity-line-svg{display:block;width:100%') && html.includes('.paper-trend-svg{display:block;width:100%!important'), 'PDF export must include print styles for the SVG activity and paper score charts.');
+assert(!html.includes("downloadBlob('nexus-study-review-report.html'") && !html.includes("const fallbackReport='<!doctype html>"), 'PDF export must use the clean live-app print flow, not the preview-only HTML fallback.');
+assert(html.includes('function paperScoreTrendsMarkup') && html.includes('paper-trend-line') && html.includes('paper-trend-area'), 'Paper analytics must retain its smooth subject-separated trend charts in the app.');
+assert(!html.includes('reviewHeatmapMarkup') && !html.includes('pdf-heatmap-cell'), 'Preview-only PDF heatmap code must be removed when restoring the live report.');
+assert(html.includes('.paper-trend-svg{display:block;width:100%!important') && html.includes('nexus-activity-svg{display:block;width:100%'), 'Paper charts and rebuilt Activity charts must retain responsive graph styling.');
 assert(html.includes('ra-svg-dense') && html.includes("period==='month'") && html.includes("period==='year'"), 'Month/year graphs must retain their day/month axis labels.');
 assert(html.includes('function ratingAnalyticsTimelineTableMarkup') && html.includes('View exact counts by date / interval'), 'Analytics must provide exact per-rating counts for each timeline interval.');
 assert(html.includes('DANGER ZONE — Delete this review record?'), 'Deleting an individual review must warn that it will be removed from analytics.');
@@ -123,11 +123,12 @@ const analyticsFunctionNames = [
   'ratingAnalyticsTimelineTableMarkup',
   'nextChartGradientId',
   'smoothCurvePath',
-  'lineActivityMarkup',
-  'buildActivityBuckets',
+'renderActivityAnalytics',
   'paperScoreTrendsMarkup'
 ];
 const analyticsFunctionSources = Object.fromEntries(analyticsFunctionNames.map(name => [name, extractFunctionDeclaration(html, name)]));
+const activitySource = analyticsFunctionSources.renderActivityAnalytics || '';
+assert(activitySource && !/\b(?:lineActivityMarkup|buildActivityBuckets|smoothCurvePath|nextChartGradientId|safeDate|dateShift|dayDiff|fNum|localEsc)\b/.test(activitySource), 'Activity must not depend on helpers private to the main app IIFE.');
 for (const name of analyticsFunctionNames) assert(Boolean(analyticsFunctionSources[name]), 'Analytics runtime validation could not extract '+name+'.');
 
 if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
@@ -148,9 +149,9 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       return date.getUTCFullYear() === parts[0] && date.getUTCMonth() === parts[1] - 1 && date.getUTCDate() === parts[2];
     };
     const testContext = {
-      fsState:{analyticsPeriod:'week',analyticsCustomStart:'2026-10-10',analyticsCustomEnd:fixedToday},
+      fsState:{analyticsPeriod:'week',analyticsCustomStart:'2026-10-10',analyticsCustomEnd:fixedToday,studyLogs:[{date:'2026-10-12',minutes:25,subjectId:'science-bio'},{date:'2026-10-15',minutes:50,subjectId:'science-chem'},{date:'2026-10-16',minutes:0,subjectId:'science-bio'}]},
       chartGradientCounter:0,
-      state:{history:sampleHistory,subjects:[{id:'science-bio',name:'Biology'},{id:'science-chem',name:'Chemistry'}]},
+      state:{history:sampleHistory.map((item,index)=>({...item,subjectId:index%2?'science-chem':'science-bio'})),subjects:[{id:'science-bio',name:'Biology'},{id:'science-chem',name:'Chemistry'}]},
       today:() => fixedToday,
       safeDate:validCalendarDate,
       dateShift:(date,days) => { const d = new Date(date+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); },
@@ -158,6 +159,7 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
       fmtDate:date => date,
       esc:value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
       localEsc:value => String(value ?? ''),
+      hubCard:(title,subtitle,body)=>'<section><h3>'+String(title)+'</h3><p>'+String(subtitle)+'</p>'+String(body)+'</section>',
       RATING_LABELS:{1:'Again',2:'Hard',3:'Good',4:'Very good',5:'Easy'},
       RATING_ANALYTICS_COLORS:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#84cc16',5:'#059669'},
       getRatingAnalyticsScopedRecords:records => records || []
@@ -221,17 +223,15 @@ if (analyticsFunctionNames.every(name => analyticsFunctionSources[name])) {
     assert(filteredSvg.includes('data-rating-line="4"') && filteredSvg.includes('data-rating-line="5"'), 'Selecting Very good and Easy must show their line series.');
     assert(!filteredSvg.includes('data-rating-line="1"') && !filteredSvg.includes('data-rating-line="2"') && !filteredSvg.includes('data-rating-line="3"'), 'Unselected rating series must be hidden from the graph.');
 
-    const activitySvg = testContext.lineActivityMarkup([
-      {date:'2026-10-14',label:'14',short:'2026-10-14',count:2},
-      {date:'2026-10-15',label:'15',short:'2026-10-15',count:0},
-      {date:'2026-10-16',label:'16',short:'2026-10-16',count:5}
-    ], 'Daily saved review activity');
-    assert(activitySvg.includes('path class="activity-line"') && activitySvg.includes('activity-area') && activitySvg.includes(' C ') && (activitySvg.match(/class="activity-point"/g)||[]).length===3, 'Activity trend must draw a smooth curve, fading area, and one point per day.');
-    assert(activitySvg.includes('Daily saved review activity') && activitySvg.includes('2026-10-16'), 'Activity chart must retain accessible labelling and exact-date point details.');
-    const bucketValues = new Map([['2026-01-01',2],['2026-03-31',5]]);
-    const longBuckets = testContext.buildActivityBuckets('2026-01-01','2026-03-31',bucketValues);
-    assert(longBuckets.length<20 && longBuckets[0].date==='2026-01-01' && longBuckets[longBuckets.length-1].endDate==='2026-03-31' && longBuckets.reduce((total,bucket)=>total+bucket.count,0)===7, 'Long activity buckets must cover the selected span and preserve daily totals.');
-
+    const activityMarkup = testContext.renderActivityAnalytics({from:'2026-10-12',to:'2026-10-16',valid:true});
+    assert((activityMarkup.match(/class="nexus-activity-svg"/g)||[]).length===2, 'Activity must render separate review and study-time graphs in the actual renderer.');
+    assert(activityMarkup.includes('Reviews in range') && activityMarkup.includes('Logged study time') && activityMarkup.includes('Study sessions logged'), 'Activity must render all activity KPIs from saved data.');
+    assert(activityMarkup.includes('Biology') && activityMarkup.includes('Chemistry') && activityMarkup.includes('75 min'), 'Activity must attribute saved reviews and session minutes to their subjects.');
+    assert(activityMarkup.includes(' C ') && activityMarkup.includes('nexus-activity-area') && activityMarkup.includes('2026-10-16'), 'Activity charts must draw smooth gradient curves and retain date tooltips.');
+    const activityYear = testContext.renderActivityAnalytics({from:'2025-10-01',to:'2026-10-16',valid:true});
+    assert(activityYear.includes('Total review count') && activityYear.includes('Total study time'), 'Year-long Activity graphs must display range totals rather than daily totals.');
+    const activityEmpty = testContext.renderActivityAnalytics({from:'2024-01-01',to:'2024-01-07',valid:true});
+    assert(activityEmpty.includes('No saved reviews in this timeframe') && activityEmpty.includes('No saved minutes in this timeframe'), 'Activity must render useful empty states when no saved records exist.');
     const paperTrend = testContext.paperScoreTrendsMarkup([
       {id:'bio-1',subjectId:'science-bio',name:'Biology practice 1',date:'2026-10-01',score:30,maxScore:50},
       {id:'bio-2',subjectId:'science-bio',name:'Biology practice 2',date:'2026-10-12',score:40,maxScore:50},
@@ -259,7 +259,7 @@ assert(checkedScripts > 0, 'No inline JavaScript blocks were checked.');
 
 
 assert(html.includes("return hero+nav+sharedTimeframeFilter+'<div class=\"analytics-section-content\"") && html.includes('id="hubRatingPeriod"'), 'A shared timeframe filter must appear below the Analytics navigation.');
-assert(html.includes('function buildActivityBuckets(start,end,valuesByDate,maxPoints=80)') && html.includes("longActivityRange?'Total review count':'Daily review count'") && html.includes("longActivityRange?'Total study time':'Daily study time'"), 'Long activity graph ranges must show totals for the selected period.');
+assert(html.includes('const buildActivitySeries=') && html.includes("longRange?'Total review count':'Daily review count'") && html.includes("longRange?'Total study time':'Daily study time'"), 'Long Activity graph ranges must aggregate and label the selected period.');
 assert(html.includes('homeConsistencySummary') && html.includes('homeHeatmapPeriod') && !html.includes("['consistency','Heatmap & streaks']"), 'Heatmap and streak summary must be located on Overview.');
 assert(!html.includes('id="startReviewBtn"') && !html.includes("startReviewBtn').addEventListener"), 'Overview must not expose a Start review action.');
 assert(!/inbox/i.test(html), 'Analytics wording must use records rather than inbox terminology.');
@@ -267,7 +267,7 @@ assert(html.includes('Practice & paper records') && html.includes('Study time by
 assert(html.includes('color-mix(in srgb,var(--surface) 91%,#8978f8 9%)') && html.includes("4:'#84cc16',5:'#059669'"), 'Summary card tint and distinct green rating palette must be present.');
 
 
-assert(html.includes("reportWindow=window.open('about:blank','_blank')") && html.includes('Nexus PDF export failed'), 'PDF export must attempt to open its print window synchronously and surface generation failures.');
+assert(html.includes("const reportWindow=window.open('about:blank','_blank')") && html.includes('Could not open the PDF report') && !html.includes('Nexus PDF export failed'), 'PDF export must match the clean live print-window flow.');
 assert(html.includes('function exportAnalyticsCsv()') && html.includes("if(action==='analytics-export'){exportAnalyticsCsv();return;}") && html.includes('text/csv;charset=utf-8'), 'Analytics CSV export must use the shared timeframe and produce a downloadable UTF-8 CSV.');
 assert(html.includes(".join(',')).join('\\\\r\\\\n')"), 'Analytics CSV rows must be comma-separated with CRLF row endings.');
 assert(html.includes("const toggle=e.target.closest('[data-home-collapse]')") && html.includes('data-home-collapse="dueQueue"') && html.includes('data-home-collapse="progressList"') && html.includes('data-home-collapse="upcomingQueue"') && html.includes('data-home-collapse="overviewAnalytics"'), 'Overview list cards must use labelled Collapse/Expand buttons.');
@@ -276,10 +276,11 @@ assert(html.includes("document.addEventListener('change',e=>{") && html.includes
 
 
 assert(!html.includes("arrow.textContent='⌃'") && !html.includes('function makeCollapsible(panelSelector'), 'Overview must not inject the legacy arrow-only collapse controls; use labelled Collapse/Expand buttons.');
+assert(html.indexOf("if(analyticsSection==='activity')") < html.indexOf('getRatingAnalyticsEntityOptions(ratingLevel)'), 'Activity must route before Review-difficulty-only grouping helpers are evaluated.');
 assert(html.includes("const safeDate=d=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||'')))return false;") && html.includes('function renderActivityAnalytics(selection)'), 'Activity must use self-contained date validation and a dedicated renderer.');
-assert(html.includes("content=renderActivityAnalytics(selection)") && html.includes("lineActivityMarkup(reviewSeries,reviewTitle,'Reviews','#8978f8')") && html.includes("lineActivityMarkup(minuteSeries,studyTitle,'Minutes','#32bfc0')"), 'Activity must render the review-count and study-time line charts from its dedicated renderer.');
-assert(html.includes("Array.isArray(state.history)?state.history:[]") && html.includes("Array.isArray(fsState.studyLogs)?fsState.studyLogs:[]") && html.includes("buildActivityBuckets(from,end,reviewsByDate)") && html.includes("buildActivityBuckets(from,end,minutesByDate)"), 'Activity graph inputs must be normalized saved review history and study logs for the selected timeframe.');
-assert(html.includes("reportHtml='<!doctype html>") && html.includes("downloadBlob('nexus-study-review-report.html',reportHtml,'text/html;charset=utf-8')") && html.includes("const fallbackReport='<!doctype html>"), 'PDF export must retain a print-ready report and provide an HTML download fallback when popup or printing fails.');
+assert(html.includes("renderActivityChart(reviewSeries,reviewTitle,'Reviews','#8978f8'") && html.includes("renderActivityChart(studySeries,studyTitle,'Minutes','#32bfc0'") && html.includes("if(analyticsSection==='activity')"), 'Activity must render its two graphs through the isolated Activity route.');
+assert(html.includes("Array.isArray(state&&state.history)?state.history:[]") && html.includes("Array.isArray(fsState&&fsState.studyLogs)?fsState.studyLogs:[]") && html.includes("buildActivitySeries(from,to,reviewsByDate)") && html.includes("buildActivitySeries(from,to,minutesByDate)"), 'Activity graph inputs must be normalized saved review history and study logs for the selected timeframe.');
+assert(!html.includes("reportHtml='<!doctype html>") && !html.includes("downloadBlob('nexus-study-review-report.html'") && !html.includes("const fallbackReport='<!doctype html>"), 'The preview-only PDF HTML fallback must be fully removed.');
 // Existing shared-filter placement assertion above also covers all Analytics sections.
 
 
