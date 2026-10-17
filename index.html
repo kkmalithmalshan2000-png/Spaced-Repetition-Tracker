@@ -2050,6 +2050,17 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
     try{reportWindow.document.open();reportWindow.document.write(report);reportWindow.document.close();setTimeout(function(){try{reportWindow.focus();reportWindow.print();}catch(e){notify('The report opened, but printing was blocked. Use the browser menu to Print / Save as PDF.');}},450);}catch(e){try{reportWindow.close();}catch(_){}notify('Could not open the PDF report. Try allowing pop-ups and retry.');}
   }
 
+  function studyHubSmoothCurvePath(points){
+    if(!Array.isArray(points)||!points.length)return '';
+    if(points.length===1)return 'M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+    let d='M '+points[0].x.toFixed(2)+' '+points[0].y.toFixed(2);
+    for(let i=0;i<points.length-1;i++){
+      const p0=points[i-1]||points[i],p1=points[i],p2=points[i+1],p3=points[i+2]||p2,low=Math.min(p1.y,p2.y),high=Math.max(p1.y,p2.y);
+      const c1x=p1.x+(p2.x-p0.x)/6,c1y=Math.min(high,Math.max(low,p1.y+(p2.y-p0.y)/6)),c2x=p2.x-(p3.x-p1.x)/6,c2y=Math.min(high,Math.max(low,p2.y-(p3.y-p1.y)/6));
+      d+=' C '+c1x.toFixed(2)+' '+c1y.toFixed(2)+', '+c2x.toFixed(2)+' '+c2y.toFixed(2)+', '+p2.x.toFixed(2)+' '+p2.y.toFixed(2);
+    }
+    return d;
+  }
   function paperScoreTrendsMarkup(papers){
     const groups=new Map();
     (papers||[]).filter(p=>p&&safeDate(p.date)&&p.score!==null&&p.score!==undefined&&Number.isFinite(Number(p.score))&&Number(p.maxScore)>0).forEach(p=>{const subject=state.subjects.find(s=>s.id===p.subjectId),key=String(p.subjectId||'unassigned');if(!groups.has(key))groups.set(key,{name:subject?subject.name:'Unassigned subject',items:[]});groups.get(key).items.push(p);});
@@ -2062,7 +2073,7 @@ body.analytics-mode .app,body.danger-mode .app{display:none!important}
         graphItems=Array.from(picked.entries()).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
       }
       const left=46,right=18,height=214,top=18,bottom=42,plotH=height-top-bottom,width=Math.max(720,left+right+graphItems.length*30),plotW=width-left-right,baseline=top+plotH,values=graphItems.map(p=>Math.max(0,Math.min(100,Number(p.score)/Number(p.maxScore)*100))),xAt=i=>left+(graphItems.length>1?i/(graphItems.length-1):.5)*plotW,yAt=value=>top+plotH-(value/100)*plotH,gradientId='nexus-paper-trend-'+groupIndex;
-      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,p:graphItems[i]})),path=smoothCurvePath(points),areaPath=points.length?path+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
+      const points=values.map((value,i)=>({x:xAt(i),y:yAt(value),value,p:graphItems[i]})),path=studyHubSmoothCurvePath(points),areaPath=points.length?path+' L '+points[points.length-1].x.toFixed(2)+' '+baseline.toFixed(2)+' L '+points[0].x.toFixed(2)+' '+baseline.toFixed(2)+' Z':'';
       let svg='<svg class="paper-trend-svg" style="width:'+width+'px" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+localEsc(group.name)+' paper score percentages over time"><defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="62%" stop-color="var(--accent)" stop-opacity=".10"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>';
       [0,50,100].forEach(value=>{const yy=yAt(value);svg+='<line class="paper-trend-grid" x1="'+left+'" y1="'+yy.toFixed(2)+'" x2="'+(width-right)+'" y2="'+yy.toFixed(2)+'"/><text class="paper-trend-tick" x="'+(left-8)+'" y="'+(yy+4).toFixed(2)+'" text-anchor="end">'+value+'%</text>';});
       svg+='<line class="paper-trend-axis" x1="'+left+'" y1="'+baseline+'" x2="'+(width-right)+'" y2="'+baseline+'"/>';
